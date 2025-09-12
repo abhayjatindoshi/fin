@@ -1,7 +1,8 @@
 import type { EntityKey } from "./Entity";
+import type { EntityTypeRecordMap } from "./EntityKeyStore";
 
 export interface IPersistence {
-    load(key: EntityKey): Promise<string | null>;
-    save(key: EntityKey, data: string): Promise<void>;
-    clear(key: EntityKey): Promise<void>;
+    loadData(key: EntityKey): Promise<EntityTypeRecordMap | null>;
+    storeData(key: EntityKey, data: EntityTypeRecordMap): Promise<void>;
+    clearData(key: EntityKey): Promise<void>;
 }

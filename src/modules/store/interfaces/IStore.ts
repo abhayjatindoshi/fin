@@ -1,8 +1,9 @@
 import type { Entity, EntityKey, EntityName } from "./Entity";
+import type { IPersistence } from "./IPersistence";
 
-export interface IStore {
-    get<T extends Entity>(entityName: EntityName, key: EntityKey, id: string): Promise<T | null>;
-    getAll<T extends Entity>(entityName: EntityName, key: EntityKey): Promise<T[]>;
-    save<T extends Entity>(entityName: EntityName, key: EntityKey, data: T): Promise<boolean>;
-    delete(entityName: EntityName, key: EntityKey, id: string): Promise<void>;
+export interface IStore extends IPersistence {
+    get<T extends Entity>(key: EntityKey, entityName: EntityName, id: string): Promise<T | null>;
+    getAll<T extends Entity>(key: EntityKey, entityName: EntityName): Promise<T[]>;
+    save<T extends Entity>(key: EntityKey, entityName: EntityName, data: T): Promise<boolean>;
+    delete(key: EntityKey, entityName: EntityName, id: string): Promise<void>;
 }
