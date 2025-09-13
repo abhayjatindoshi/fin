@@ -28,9 +28,9 @@ export class EntityKey {
             this.scope = 'monthly';
             this.year = parseInt(parts[1], 10);
             this.month = parseInt(parts[2], 10);
+        } else {
+            throw new Error(`Invalid EntityKey format: ${key}`);
         }
-
-        throw new Error(`Invalid EntityKey format: ${key}`);
     }
 
     static from(key: string): EntityKey {

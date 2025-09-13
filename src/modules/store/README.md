@@ -32,7 +32,7 @@ We support **three tiers of persistence**:
 * Each entity instance tracks:
 
   * `id`
-  * `changeSeq` (monotonic version counter, per-instance)
+  * `version` (monotonic version counter, per-instance)
   * `updatedAt`
 
 ### 2.2 EntityKey
@@ -164,7 +164,7 @@ The sync process is defined as `sync(Pa, Pb)` where Pa and Pb are two persistenc
 ### Guardrails
 
 * **Single sync at a time** → no parallel runs.
-* **Per-instance `changeSeq`** → deterministic conflict resolution.
+* **Per-instance `version`** → deterministic conflict resolution.
 * **Deleted entities tracked inside `EntityKeyData`** (not metadata).
 * **Metadata is lightweight** → quick dirty checks, not detailed tracking.
 * **Stable entity ordering on save** → avoids false hash mismatches.
@@ -215,14 +215,14 @@ For each entity `id` under a given `entityName`:
 
 * **Case A: Both active**
 
-  * Compare `changeSeq`.
-  * Higher `changeSeq` wins.
+  * Compare `version`.
+  * Higher `version` wins.
   * If equal → compare `updatedAt`.
 
 * **Case B: One active, one deleted**
 
-  * Compare entity’s `changeSeq` with the deletion’s `deletionTime`.
-  * If `deletionTime > changeSeq` → delete wins (remove from active set, record in `deleted`).
+  * Compare entity’s `version` with the deletion’s `deletionTime`.
+  * If `deletionTime > version` → delete wins (remove from active set, record in `deleted`).
   * Otherwise → keep entity, ignore deletion.
 
 * **Case C: Both deleted**
@@ -233,7 +233,7 @@ For each entity `id` under a given `entityName`:
 * **Case D: Only on one side (new entity)**
 
   * Copy entity to the other side.
-  * Ensure `changeSeq` increments appropriately.
+  * Ensure `version` increments appropriately.
 
 Any entity updates that must flow back into Pa (because Pb had the fresher data) are added into **bucket b1**.
 
@@ -253,7 +253,7 @@ Any entity updates that must flow back into Pa (because Pb had the fresher data)
 3. If Pa’s `updatedAt != t1` → Pa changed during sync.
 
    * Re-compare entities in bucket b1 with Pa’s current data.
-   * Apply entity-level resolution again (`changeSeq` / `updatedAt` rules).
+   * Apply entity-level resolution again (`version` / `updatedAt` rules).
    * Update Pa accordingly.
 
 ---
@@ -267,8 +267,8 @@ Any entity updates that must flow back into Pa (because Pb had the fresher data)
 
 ## Conflict Resolution Summary
 
-* **Update vs Update** → higher `changeSeq` wins.
-* **Update vs Delete** → compare `changeSeq` vs `deletionTime`.
+* **Update vs Update** → higher `version` wins.
+* **Update vs Delete** → compare `version` vs `deletionTime`.
 * **Delete vs Delete** → keep latest `deletionTime`.
 * **Missing vs Present** → treat as new entity.
 

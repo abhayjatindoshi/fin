@@ -1,4 +1,5 @@
-import type { Entity, EntityKey, EntityName } from "./Entity";
+import type { Entity, EntityName } from "./Entity";
+import type { EntityKey } from "./EntityKey";
 import type { IPersistence } from "./IPersistence";
 
 export interface IStore extends IPersistence {

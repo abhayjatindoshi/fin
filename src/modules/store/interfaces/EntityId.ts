@@ -27,9 +27,9 @@ export class EntityId {
             this.scope = 'monthly';
             this.year = parseInt(parts[0], 10);
             this.month = parseInt(parts[1], 10);
+        } else {
+            throw new Error(`Invalid EntityId format: ${id}`);
         }
-
-        throw new Error(`Invalid EntityId format: ${id}`);
     }
 
     static new<Name extends EntityName>(entityName: Name, entity: EntityType<Name>): EntityId {
