@@ -1,73 +1,42 @@
-import type { Metadata } from "./entities/Metadata";
+import type { EntityMetadata, Metadata } from "./entities/Metadata";
 import type { Entity, EntityName } from "./interfaces/Entity";
 import type { EntityKeyData } from "./interfaces/EntityKeyData";
 import type { IPersistence } from "./interfaces/IPersistence";
+import { Utils } from "./utils";
 
-class PersistenceCacheWrapper implements IPersistence {
-
-    private persistence: IPersistence;
-    private cache: Record<string, EntityKeyData>;
-    private ops: Record<string, EntityKeyData | null>;
-
-    constructor(persistence: IPersistence) {
-        this.persistence = persistence;
-        this.cache = {};
-        this.ops = {};
-    }
-
-    async loadData(entityKey: string): Promise<EntityKeyData | null> {
-        const key = entityKey.toString();
-        if (this.cache[key]) {
-            return Promise.resolve(this.cache[key]);
-        }
-
-        const data = await this.persistence.loadData(entityKey);
-        if (data) {
-            this.cache[key] = data;
-        }
-        return data;
-    }
-    async storeData(entityKey: string, data: EntityKeyData): Promise<void> {
-        this.ops[entityKey] = data;
-        this.cache[entityKey] = data;
-    }
-
-    async clearData(entityKey: string): Promise<void> {
-        this.ops[entityKey] = null;
-        delete this.cache[entityKey];
-    }
-
-    async executeOps(): Promise<void> {
-        const promises = Object.entries(this.ops).map(([key, data]) => {
-            if (data) return this.persistence.storeData(key, data);
-            else return this.clearData(key);
-        });
-        return Promise.all(promises).then(() => undefined);
-    }
-}
-
-interface TypedEntityKeyData {
+type TypedEntityKeyData = {
     [entityName: string]: {
-        [id: string]: { type: "active", data: Entity } | { type: "deleted", deletedAt: Date }
+        [id: string]: TypedEntity
     }
 }
+
+type TypedEntity = { type: "active", data: Entity } | { type: "deleted", deletedAt: Date };
+
+// entityKey vs <entity id vs ops> | 'copy'
+type DifferenceBucket = Record<string, DifferenceOps>;
+type DifferenceOps = Record<string, DifferenceOp> | 'copy';
+type DifferenceOp =
+    | { type: 'save', entityName: EntityName, data: Entity }
+    | { type: 'delete', entityName: EntityName, deletedAt: Date }
 
 export class SyncHandler {
 
     private prefix: string;
-    private persistenceA: PersistenceCacheWrapper;
-    private persistenceB: PersistenceCacheWrapper;
+    private persistenceA: IPersistence;
+    private persistenceB: IPersistence;
     private metadataA: Metadata | undefined;
     private metadataB: Metadata | undefined;
     private EntityKeyDataMapA: Record<string, EntityKeyData> = {};
     private EntityKeyDataMapB: Record<string, EntityKeyData> = {};
+    private bucketA: DifferenceBucket = {};
+    private bucketB: DifferenceBucket = {};
 
     static sync = (prefix: string, persistenceA: IPersistence, persistenceB: IPersistence): Promise<void> => new SyncHandler(prefix, persistenceA, persistenceB).sync();
 
     private constructor(prefix: string, persistenceA: IPersistence, persistenceB: IPersistence) {
         this.prefix = prefix;
-        this.persistenceA = new PersistenceCacheWrapper(persistenceA);
-        this.persistenceB = new PersistenceCacheWrapper(persistenceB);
+        this.persistenceA = persistenceA;
+        this.persistenceB = persistenceB;
     }
 
     private async loadMetadata(): Promise<void> {
@@ -97,48 +66,180 @@ export class SyncHandler {
         await Promise.all([
             this.loadEntityKeyData('A', [...Object.keys(entityKeysOnlyInA), ...Object.keys(entityKeysWithHashMismatch)]),
             this.loadEntityKeyData('B', [...Object.keys(entityKeysWithHashMismatch)]),
-        ])
+        ]);
 
-        await this.storeMissingEntityKeys('B', Object.keys(entityKeysOnlyInA));
+        Object.keys(entityKeysOnlyInA).forEach(entityKey => this.bucketB[entityKey] = 'copy');
+        Object.keys(entityKeysOnlyInB).forEach(entityKey => this.bucketA[entityKey] = 'copy');
 
-        // Step 3: Keys present in both but with hash mismatch (resolve)
-        for (const key of Object.keys(entityKeysWithHashMismatch)) {
-            const dataA = this.EntityKeyDataMapA[key];
-            const dataB = this.EntityKeyDataMapB[key];
+        this.findDifferenceBuckets(Object.keys(entityKeysWithHashMismatch));
+        await this.applyBucket('B');
+
+        const newMetadataA = await SyncHandler.getMetadata(this.prefix, this.persistenceA);
+        if (this.metadataA.updatedAt.getTime() === newMetadataA.updatedAt.getTime()) {
+            await this.applyBucket('A');
+        }
+
+    }
+
+    async applyBucket(inPersistence: 'A' | 'B'): Promise<void> {
+        const bucket = inPersistence === 'A' ? this.bucketA : this.bucketB;
+        await Promise.all(Object.entries(bucket).map(([entityKey, ops]) => this.applyOps(inPersistence, entityKey, ops)));
+
+        const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
+        const targetMetadata = inPersistence === 'A' ? this.metadataA : this.metadataB;
+        if (!targetMetadata) throw new Error('Metadata not loaded');
+        targetMetadata.updatedAt = new Date();
+        await SyncHandler.storeMetadata(this.prefix, target, targetMetadata);
+    }
+
+    async applyOps(inPersistence: 'A' | 'B', entityKey: string, ops: DifferenceOps): Promise<void> {
+        const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
+        const sourceMetadata = inPersistence === 'A' ? this.metadataB : this.metadataA;
+        const targetMetadata = inPersistence === 'A' ? this.metadataA : this.metadataB;
+        const sourceEntityKeyDataMap = inPersistence === 'A' ? this.EntityKeyDataMapB : this.EntityKeyDataMapA;
+        const targetEntityKeyDataMap = inPersistence === 'A' ? this.EntityKeyDataMapA : this.EntityKeyDataMapB;
+
+        if (!targetMetadata || !sourceMetadata) throw new Error('Metadata not loaded');
+
+        if (ops === 'copy') {
+            const data = sourceEntityKeyDataMap[entityKey];
+            if (data) await target.storeData(entityKey, data);
+            targetMetadata.entityKeys[entityKey] = sourceMetadata.entityKeys[entityKey];
+            targetMetadata.entityKeys[entityKey].updatedAt = new Date();
+            return;
+        }
+
+        const entityKeyData = targetEntityKeyDataMap[entityKey];
+        if (!entityKeyData) throw new Error(`EntityKeyData not loaded for ${entityKey}`);
+
+        Object.entries(ops).forEach(([id, op]) => {
+            if (op.type === 'save') {
+                if (entityKeyData[op.entityName] === undefined) entityKeyData[op.entityName] = {};
+                entityKeyData[op.entityName]![id] = op.data;
+
+                if (entityKeyData.deleted && entityKeyData.deleted[op.entityName]) {
+                    delete entityKeyData.deleted[op.entityName]![id];
+                }
+
+            } else if (op.type === 'delete') {
+                if (entityKeyData.deleted === undefined) entityKeyData.deleted = {};
+
+                if (entityKeyData.deleted[op.entityName] === undefined) entityKeyData.deleted[op.entityName] = {};
+
+                entityKeyData.deleted[op.entityName]![id] = op.deletedAt;
+
+                if (entityKeyData[op.entityName] && entityKeyData[op.entityName]![id]) {
+                    delete entityKeyData[op.entityName]![id];
+                }
+            }
+        });
+
+        this.updateEntityKeyMetadata(entityKey, entityKeyData, targetMetadata);
+        await target.storeData(entityKey, entityKeyData);
+    }
+
+    updateEntityKeyMetadata(entityKey: string, entityKeyData: EntityKeyData, metadata: Metadata) {
+        const updatedAt = new Date();
+        const entities: Record<string, EntityMetadata> = {};
+        Object.keys(entityKeyData).forEach(k => {
+            if (k === 'deleted') {
+                entityKeyData[k] = SyncHandler.sortKeys(entityKeyData[k]!);
+                return;
+            } else {
+                const entityName = k as EntityName;
+                entityKeyData[entityName] = SyncHandler.sortKeys(entityKeyData[entityName]!);
+                entities[entityName] = {
+                    count: Object.keys(entityKeyData[entityName] || {}).length,
+                    deletedCount: entityKeyData.deleted && entityKeyData.deleted[entityName] ? Object.keys(entityKeyData.deleted[entityName]!).length : 0
+                }
+            }
+        });
+        const hash = Utils.generateHash(JSON.stringify(entityKeyData));
+        metadata.entityKeys[entityKey] = { hash, updatedAt, entities };
+    }
+
+    addDifferenceOp(bucket: DifferenceBucket, entityKey: string, id: string, op: DifferenceOp) {
+        if (bucket[entityKey] === undefined) bucket[entityKey] = {};
+        if (bucket[entityKey] === 'copy') throw new Error(`Cannot add difference op to entityKey ${entityKey} marked as 'copy'`);
+        bucket[entityKey][id] = op;
+    }
+
+    addEntityNamesToBucket(missingEntityNames: TypedEntityKeyData, bucket: DifferenceBucket, entityKey: string) {
+        Object.entries(missingEntityNames).forEach(([entityName, entities]) => (
+            this.addEntitiesToBucket(entities, bucket, entityKey, entityName as EntityName)
+        ));
+    }
+
+    addEntitiesToBucket(missingEntities: Record<string, TypedEntity>, bucket: DifferenceBucket, entityKey: string, entityName: EntityName) {
+        Object.entries(missingEntities).forEach(([id, typedEntity]) => {
+            this.addDifferenceOp(bucket, entityKey, id, typedEntity.type === 'active'
+                ? { type: 'save', entityName: entityName as EntityName, data: typedEntity.data }
+                : { type: 'delete', entityName: entityName as EntityName, deletedAt: typedEntity.deletedAt });
+        })
+    }
+
+    resolveEntity(id: string, entityKey: string, entityName: EntityName, a: TypedEntity, b: TypedEntity) {
+        // Extract timestamps
+        let timeA = a.type === 'active' ? a.data.updatedAt?.getTime() : a.deletedAt?.getTime();
+        let timeB = b.type === 'active' ? b.data.updatedAt?.getTime() : b.deletedAt?.getTime();
+
+        if (timeA === undefined) timeA = new Date(0).getTime();
+        if (timeB === undefined) timeB = new Date(0).getTime();
+
+        if (timeA === timeB) {
+            if (a.type === b.type) return; // nothing to do
+            if (a.type === 'deleted') this.addDifferenceOp(this.bucketB, entityKey, id, { type: 'delete', entityName, deletedAt: a.deletedAt });
+            else if (b.type === 'deleted') this.addDifferenceOp(this.bucketA, entityKey, id, { type: 'delete', entityName, deletedAt: b.deletedAt });
+            return;
+        }
+
+        if (timeA > timeB) {
+            // A is newer → update B
+            if (a.type === 'active') this.addDifferenceOp(this.bucketB, entityKey, id, { type: 'save', entityName, data: a.data });
+            else this.addDifferenceOp(this.bucketB, entityKey, id, { type: 'delete', entityName, deletedAt: a.deletedAt });
+        } else {
+            // B is newer → update A
+            if (b.type === 'active') this.addDifferenceOp(this.bucketA, entityKey, id, { type: 'save', entityName, data: b.data });
+            else this.addDifferenceOp(this.bucketA, entityKey, id, { type: 'delete', entityName, deletedAt: b.deletedAt });
+        }
+    }
+
+
+    findDifferenceBuckets(entityKeysWithHashMismatch: string[]) {
+        for (const entityKey of entityKeysWithHashMismatch) {
+            const dataA = this.EntityKeyDataMapA[entityKey];
+            const dataB = this.EntityKeyDataMapB[entityKey];
             if (!dataA || !dataB) continue; // no-op we'll always have data if we reach here.
 
             const typedDataA = this.convertToTypedData(dataA);
             const typedDataB = this.convertToTypedData(dataB);
 
+            if (this.bucketA[entityKey] === undefined) this.bucketA[entityKey] = {};
+            if (this.bucketB[entityKey] === undefined) this.bucketB[entityKey] = {};
+
             const [entityNamesOnlyInA, entityNamesOnlyInB, entityNamesInBoth] = SyncHandler.partitionDifferences(
                 typedDataA, typedDataB, () => true
             )
 
-            Object.keys(entityNamesOnlyInA).forEach(name => {
-                const entityName = name as EntityName;
-                dataB[entityName] = dataA[entityName];
-                this.metadataB!.entityKeys[key].entities[entityName] = this.metadataA!.entityKeys[key].entities[entityName];
-            })
+            this.addEntityNamesToBucket(entityNamesOnlyInA, this.bucketB, entityKey);
+            this.addEntityNamesToBucket(entityNamesOnlyInB, this.bucketA, entityKey);
 
             for (const [name, [entitiesA, entitiesB]] of Object.entries(entityNamesInBoth)) {
                 const entityName = name as EntityName;
-                const [entitiesOnlyInA, entitiesOnlyInB, entitiesWithVersionMismatch] = SyncHandler.partitionDifferences(
+                const [
+                    entitiesOnlyInA,
+                    entitiesOnlyInB,
+                    commonEntities
+                ] = SyncHandler.partitionDifferences(
                     entitiesA, entitiesB,
-                    (left, right) => left.version !== right.version || left.updatedAt?.getTime() !== right.updatedAt?.getTime()
+                    () => true,
                 )
 
-                Object.entries(entitiesOnlyInA).forEach(([id, entity]) => {
-                    const deletionTimeB = deletedDataB[entityName]?.[id];
-                    // deleted in B
-                    if (deletionTimeB) {
-                        // deletion in B is newer than entity in A
-                        if (deletionTimeB.getTime() >= (entity.updatedAt?.getTime() ?? 0)) {
-                            // add to A bucket - delete
-                        } else {
-                            dataB[entityName]![id] = entity;
-                        }
-                    }
-                });
+                this.addEntitiesToBucket(entitiesOnlyInA, this.bucketB, entityKey, entityName);
+                this.addEntitiesToBucket(entitiesOnlyInB, this.bucketA, entityKey, entityName);
+                Object.entries(commonEntities).forEach(([id, [typedEntityA, typedEntityB]]) =>
+                    this.resolveEntity(id, entityKey, entityName, typedEntityA, typedEntityB));
+
             }
         }
     }

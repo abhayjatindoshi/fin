@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/modules/base-ui/components/ui/button";
+import { SyncHandler } from "@/modules/store/sync2";
 import React, { useState } from "react";
 import { MyPersistence } from "../../dump/MyPersistence";
-import { EntityKey } from "../../store/interfaces/EntityKey";
 import type { EntityKeyData } from "../../store/interfaces/EntityKeyData";
-import { sync } from "../../store/sync";
 
 const persistenceA = new MyPersistence('PersistenceA');
 const persistenceB = new MyPersistence('PersistenceB');
@@ -14,8 +13,7 @@ const getAllKeys = (persistence: MyPersistence): string[] => {
     return Array.from(persistence["store"].keys());
 };
 
-const getKeyData = async (persistence: MyPersistence, keyStr: string): Promise<EntityKeyData | null> => {
-    const key = EntityKey.from(keyStr);
+const getKeyData = async (persistence: MyPersistence, key: string): Promise<EntityKeyData | null> => {
     return await persistence.loadData(key);
 };
 
@@ -49,7 +47,7 @@ const PersistenceTesting: React.FC = () => {
         setLoading(true);
         setSyncTime(null);
         const start = performance.now();
-        await sync(prefix, persistenceB, persistenceA);
+        await SyncHandler.sync(prefix, persistenceB, persistenceA);
         const end = performance.now();
         setSyncTime(end - start);
         await loadData();
@@ -58,13 +56,13 @@ const PersistenceTesting: React.FC = () => {
 
     const handleAddKey = async (persistence: MyPersistence, key: string, reload: () => void) => {
         if (!key) return;
-        await persistence.storeData(EntityKey.from(key), {});
+        await persistence.storeData(key, {});
         reload();
     };
 
     const handleRemoveKey = async (persistence: MyPersistence, key: string, reload: () => void) => {
         if (!key) return;
-        await persistence.clearData(EntityKey.from(key));
+        await persistence.clearData(key);
         reload();
     };
 

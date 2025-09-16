@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { EntityKey } from "../store/interfaces/EntityKey";
 import type { EntityKeyData } from "../store/interfaces/EntityKeyData";
 import type { IPersistence } from "../store/interfaces/IPersistence";
 
@@ -12,7 +11,7 @@ export class MyPersistence implements IPersistence {
         this.loadFromLocalStorage();
     }
 
-    private dateReviver(key: string, value: any): any {
+    private dateReviver(_key: string, value: any): any {
         if (typeof value === "string") {
             // Check for ISO date format
             const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
@@ -43,17 +42,17 @@ export class MyPersistence implements IPersistence {
         localStorage.setItem(this.name, JSON.stringify(obj));
     }
 
-    async loadData(key: EntityKey): Promise<EntityKeyData | null> {
-        return this.store.get(key.toString()) || null;
+    async loadData(key: string): Promise<EntityKeyData | null> {
+        return this.store.get(key) || null;
     }
 
-    async storeData(key: EntityKey, data: EntityKeyData): Promise<void> {
-        this.store.set(key.toString(), data);
+    async storeData(key: string, data: EntityKeyData): Promise<void> {
+        this.store.set(key, data);
         this.saveToLocalStorage();
     }
 
-    async clearData(key: EntityKey): Promise<void> {
-        this.store.delete(key.toString());
+    async clearData(key: string): Promise<void> {
+        this.store.delete(key);
         this.saveToLocalStorage();
     }
 }

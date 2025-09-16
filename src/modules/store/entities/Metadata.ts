@@ -10,10 +10,10 @@ export interface Metadata extends Entity {
 export interface EntityKeyMetadata {
     updatedAt: Date;
     hash: number;
-    entities: {
-        [entityName: string]: {
-            count: number;
-            deletedCount: number;
-        }
-    }
+    entities: Record<string, EntityMetadata>;
+}
+
+export interface EntityMetadata {
+    count: number;
+    deletedCount: number;
 }
