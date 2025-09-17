@@ -48,7 +48,7 @@ export class SyncHandler {
         this.metadataB = metaB;
     }
 
-    async sync(): Promise<void> {
+    private async sync(): Promise<void> {
 
         // Step 1: Load and compare metadata.updatedAt
         await this.loadMetadata();
@@ -81,7 +81,7 @@ export class SyncHandler {
 
     }
 
-    async applyBucket(inPersistence: 'A' | 'B'): Promise<void> {
+    private async applyBucket(inPersistence: 'A' | 'B'): Promise<void> {
         const bucket = inPersistence === 'A' ? this.bucketA : this.bucketB;
         await Promise.all(Object.entries(bucket).map(([entityKey, ops]) => this.applyOps(inPersistence, entityKey, ops)));
 
@@ -92,7 +92,7 @@ export class SyncHandler {
         await SyncHandler.storeMetadata(this.prefix, target, targetMetadata);
     }
 
-    async applyOps(inPersistence: 'A' | 'B', entityKey: string, ops: DifferenceOps): Promise<void> {
+    private async applyOps(inPersistence: 'A' | 'B', entityKey: string, ops: DifferenceOps): Promise<void> {
         const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
         const sourceMetadata = inPersistence === 'A' ? this.metadataB : this.metadataA;
         const targetMetadata = inPersistence === 'A' ? this.metadataA : this.metadataB;
@@ -138,7 +138,7 @@ export class SyncHandler {
         await target.storeData(entityKey, entityKeyData);
     }
 
-    updateEntityKeyMetadata(entityKey: string, entityKeyData: EntityKeyData, metadata: Metadata) {
+    private updateEntityKeyMetadata(entityKey: string, entityKeyData: EntityKeyData, metadata: Metadata) {
         const updatedAt = new Date();
         const entities: Record<string, EntityMetadata> = {};
         Object.keys(entityKeyData).forEach(k => {
@@ -158,19 +158,19 @@ export class SyncHandler {
         metadata.entityKeys[entityKey] = { hash, updatedAt, entities };
     }
 
-    addDifferenceOp(bucket: DifferenceBucket, entityKey: string, id: string, op: DifferenceOp) {
+    private addDifferenceOp(bucket: DifferenceBucket, entityKey: string, id: string, op: DifferenceOp) {
         if (bucket[entityKey] === undefined) bucket[entityKey] = {};
         if (bucket[entityKey] === 'copy') throw new Error(`Cannot add difference op to entityKey ${entityKey} marked as 'copy'`);
         bucket[entityKey][id] = op;
     }
 
-    addEntityNamesToBucket(missingEntityNames: TypedEntityKeyData, bucket: DifferenceBucket, entityKey: string) {
+    private addEntityNamesToBucket(missingEntityNames: TypedEntityKeyData, bucket: DifferenceBucket, entityKey: string) {
         Object.entries(missingEntityNames).forEach(([entityName, entities]) => (
             this.addEntitiesToBucket(entities, bucket, entityKey, entityName as EntityName)
         ));
     }
 
-    addEntitiesToBucket(missingEntities: Record<string, TypedEntity>, bucket: DifferenceBucket, entityKey: string, entityName: EntityName) {
+    private addEntitiesToBucket(missingEntities: Record<string, TypedEntity>, bucket: DifferenceBucket, entityKey: string, entityName: EntityName) {
         Object.entries(missingEntities).forEach(([id, typedEntity]) => {
             this.addDifferenceOp(bucket, entityKey, id, typedEntity.type === 'active'
                 ? { type: 'save', entityName: entityName as EntityName, data: typedEntity.data }
@@ -178,7 +178,7 @@ export class SyncHandler {
         })
     }
 
-    resolveEntity(id: string, entityKey: string, entityName: EntityName, a: TypedEntity, b: TypedEntity) {
+    private resolveEntity(id: string, entityKey: string, entityName: EntityName, a: TypedEntity, b: TypedEntity) {
         // Extract timestamps
         let timeA = a.type === 'active' ? a.data.updatedAt?.getTime() : a.deletedAt?.getTime();
         let timeB = b.type === 'active' ? b.data.updatedAt?.getTime() : b.deletedAt?.getTime();
@@ -204,8 +204,7 @@ export class SyncHandler {
         }
     }
 
-
-    findDifferenceBuckets(entityKeysWithHashMismatch: string[]) {
+    private findDifferenceBuckets(entityKeysWithHashMismatch: string[]) {
         for (const entityKey of entityKeysWithHashMismatch) {
             const dataA = this.EntityKeyDataMapA[entityKey];
             const dataB = this.EntityKeyDataMapB[entityKey];
@@ -244,7 +243,7 @@ export class SyncHandler {
         }
     }
 
-    convertToTypedData(data: EntityKeyData): TypedEntityKeyData {
+    private convertToTypedData(data: EntityKeyData): TypedEntityKeyData {
         const typedData: TypedEntityKeyData = {};
         for (const entityName of Object.keys(data) as EntityName[]) {
             typedData[entityName] = {};
@@ -265,7 +264,7 @@ export class SyncHandler {
         return typedData;
     }
 
-    async loadEntityKeyData(inPersistence: 'A' | 'B', entityKeys: string[]): Promise<void> {
+    private async loadEntityKeyData(inPersistence: 'A' | 'B', entityKeys: string[]): Promise<void> {
         const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
         const entityKeyDataMap = inPersistence === 'A' ? this.EntityKeyDataMapA : this.EntityKeyDataMapB;
         await Promise.all(entityKeys.map(entityKey => target.loadData(entityKey)
@@ -273,23 +272,6 @@ export class SyncHandler {
                 if (data) entityKeyDataMap[entityKey] = data;
             })
         ));
-    }
-
-    async storeMissingEntityKeys(inPersistence: 'A' | 'B', entityKeys: string[]): Promise<void> {
-        const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
-        const sourceMap = inPersistence === 'A' ? this.EntityKeyDataMapB : this.EntityKeyDataMapA;
-        const targetMetadata = inPersistence === 'A' ? this.metadataA : this.metadataB;
-        const sourceMetadata = inPersistence === 'A' ? this.metadataB : this.metadataA;
-
-        const keyVsEntityData = entityKeys
-            .map(entityKey => ({ key: entityKey, data: sourceMap[entityKey] }))
-            .filter(row => row.data);
-
-        await Promise.all(keyVsEntityData.map(row =>
-            target.storeData(row.key, row.data!)
-                .then(() => targetMetadata!.entityKeys[row.key] = sourceMetadata!.entityKeys[row.key])
-        ));
-
     }
 
     private static partitionDifferences<T>(

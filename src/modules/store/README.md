@@ -1,43 +1,91 @@
 # Entity Sync System
 
-## 1. Persistence Layers
+## Overview
 
-We support **three tiers of persistence**:
-
-* **P1: In-Memory**
-
-  * Ephemeral, fast access.
-  * Cleared on app restart.
-  * Primary source of truth while the app is running.
-
-* **P2: Local Storage (IndexedDB / SQLite)**
-
-  * Reliable, offline-capable store.
-  * Periodically synced from memory (every few seconds).
-  * User continues where they left off even without network.
-
-* **P3: Cloud Storage**
-
-  * Optional, depends on user settings.
-  * Provides cross-device sync and backup.
-  * Updated from local storage on demand or at intervals.
+Synchronizes entities between multiple persistence layers (memory, local storage, cloud) with robust conflict resolution and safe deletes. Supports both automatic and user-triggered syncs.
 
 ---
 
-## 2. Entity Architecture
+## Persistence Layers
 
-### 2.1 Entity
+- **P1: In-Memory** – Fast, ephemeral, cleared on restart.
+- **P2: Local Storage** – Reliable, offline, periodically synced from memory.
+- **P3: Cloud Storage** – Optional, for cross-device sync and backup.
 
-* Smallest unit of data.
-* Each entity instance tracks:
+---
 
-  * `id`
-  * `version` (monotonic version counter, per-instance)
-  * `updatedAt`
+## Entity Structure
 
-### 2.2 EntityKey
+- **Entity**: Has `id`, `version`, `updatedAt`.
+- **EntityKey**: Groups entities by scope (global, yearly, monthly).
+- **EntityKeyData**: Stores all entities and deleted markers for a given key.
 
-* A **storage key** that groups entities by scope (e.g., monthly, yearly, global).
+---
+
+## Metadata
+
+- Tracks last update time, per-key hashes, and entity counts.
+- Used for fast dirty checks and sync decisions.
+
+---
+
+## SyncHandler
+
+`SyncHandler` is the core class for synchronizing two persistence layers:
+
+- Compares metadata to detect changes.
+- Identifies missing or changed entity keys.
+- Resolves differences at the entity level using version and updatedAt.
+- Handles safe deletes and updates.
+- Ensures atomic writes and stable ordering.
+- Only one sync runs at a time per pair.
+
+**Conflict Resolution:**
+- Update vs Update: Higher version wins.
+- Update vs Delete: Compare version and deletion time.
+- Delete vs Delete: Latest deletion time wins.
+- Missing vs Present: Treat as new entity.
+
+---
+
+## SyncScheduler
+
+`SyncScheduler` manages sync jobs and ensures only one sync runs at a time:
+
+- Maintains a queue of sync requests.
+- Deduplicates requests for the same source/target pair.
+- Supports both fire-and-forget (`triggerSync`) and awaitable (`sync`) syncs.
+- Automatically processes the next job when the current one finishes.
+- Periodic syncs can be scheduled externally.
+
+**Usage Example:**
+```ts
+const scheduler = new SyncScheduler("prefix");
+scheduler.triggerSync(persistenceA, persistenceB); // fire-and-forget
+await scheduler.sync(persistenceA, persistenceB);  // wait for completion
+```
+
+---
+
+## Data Flow
+
+- On app start: Load local storage, sync with cloud, populate memory.
+- Periodic: Flush memory to local storage.
+- On demand: Sync local storage with cloud.
+- Deletes: Mark entities as deleted with timestamp, propagate deletes.
+
+---
+
+## Design Goals
+
+- Fast sync checks via metadata.
+- Precise, scalable entity-level resolution.
+- Safe deletes and conflict handling.
+- Minimal overhead for large datasets.
+
+---
+
+**See `SyncHandler.ts` and `SyncScheduler.ts` for implementation details.**
 * Example:
 
   * Global config → `app.global`

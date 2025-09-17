@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/modules/base-ui/components/ui/button";
-import { SyncHandler } from "@/modules/store/sync2";
+import { SyncHandler } from "@/modules/store/SyncHandler";
 import React, { useState } from "react";
 import { MyPersistence } from "../../dump/MyPersistence";
 import type { EntityKeyData } from "../../store/interfaces/EntityKeyData";
