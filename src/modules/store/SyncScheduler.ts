@@ -29,7 +29,7 @@ export class SyncScheduler {
         this.enqueue(source, target);
     }
 
-    async shutdown(): Promise<void> {
+    async gracefullyShutdown(): Promise<void> {
         this.shuttingDown = true;
         while (this.running || this.queue.length > 0) {
             await new Promise(res => setTimeout(res, 100));

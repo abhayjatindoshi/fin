@@ -12,16 +12,17 @@ export class DataOrchestrator {
     private sync: SyncScheduler;
 
     // Load function to initialize the singleton instance
-    public static load(prefix: string, store: IStore, local: IPersistence, cloud: IPersistence): void {
-        if (DataOrchestrator.instance) DataOrchestrator.unload();
+    public static async load(prefix: string, store: IStore, local: IPersistence, cloud: IPersistence): Promise<void> {
+        if (DataOrchestrator.instance) await DataOrchestrator.unload();
         DataOrchestrator.instance = new DataOrchestrator(prefix, store, local, cloud);
-        DataOrchestrator.instance.startIntervals();
+        await DataOrchestrator.instance.load();
     }
 
     // Unload function to clear the singleton instance
-    public static unload(): void {
-        DataOrchestrator.instance?.stopIntervals();
-        DataOrchestrator.instance?.sync.shutdown();
+    public static async unload(): Promise<void> {
+        if (DataOrchestrator.instance) {
+            await DataOrchestrator.instance.unload();
+        }
         DataOrchestrator.instance = null;
     }
 
@@ -41,6 +42,17 @@ export class DataOrchestrator {
         this.cloud = cloud;
         this.intervals = [];
         this.sync = new SyncScheduler(this.prefix);
+    }
+
+    private async load(): Promise<void> {
+        await this.sync.sync(this.cloud, this.local);
+        await this.sync.sync(this.local, this.store);
+        this.startIntervals();
+    }
+
+    private async unload(): Promise<void> {
+        this.stopIntervals();
+        await this.sync.gracefullyShutdown();
     }
 
     private startIntervals(): void {
