@@ -4,13 +4,13 @@ import type { EntityConfig } from "./EntityConfig";
 export interface QueryOptions {
     ids?: string[];
     where?: Partial<Entity>;
-    years?: number[];
+    year: number;
     sort?: { field: string; direction: 'asc' | 'desc' }[];
 }
 
 export function filterEntities<T extends Entity>(config: EntityConfig<T>, data: Array<T>, options?: QueryOptions): Array<T> {
     if (!options) return data
-    if (!options.years) options.years = [new Date().getFullYear()];
+    if (!options.year) options.year = new Date().getFullYear();
 
     if (options.ids) data = data
         .filter(item => item.id && options.ids!.includes(item.id));
@@ -19,8 +19,8 @@ export function filterEntities<T extends Entity>(config: EntityConfig<T>, data: 
         .filter(item => Object.entries(options.where!)
             .every(([key, value]) => item[key as keyof T] === value));
 
-    if (options.years) data = data
-        .filter(item => config.getKeyDate && options.years!.includes(config.getKeyDate(item).getFullYear()));
+    if (options.year) data = data
+        .filter(item => config.getKeyDate && options.year === config.getKeyDate(item).getFullYear());
 
     if (options.sort) {
         options.sort.forEach(({ field, direction }) => {

@@ -15,3 +15,4 @@ type EntityNames = {
 
 export type EntityName = keyof EntityNames;
 export type EntityType<K extends EntityName> = EntityNames[K];
+export const EntityNames = Object.keys({} as EntityNames) as Array<EntityName>;

@@ -32,7 +32,7 @@ export class EntityId {
         }
     }
 
-    static new<Name extends EntityName>(entityName: Name, entity: EntityType<Name>): EntityId {
+    static new<N extends EntityName>(entityName: N, entity: EntityType<N>): EntityId {
         const config = EntityConfigs[entityName];
         const scope = config.scope;
         const nanoId = nanoid(8);

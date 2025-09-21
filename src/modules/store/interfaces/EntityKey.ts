@@ -1,4 +1,5 @@
-import { type EntityScope } from "./EntityConfig";
+import type { EntityName } from "./Entity";
+import { EntityConfigs, type EntityScope } from "./EntityConfig";
 import type { EntityId } from "./EntityId";
 
 /**
@@ -49,6 +50,22 @@ export class EntityKey {
         }
 
         throw new Error(`Unsupported EntityConfig scope: ${id.scope}`);
+    }
+
+    static fromDate(prefix: string, entityName: EntityName, date: Date): EntityKey {
+        const config = EntityConfigs[entityName];
+        switch (config.scope) {
+            case 'global': return new EntityKey(`${prefix}.global`);
+            case 'yearly': {
+                const year = date.getFullYear();
+                return new EntityKey(`${prefix}.${year}`);
+            }
+            case 'monthly': {
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                return new EntityKey(`${prefix}.${year}.${String(month).padStart(2, '0')}`);
+            }
+        }
     }
 
     toString(): string {
