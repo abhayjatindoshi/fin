@@ -1,8 +1,8 @@
+import { generateHash, sortKeys } from "../common/json";
 import type { EntityMetadata, Metadata } from "./entities/Metadata";
 import type { Entity, EntityName } from "./interfaces/Entity";
 import type { EntityKeyData } from "./interfaces/EntityKeyData";
 import type { IPersistence } from "./interfaces/IPersistence";
-import { Utils } from "./utils";
 
 type TypedEntityKeyData = {
     [entityName: string]: {
@@ -48,6 +48,10 @@ export class SyncHandler {
         this.metadataB = metaB;
     }
 
+    private filterKeys<T>(obj: Record<string, T>, keys: string[]): Record<string, T> {
+        return Object.fromEntries(Object.entries(obj).filter(([key]) => keys.includes(key)));
+    }
+
     private async sync(): Promise<void> {
 
         // Step 1: Load and compare metadata.updatedAt
@@ -59,7 +63,8 @@ export class SyncHandler {
 
         // Step 2: partition entityKey to lists of missing items and hash mismatch
         const [entityKeysOnlyInA, entityKeysOnlyInB, entityKeysWithHashMismatch] = SyncHandler.partitionDifferences(
-            this.metadataA.entityKeys, this.metadataB.entityKeys,
+            this.metadataA.entityKeys,
+            this.filterKeys(this.metadataB.entityKeys, this.metadataA ? Object.keys(this.metadataA.entityKeys) : []),
             (entityKeyA, entityKeyB) => entityKeyA.hash !== entityKeyB.hash
         );
 
@@ -143,18 +148,18 @@ export class SyncHandler {
         const entities: Record<string, EntityMetadata> = {};
         Object.keys(entityKeyData).forEach(k => {
             if (k === 'deleted') {
-                entityKeyData[k] = SyncHandler.sortKeys(entityKeyData[k]!);
+                entityKeyData[k] = sortKeys(entityKeyData[k]!);
                 return;
             } else {
                 const entityName = k as EntityName;
-                entityKeyData[entityName] = SyncHandler.sortKeys(entityKeyData[entityName]!);
+                entityKeyData[entityName] = sortKeys(entityKeyData[entityName]!);
                 entities[entityName] = {
                     count: Object.keys(entityKeyData[entityName] || {}).length,
                     deletedCount: entityKeyData.deleted && entityKeyData.deleted[entityName] ? Object.keys(entityKeyData.deleted[entityName]!).length : 0
                 }
             }
         });
-        const hash = Utils.generateHash(JSON.stringify(entityKeyData));
+        const hash = generateHash(JSON.stringify(entityKeyData));
         metadata.entityKeys[entityKey] = { hash, updatedAt, entities };
     }
 
@@ -245,7 +250,9 @@ export class SyncHandler {
 
     private convertToTypedData(data: EntityKeyData): TypedEntityKeyData {
         const typedData: TypedEntityKeyData = {};
-        for (const entityName of Object.keys(data) as EntityName[]) {
+        for (const name of Object.keys(data)) {
+            if (name === 'deleted') continue;
+            const entityName = name as EntityName;
             typedData[entityName] = {};
             const entities = data[entityName] || {};
             for (const id of Object.keys(entities)) {
@@ -284,8 +291,8 @@ export class SyncHandler {
         const onlyRight: Record<string, T> = {};
         const filterResults: Array<Record<string, [left: T, right: T]>> = Array(filters.length).fill({});
 
-        const leftKeys = Object.keys(left);
-        const rightKeys = Object.keys(right);
+        const leftKeys = Object.keys(left).sort();
+        const rightKeys = Object.keys(right).sort();
 
         let i = 0;
         let j = 0;
@@ -343,19 +350,10 @@ export class SyncHandler {
     private static async storeMetadata(prefix: string, persistence: IPersistence, metadata: Metadata): Promise<void> {
         const metadataKey = `${prefix}.metadata`;
         metadata.id = 'id';
-        metadata.entityKeys = SyncHandler.sortKeys(metadata.entityKeys);
+        metadata.entityKeys = sortKeys(metadata.entityKeys);
 
         const entityKeyData: EntityKeyData = { Metadata: {} };
         entityKeyData.Metadata![metadata.id!] = metadata;
         await persistence.storeData(metadataKey, entityKeyData);
     }
-
-    private static sortKeys<T>(obj: Record<string, T>): Record<string, T> {
-        return Object.keys(obj).sort()
-            .reduce((sorted, key) => {
-                sorted[key] = obj[key];
-                return sorted;
-            }, {} as Record<string, T>);
-    }
-
 }

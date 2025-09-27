@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button } from "@/modules/base-ui/components/ui/button";
+import { Button } from "@/modules/base-ui/components/ui/Button";
 import { SyncHandler } from "@/modules/store/SyncHandler";
 import React, { useState } from "react";
 import { MyPersistence } from "../../dump/MyPersistence";

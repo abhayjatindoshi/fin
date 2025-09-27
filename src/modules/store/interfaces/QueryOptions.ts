@@ -20,7 +20,7 @@ export function filterEntities<T extends Entity>(config: EntityConfig<T>, data: 
             .every(([key, value]) => item[key as keyof T] === value));
 
     if (options.year) data = data
-        .filter(item => config.getKeyDate && options.year === config.getKeyDate(item).getFullYear());
+        .filter(item => !config.getKeyDate || options.year === config.getKeyDate(item).getFullYear());
 
     if (options.sort) {
         options.sort.forEach(({ field, direction }) => {

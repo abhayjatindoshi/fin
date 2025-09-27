@@ -38,7 +38,9 @@ export class SyncScheduler {
 
     private enqueue(source: IPersistence, target: IPersistence): Promise<void> {
         const existingItem = this.queue.find(item => item.source === source && item.target === target);
-        if (existingItem) return existingItem.promise;
+        if (existingItem) {
+            return existingItem.promise;
+        }
 
         let resolve!: () => void;
         let reject!: (error: unknown) => void;

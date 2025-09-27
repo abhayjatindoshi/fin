@@ -1,6 +1,8 @@
 import { combineLatest, map, type Observable } from "rxjs";
+import { generateHash, sortKeys } from "../common/json";
 import type { IPersistence } from "../store/interfaces/IPersistence";
 import type { IStore } from "../store/interfaces/IStore";
+import type { Metadata } from "./entities/Metadata";
 import { type Entity, type EntityName, type EntityType } from "./interfaces/Entity";
 import { EntityConfigs } from "./interfaces/EntityConfig";
 import { EntityId } from "./interfaces/EntityId";
@@ -16,8 +18,11 @@ export class DataOrchestrator {
     private static instance: DataOrchestrator | null = null;
 
     // Load function to initialize the singleton instance
-    public static async load(prefix: string, store: IStore, local: IPersistence, cloud: IPersistence): Promise<void> {
-        if (DataOrchestrator.instance) await DataOrchestrator.unload();
+    public static async load(prefix: string, store: IStore, local: IPersistence, cloud?: IPersistence): Promise<void> {
+        if (DataOrchestrator.instance) {
+            if (DataOrchestrator.instance.prefix === prefix) return;
+            await DataOrchestrator.unload();
+        }
         DataOrchestrator.instance = new DataOrchestrator(prefix, store, local, cloud);
         await DataOrchestrator.instance.load();
     }
@@ -43,13 +48,13 @@ export class DataOrchestrator {
     private prefix: string;
     private store: IStore;
     private local: IPersistence;
-    private cloud: IPersistence;
+    private cloud?: IPersistence;
     private intervals: Array<NodeJS.Timeout> = [];
     private sync: SyncScheduler;
     private observableManagers: Map<string, ObservableManager<EntityName, EntityType<EntityName>>>;
 
     // Private constructor to enforce singleton pattern
-    private constructor(prefix: string, store: IStore, local: IPersistence, cloud: IPersistence) {
+    private constructor(prefix: string, store: IStore, local: IPersistence, cloud?: IPersistence) {
         this.prefix = prefix;
         this.store = store;
         this.local = local;
@@ -62,7 +67,7 @@ export class DataOrchestrator {
     // =========================== Load/Unload ===========================
 
     private async load(): Promise<void> {
-        await this.sync.sync(this.cloud, this.local);
+        if (this.cloud) await this.sync.sync(this.local, this.cloud);
         await this.sync.sync(this.local, this.store);
         this.startIntervals();
     }
@@ -77,7 +82,7 @@ export class DataOrchestrator {
         // every 2 seconds
         this.intervals.push(setInterval(() => this.sync.triggerSync(this.store, this.local), 2 * 1000));
         // every 5 minutes
-        this.intervals.push(setInterval(() => this.sync.triggerSync(this.local, this.cloud), 5 * 60 * 1000));
+        this.intervals.push(setInterval(() => this.cloud && this.sync.triggerSync(this.local, this.cloud), 5 * 60 * 1000));
     }
 
     private stopIntervals(): void {
@@ -102,13 +107,18 @@ export class DataOrchestrator {
     public async save<N extends EntityName>(entityName: N, entity: EntityType<N>): Promise<void> {
         await this.ensureEntityId(entityName, entity);
         const entityKey = EntityKey.fromId(this.prefix, EntityId.from(entity.id || '')).toString();
+        entity.createdAt = entity.createdAt || new Date();
+        entity.updatedAt = new Date();
+        entity.version = (entity.version || 0) + 1;
         await this.store.save(entityKey, entityName, entity);
+        await this.updateStoreMetadata(entityName, entityKey);
         this.observableManagers.get(`${entityName}.${entityKey}`)?.notifyChange({ type: 'save', id: entity.id || '', entity });
     }
 
     public async delete<N extends EntityName>(entityName: N, id: string): Promise<void> {
         const entityKey = EntityKey.fromId(this.prefix, EntityId.from(id)).toString();
         await this.store.delete(entityKey, entityName, id);
+        await this.updateStoreMetadata(entityName, entityKey);
         this.observableManagers.get(`${entityName}.${entityKey}`)?.notifyChange({ type: 'delete', id, entity: {} as EntityType<N> });
     }
 
@@ -125,6 +135,7 @@ export class DataOrchestrator {
         await Promise.all(entityKeys.map(key => this.ensureObservableManager(entityName, key)));
         const observables = entityKeys
             .map(key => this.observableManagers.get(`${entityName}.${key}`)?.observeAll(options) as Observable<Array<EntityType<N>>>)
+        if (observables.length === 1) return observables[0];
         return combineLatest(observables).pipe(map((arrays) => arrays.flat()));
     }
 
@@ -165,5 +176,35 @@ export class DataOrchestrator {
                 break;
         }
         return entityKeys;
+    }
+
+    private async updateStoreMetadata(entityName: EntityName, entityKey: string): Promise<void> {
+        const metadataKeyData = await this.store.loadData(`${this.prefix}.metadata`);
+        if (!metadataKeyData || !metadataKeyData['Metadata']) return;
+        const metadata = Object.values(metadataKeyData['Metadata'])[0] as Metadata | undefined;
+        if (!metadata) return;
+
+        const entityKeyData = await this.store.loadData(entityKey);
+        if (!entityKeyData || !entityKeyData[entityName]) return;
+        entityKeyData[entityName] = sortKeys(entityKeyData[entityName]);
+
+        metadata.entityKeys = metadata.entityKeys || {};
+        metadata.entityKeys[entityKey] = metadata.entityKeys[entityKey] || {};
+        metadata.entityKeys[entityKey].entities = metadata.entityKeys[entityKey].entities || {};
+        metadata.entityKeys[entityKey].entities[entityName] = metadata.entityKeys[entityKey].entities[entityName] || { count: 0, deletedCount: 0 };
+
+        metadata.entityKeys[entityKey].updatedAt = new Date();
+        metadata.entityKeys[entityKey].hash = generateHash(JSON.stringify(entityKeyData[entityName]));
+
+        metadata.entityKeys[entityKey].entities[entityName].count = Object.keys(entityKeyData[entityName]).length;
+
+        if (entityKeyData.deleted) {
+            entityKeyData.deleted[entityName] = sortKeys(entityKeyData.deleted[entityName] || {});
+            metadata.entityKeys[entityKey].entities[entityName].deletedCount = Object.keys(entityKeyData.deleted[entityName]).length;
+        }
+
+        metadata.updatedAt = new Date();
+        await this.store.storeData(entityKey, entityKeyData);
+        await this.store.save(`${this.prefix}.metadata`, 'Metadata', metadata);
     }
 }

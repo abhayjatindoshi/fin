@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { parseJson } from "../common/json";
 import type { EntityKeyData } from "../store/interfaces/EntityKeyData";
 import type { IPersistence } from "../store/interfaces/IPersistence";
 
@@ -11,22 +12,11 @@ export class MyPersistence implements IPersistence {
         this.loadFromLocalStorage();
     }
 
-    private dateReviver(_key: string, value: any): any {
-        if (typeof value === "string") {
-            // Check for ISO date format
-            const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
-            if (isoDateRegex.test(value)) {
-                return new Date(value);
-            }
-        }
-        return value;
-    }
-
     private loadFromLocalStorage() {
         const raw = localStorage.getItem(this.name);
         if (raw) {
             try {
-                const obj = JSON.parse(raw, this.dateReviver);
+                const obj = parseJson(raw) as Record<string, EntityKeyData>;
                 this.store = new Map(Object.entries(obj));
             } catch {
                 this.store = new Map();
