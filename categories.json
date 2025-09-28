@@ -1,0 +1,1825 @@
+{
+    "INCOMING": [
+        {
+            "uuid": "46ab2657-0e00-40cf-af5d-5d65e4e58152",
+            "name": "Earnings",
+            "subtext": "Income from sources other than salary",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "fc660412-d298-4aa6-a34a-a07d41161764",
+                    "display_name": "Rent",
+                    "name": "earnings-home",
+                    "icon": "https://cdn.fold.money/icons/home.svg"
+                },
+                {
+                    "uuid": "599bdec3-5dde-4125-8ddc-d6d5867f4447",
+                    "display_name": "Freelance",
+                    "name": "earnings-laptop",
+                    "icon": "https://cdn.fold.money/icons/laptop.svg"
+                },
+                {
+                    "uuid": "f65f2f47-e00c-4057-8a28-13dbb98f507f",
+                    "display_name": "Various",
+                    "name": "cash-stack",
+                    "icon": "https://cdn.fold.money/icons/cash-stack.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "cbfad38c-afc8-49d3-b689-7171767df0d6",
+            "name": "Salary",
+            "subtext": "Monthly, regular income",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "7218735f-4480-47e3-8813-938d46fbd5d0",
+                    "display_name": "Salary",
+                    "name": "briefcase",
+                    "icon": "https://cdn.fold.money/icons/briefcase.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "7a2b36cc-d23b-4044-a1e1-49006df762c3",
+            "name": "Pocket Money",
+            "subtext": "Support from loved ones",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "13f29cfd-4f5d-4fc9-b3d2-354cad3c844a",
+                    "display_name": "Pocket Money",
+                    "name": "pocket-money",
+                    "icon": "https://cdn.fold.money/icons/pocket.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "247e3e5d-59bf-4bf8-82ff-c152569893ea",
+            "name": "Self Transfer",
+            "subtext": "Transfer between personal Bank accounts",
+            "type": [
+                "OUTGOING",
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "9117b5d5-7d2f-4139-b6e8-feb5f7a346e7",
+                    "display_name": "Self transfer",
+                    "name": "self-transfer",
+                    "icon": "https://cdn.fold.money/icons/self-transfer.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": true
+        },
+        {
+            "uuid": "3d3a06cc-92cb-4d88-b9c9-4ce53de25c17",
+            "name": "Gift",
+            "subtext": "Money received as gift, not to return",
+            "type": [
+                "OUTGOING",
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "49d28ed8-6ad2-41a6-8357-18f6aea2ea18",
+                    "display_name": "Gift",
+                    "name": "incoming-gift",
+                    "icon": "https://cdn.fold.money/icons/gift.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "8281a1f2-df95-4299-97cc-c93b1e0a65ee",
+            "name": "Borrowed",
+            "subtext": "Money borrowed, to be returned",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "9e693d8a-33e3-4838-acfa-624ee04e231b",
+                    "display_name": "Borrowed",
+                    "name": "round-rupee",
+                    "icon": "https://cdn.fold.money/icons/round-rupee.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "255b80bb-96c7-4254-be68-8b80dd1fc473",
+            "name": "Refund",
+            "subtext": "Refunds & Reimbursements",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "7852dd7c-6d26-4e11-ad1d-0c4e0fd2aa5a",
+                    "display_name": "Refund",
+                    "name": "half-return-left",
+                    "icon": "https://cdn.fold.money/icons/half-return-left.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "3cf94230-f5bf-4aa7-a3f0-bb0c4453413f",
+            "name": "Return",
+            "subtext": "Money you lent is returned",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "3f7a7e48-3255-4822-a4e9-38dc12e8d1c6",
+                    "display_name": "Return",
+                    "name": "return-wallet",
+                    "icon": "https://cdn.fold.money/icons/wallet.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "e893b723-228f-4732-8c54-929f967e9364",
+            "name": "Interest",
+            "subtext": "Interest earned on savings account",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "91735e51-68a6-4794-b07d-3ee2c9ec963d",
+                    "display_name": "Interest",
+                    "name": "sparkles-interest",
+                    "icon": "https://cdn.fold.money/icons/sparkles.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "46a9a71e-388e-418e-a13b-cc7d140f29b8",
+            "name": "Redemption",
+            "subtext": "Money redeemed from investments",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "60d8cc3b-6b5c-4357-b606-91d4e7f15b2b",
+                    "display_name": "Cash Deposit",
+                    "name": "cash-deposit-piggy-bank",
+                    "icon": "https://cdn.fold.money/icons/piggy-bank.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "f862dd14-ce61-4fe2-9592-fc5080bd3cc2",
+            "name": "Cash Deposit",
+            "subtext": "Cash deposited at a physical branch",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "c873130a-0527-4aa5-8823-f91e166630f7",
+                    "display_name": "Assets",
+                    "name": "piggy-bank",
+                    "icon": "https://cdn.fold.money/icons/piggy-bank.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "a4ec128f-b01f-4a86-98f2-156c8b2b6071",
+            "name": "Dividends",
+            "subtext": "Returns on stock investment",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "47ff3801-dcf6-4437-a2f4-1b00461a1a4a",
+                    "display_name": "Dividends",
+                    "name": "incoming-dividends",
+                    "icon": "https://cdn.fold.money/icons/round-divide.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "f22d1ec8-5cc7-4b4e-b0d3-4193e757f52d",
+            "name": "Cashback",
+            "subtext": "Rewards from GPay, PhonePe etc.",
+            "type": [
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "c728897d-da1d-4d8b-a3ae-4c88c8037080",
+                    "display_name": "Google Pay",
+                    "name": "google-cashback",
+                    "icon": "https://cdn.fold.money/icons/google.svg"
+                },
+                {
+                    "uuid": "ce3a6ac3-94ac-42fe-8b58-8b7f31f75502",
+                    "display_name": "Paytm",
+                    "name": "paytm-cashback",
+                    "icon": "https://cdn.fold.money/icons/paytm.svg"
+                },
+                {
+                    "uuid": "ae70de54-6ad7-4deb-92f5-1639282726be",
+                    "display_name": "PhonePe",
+                    "name": "phone-pe-cashback",
+                    "icon": "https://cdn.fold.money/icons/phone-pe.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "6176feae-21c5-4874-9d9a-908a257e0ede",
+            "name": "Misc.",
+            "subtext": "Everything else",
+            "type": [
+                "OUTGOING",
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "bfb75731-d8db-4b31-8deb-54eca1c0a6ef",
+                    "display_name": "Tip",
+                    "name": "misc-tip",
+                    "icon": "https://cdn.fold.money/icons/tip.svg"
+                },
+                {
+                    "uuid": "ab9ff3b4-108d-45af-bc71-ef17db2a8578",
+                    "display_name": "Verification",
+                    "name": "misc-penny-verification",
+                    "icon": "https://cdn.fold.money/icons/penny-verification.svg"
+                },
+                {
+                    "uuid": "bcc2f1e2-4da4-405e-9317-962648b3551f",
+                    "display_name": "Forex",
+                    "name": "misc-globe",
+                    "icon": "https://cdn.fold.money/icons/globe.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        }
+    ],
+    "OUTGOING": [
+        {
+            "uuid": "0b55293c-5b8d-48e4-91be-4312b87dd714",
+            "name": "Food & Drinks",
+            "subtext": "Eating out, Swiggy, Zomato etc.",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "192607e0-bbd7-487d-89bd-c61d49da820e",
+                    "display_name": "Eating out",
+                    "name": "knife-fork",
+                    "icon": "https://cdn.fold.money/icons/knife-fork.svg"
+                },
+                {
+                    "uuid": "909fb048-95cd-43c0-8d86-42541581b248",
+                    "display_name": "Take Away",
+                    "name": "food-drinks-take-away",
+                    "icon": "https://cdn.fold.money/icons/take-away.svg"
+                },
+                {
+                    "uuid": "881732be-a091-406a-abf5-0777ccb51d06",
+                    "display_name": "Tea & Coffee",
+                    "name": "tea-glass",
+                    "icon": "https://cdn.fold.money/icons/tea-glass.svg"
+                },
+                {
+                    "uuid": "d8ad10a6-a204-43da-adc7-f246cf84e9e5",
+                    "display_name": "Fast Food",
+                    "name": "burger",
+                    "icon": "https://cdn.fold.money/icons/burger.svg"
+                },
+                {
+                    "uuid": "70645a4d-fda0-4764-9d7c-82510eead840",
+                    "display_name": "Snacks",
+                    "name": "food-drinks-cookie",
+                    "icon": "https://cdn.fold.money/icons/cookie.svg"
+                },
+                {
+                    "uuid": "e491efd8-3e24-4b9b-bd80-87828cb5d188",
+                    "display_name": "Swiggy",
+                    "name": "swiggy",
+                    "icon": "https://cdn.fold.money/icons/swiggy.svg"
+                },
+                {
+                    "uuid": "c5056fde-18ee-46c8-97f9-a3b43452f8c3",
+                    "display_name": "Zomato",
+                    "name": "zomato",
+                    "icon": "https://cdn.fold.money/icons/zomato.svg"
+                },
+                {
+                    "uuid": "42e70727-ae45-49cc-b795-9736e312193d",
+                    "display_name": "Dessert",
+                    "name": "ice-cream",
+                    "icon": "https://cdn.fold.money/icons/ice-cream.svg"
+                },
+                {
+                    "uuid": "2ab1e5b4-862c-4bca-8435-94229f437bab",
+                    "display_name": "Liquor",
+                    "name": "beer",
+                    "icon": "https://cdn.fold.money/icons/beer.svg"
+                },
+                {
+                    "uuid": "a66c1ada-e47f-4c9d-998a-32213ec6ab62",
+                    "display_name": "Beverages",
+                    "name": "coconut-water",
+                    "icon": "https://cdn.fold.money/icons/beverages.svg"
+                },
+                {
+                    "uuid": "c149c528-b74e-4074-9eba-65bb8d187496",
+                    "display_name": "Date",
+                    "name": "restaurant",
+                    "icon": "https://cdn.fold.money/icons/restaurant.svg"
+                },
+                {
+                    "uuid": "2d43a622-8d12-4c91-b68f-cb7abfa1ad72",
+                    "display_name": "Pizza",
+                    "name": "pizza-slice",
+                    "icon": "https://cdn.fold.money/icons/pizza-slice.svg"
+                },
+                {
+                    "uuid": "e99b3ac2-bf09-4b09-ac30-b622dd7c8d29",
+                    "display_name": "Tiffin",
+                    "name": "tiffin",
+                    "icon": "https://cdn.fold.money/icons/tiffin-2.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "f181114a-e486-4860-acc5-d95822a9d73f",
+            "name": "Transport",
+            "subtext": "Uber, Ola and other modes of transport",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "26f0ad1f-d1ac-4f8b-9466-72feb7f1dfb8",
+                    "display_name": "Uber",
+                    "name": "uber",
+                    "icon": "https://cdn.fold.money/icons/uber.svg"
+                },
+                {
+                    "uuid": "d0457937-48de-44ac-b57c-33ee84ff1de7",
+                    "display_name": "Rapido",
+                    "name": "rapido",
+                    "icon": "https://cdn.fold.money/icons/rapido.svg"
+                },
+                {
+                    "uuid": "539fa5e3-6561-4121-89d9-6f7629100ddd",
+                    "display_name": "Auto",
+                    "name": "autorickshaw",
+                    "icon": "https://cdn.fold.money/icons/autorickshaw.svg"
+                },
+                {
+                    "uuid": "4052dd37-3501-4b63-a64b-37f94b4e5b7e",
+                    "display_name": "Cab",
+                    "name": "taxi",
+                    "icon": "https://cdn.fold.money/icons/taxi.svg"
+                },
+                {
+                    "uuid": "301a8505-bd6e-4179-9697-3813a1d6cfda",
+                    "display_name": "Train",
+                    "name": "train",
+                    "icon": "https://cdn.fold.money/icons/train.svg"
+                },
+                {
+                    "uuid": "df17206a-9239-43fa-a4de-2df588b8eba2",
+                    "display_name": "Metro",
+                    "name": "metro",
+                    "icon": "https://cdn.fold.money/icons/metro.svg"
+                },
+                {
+                    "uuid": "cc626960-1d49-4252-a23c-dbdfa330c73e",
+                    "display_name": "Bus",
+                    "name": "bus",
+                    "icon": "https://cdn.fold.money/icons/bus.svg"
+                },
+                {
+                    "uuid": "1e7bf399-501e-44bd-979d-cda05f120abd",
+                    "display_name": "Bike",
+                    "name": "bike-helmet",
+                    "icon": "https://cdn.fold.money/icons/bike-helmet.svg"
+                },
+                {
+                    "uuid": "35002b64-fd2f-44ca-bf0d-f9568f4051f5",
+                    "display_name": "Petrol",
+                    "name": "petrol",
+                    "icon": "https://cdn.fold.money/icons/petrol.svg"
+                },
+                {
+                    "uuid": "cdde9e9f-74f9-4f9c-ac95-e94c0ee0766f",
+                    "display_name": "Flights",
+                    "name": "airplane",
+                    "icon": "https://cdn.fold.money/icons/airplane.svg"
+                },
+                {
+                    "uuid": "40e09bc8-4a15-4176-938d-1464b5dd4c42",
+                    "display_name": "Parking",
+                    "name": "parking-sign",
+                    "icon": "https://cdn.fold.money/icons/parking-sign.svg"
+                },
+                {
+                    "uuid": "71f96ec4-462a-4605-97fa-1b9088660488",
+                    "display_name": "FASTag",
+                    "name": "transport-fastag",
+                    "icon": "https://cdn.fold.money/icons/fastag.svg"
+                },
+                {
+                    "uuid": "dcdf3755-1fc8-4b84-aab4-dfd27a662941",
+                    "display_name": "Tolls",
+                    "name": "toll-gate",
+                    "icon": "https://cdn.fold.money/icons/toll-gate.svg"
+                },
+                {
+                    "uuid": "6f587cdd-bf99-429f-b045-41c9a449704a",
+                    "display_name": "Lounge",
+                    "name": "transport-lounge",
+                    "icon": "https://cdn.fold.money/icons/lounge-chair.svg"
+                },
+                {
+                    "uuid": "29faeb90-6210-4d37-bff2-aed4f25fa3f0",
+                    "display_name": "Fine",
+                    "name": "transport-whistle",
+                    "icon": "https://cdn.fold.money/icons/whistle.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "6c41313d-82ed-4333-9329-ac75551e79c5",
+            "name": "Shopping",
+            "subtext": "Clothes, shoes, furniture etc.",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "6c01b109-8ae5-4eda-bdda-ccf95cf9c376",
+                    "display_name": "Clothes",
+                    "name": "t-shirt",
+                    "icon": "https://cdn.fold.money/icons/t-shirt.svg"
+                },
+                {
+                    "uuid": "58325158-461f-468f-bd53-7e443a298b59",
+                    "display_name": "Shoes",
+                    "name": "shoes",
+                    "icon": "https://cdn.fold.money/icons/shoes.svg"
+                },
+                {
+                    "uuid": "7171cd4a-55ac-42b2-acb1-bf848accc40a",
+                    "display_name": "Electronics",
+                    "name": "laptop",
+                    "icon": "https://cdn.fold.money/icons/laptop.svg"
+                },
+                {
+                    "uuid": "44a8ac63-f6cb-46e3-a0a4-f74492ed9c34",
+                    "display_name": "Video games",
+                    "name": "video-game",
+                    "icon": "https://cdn.fold.money/icons/video-game.svg"
+                },
+                {
+                    "uuid": "681c076d-585f-495a-892b-08658d971cf6",
+                    "display_name": "Books",
+                    "name": "book",
+                    "icon": "https://cdn.fold.money/icons/book.svg"
+                },
+                {
+                    "uuid": "eadc5284-9329-4b62-b29b-7a17f2871e17",
+                    "display_name": "Plants",
+                    "name": "plant-shopping",
+                    "icon": "https://cdn.fold.money/icons/plant.svg"
+                },
+                {
+                    "uuid": "d45cbcc9-2b05-45af-ba6d-9b83830c1aae",
+                    "display_name": "Jewellery",
+                    "name": "jewellery",
+                    "icon": "https://cdn.fold.money/icons/jewellery.svg"
+                },
+                {
+                    "uuid": "2fe2b813-af57-4189-bd6d-34a91dbe7978",
+                    "display_name": "Furniture",
+                    "name": "chair",
+                    "icon": "https://cdn.fold.money/icons/chair.svg"
+                },
+                {
+                    "uuid": "07209b75-2aea-440b-97d6-232bae42b31e",
+                    "display_name": "Appliances",
+                    "name": "shopping-appliance",
+                    "icon": "https://cdn.fold.money/icons/applicances.svg"
+                },
+                {
+                    "uuid": "024491a2-a87b-4ef3-8524-2fc53ad1d531",
+                    "display_name": "Vehicle",
+                    "name": "car-shopping",
+                    "icon": "https://cdn.fold.money/icons/car.svg"
+                },
+                {
+                    "uuid": "0a90821f-eb73-4b84-8dc7-a61254a7f44f",
+                    "display_name": "Cosmetics",
+                    "name": "cosmetics",
+                    "icon": "https://cdn.fold.money/icons/cosmetics.svg"
+                },
+                {
+                    "uuid": "2e290b50-6b4c-4a8d-baa3-8d2fdc09d973",
+                    "display_name": "Toys",
+                    "name": "toys",
+                    "icon": "https://cdn.fold.money/icons/toys.svg"
+                },
+                {
+                    "uuid": "ac8db053-6d53-45b7-9fa0-193bba1afe0d",
+                    "display_name": "Stationery",
+                    "name": "shopping-stationery",
+                    "icon": "https://cdn.fold.money/icons/stationery.svg"
+                },
+                {
+                    "uuid": "25481328-e1d0-47b0-8732-161d172a0073",
+                    "display_name": "Glasses",
+                    "name": "shopping-goggle",
+                    "icon": "https://cdn.fold.money/icons/goggles.svg"
+                },
+                {
+                    "uuid": "495ae07f-4c44-4b74-93b7-c1c73ee94260",
+                    "display_name": "Devotional",
+                    "name": "shopping-devotional",
+                    "icon": "https://cdn.fold.money/icons/devotional.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "08d63a76-6e11-4467-854e-5a081fd51097",
+            "name": "Groceries",
+            "subtext": "Kitchen and other household supplies",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "8a9221ea-4c2e-450c-bacb-6bd278de3a7e",
+                    "display_name": "Staples",
+                    "name": "groceries-staples",
+                    "icon": "https://cdn.fold.money/icons/staples.svg"
+                },
+                {
+                    "uuid": "e0cf35c0-2057-4ba8-adfd-d676b6975ff4",
+                    "display_name": "Vegetables",
+                    "name": "brocolli",
+                    "icon": "https://cdn.fold.money/icons/broccoli.svg"
+                },
+                {
+                    "uuid": "9989c34e-7a5c-4543-81f3-cad886613821",
+                    "display_name": "Fruits",
+                    "name": "banana",
+                    "icon": "https://cdn.fold.money/icons/banana.svg"
+                },
+                {
+                    "uuid": "7512d1f3-4270-4aba-afc0-8d681675c384",
+                    "display_name": "Meat",
+                    "name": "chicken",
+                    "icon": "https://cdn.fold.money/icons/meat.svg"
+                },
+                {
+                    "uuid": "b100de4c-ca8c-4943-8ee3-d91b128b5f66",
+                    "display_name": "Bakery",
+                    "name": "bread-loaf",
+                    "icon": "https://cdn.fold.money/icons/bread-loaf.svg"
+                },
+                {
+                    "uuid": "d27fa943-3cc2-4b98-8e56-5d0076f165cb",
+                    "display_name": "Dairy",
+                    "name": "groceries-cow",
+                    "icon": "https://cdn.fold.money/icons/cow.svg"
+                },
+                {
+                    "uuid": "6d468c9e-6646-4b74-836a-4180f210dfbd",
+                    "display_name": "Zepto",
+                    "name": "groceries-zepto",
+                    "icon": "https://cdn.fold.money/icons/zepto.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "6e7a92ec-2798-408e-b164-6283d63a1ca9",
+            "name": "Entertainment",
+            "subtext": "Movies, Concerts and other recreations",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "d49f5757-12b5-4c26-8bac-c73fdce7a555",
+                    "display_name": "Movies",
+                    "name": "movie-reel",
+                    "icon": "https://cdn.fold.money/icons/movie-reel.svg"
+                },
+                {
+                    "uuid": "e5d4b12e-db46-4e5e-b373-6a17502f1ac7",
+                    "display_name": "Shows",
+                    "name": "mic",
+                    "icon": "https://cdn.fold.money/icons/mic.svg"
+                },
+                {
+                    "uuid": "70a53631-4193-4da1-895c-2fcd25c176bf",
+                    "display_name": "Bowling",
+                    "name": "bowling",
+                    "icon": "https://cdn.fold.money/icons/bowling.svg"
+                },
+                {
+                    "uuid": "aed22ecc-8c76-4dbf-a266-0554af44674e",
+                    "display_name": "Others",
+                    "name": "tickets",
+                    "icon": "https://cdn.fold.money/icons/tickets.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "f26aa519-14ba-47dc-a07e-7a6ff7a8dc1f",
+            "name": "Events",
+            "subtext": "Being social while putting a dent in your bank account",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "908afd88-895d-4002-bead-65d37cf6b84f",
+                    "display_name": "Party",
+                    "name": "events-party",
+                    "icon": "https://cdn.fold.money/icons/party.svg"
+                },
+                {
+                    "uuid": "b12c2cd1-29b4-490b-953e-2f9ac1fd9dcc",
+                    "display_name": "Spiritual",
+                    "name": "events-spiritual",
+                    "icon": "https://cdn.fold.money/icons/devotional.svg"
+                },
+                {
+                    "uuid": "3318ce56-99a8-4d19-b1a1-55dda38a6b45",
+                    "display_name": "Wedding",
+                    "name": "events-wedding",
+                    "icon": "https://cdn.fold.money/icons/jewellery.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "ab7716b1-b940-4889-977d-ca86c74039fb",
+            "name": "Travel",
+            "subtext": "Exploration, fun and vacations!",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "9647d0be-ceb9-4b9e-bde6-5b38141f0fc0",
+                    "display_name": "Activities",
+                    "name": "rafting",
+                    "icon": "https://cdn.fold.money/icons/rafting.svg"
+                },
+                {
+                    "uuid": "baaca2a7-f421-4109-9cf4-540d5c231a46",
+                    "display_name": "Camping",
+                    "name": "tent",
+                    "icon": "https://cdn.fold.money/icons/tent.svg"
+                },
+                {
+                    "uuid": "1bf96d5a-22d3-4688-937e-b9b6314b96f3",
+                    "display_name": "Hotel",
+                    "name": "bed",
+                    "icon": "https://cdn.fold.money/icons/bed.svg"
+                },
+                {
+                    "uuid": "662b9058-6115-40a9-ad2d-491497f85e65",
+                    "display_name": "Hostel",
+                    "name": "backpack",
+                    "icon": "https://cdn.fold.money/icons/backpack.svg"
+                },
+                {
+                    "uuid": "4b5bf52c-d501-4b6c-9d4f-40529d0fa623",
+                    "display_name": "Airbnb",
+                    "name": "airbnb",
+                    "icon": "https://cdn.fold.money/icons/airbnb.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "2ca04e4b-45e8-4e06-8029-9b1eeb35fc44",
+            "name": "Medical",
+            "subtext": "Medicines, Doctor consulation etc.",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "cac5fe33-6310-4c56-b65a-0f3ce59e68ed",
+                    "display_name": "Medicines",
+                    "name": "meds",
+                    "icon": "https://cdn.fold.money/icons/meds.svg"
+                },
+                {
+                    "uuid": "c444e92d-ba44-4074-98fa-862a9dade6ec",
+                    "display_name": "Hospital",
+                    "name": "medical-plus-hospital",
+                    "icon": "https://cdn.fold.money/icons/medical-plus.svg"
+                },
+                {
+                    "uuid": "9a367707-7a68-4f5a-84b8-3c4a61c7f18e",
+                    "display_name": "Clinic",
+                    "name": "band-aid",
+                    "icon": "https://cdn.fold.money/icons/band-aid.svg"
+                },
+                {
+                    "uuid": "2c966c12-ed64-47d5-a155-86112721c50a",
+                    "display_name": "Dentist",
+                    "name": "tooth",
+                    "icon": "https://cdn.fold.money/icons/tooth.svg"
+                },
+                {
+                    "uuid": "ea50563c-5423-4a20-85a3-24411812e2fd",
+                    "display_name": "Lab test",
+                    "name": "syringe",
+                    "icon": "https://cdn.fold.money/icons/syringe.svg"
+                },
+                {
+                    "uuid": "115f3c2d-faf0-43c6-b38a-1d84a3f765d9",
+                    "display_name": "Hygiene",
+                    "name": "medical-sparkles",
+                    "icon": "https://cdn.fold.money/icons/sparkles.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "f2d5dcf1-0c54-4f8d-957a-ae9b63e458f1",
+            "name": "Personal",
+            "subtext": "Money spent on & for yourself",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "21f17284-2011-4e10-9d52-93b57c0fb7f7",
+                    "display_name": "Self-care",
+                    "name": "heart",
+                    "icon": "https://cdn.fold.money/icons/heart.svg"
+                },
+                {
+                    "uuid": "f6e13aed-be8d-4dc6-a6e2-d8920f745a30",
+                    "display_name": "Grooming",
+                    "name": "scissors",
+                    "icon": "https://cdn.fold.money/icons/scissors.svg"
+                },
+                {
+                    "uuid": "86f5724d-5e58-4874-89e1-ed342cb4eab8",
+                    "display_name": "Hobbies",
+                    "name": "personal-paint-palette",
+                    "icon": "https://cdn.fold.money/icons/paint-palette.svg"
+                },
+                {
+                    "uuid": "d17eb5f0-efe4-4810-9235-d2625921bf1d",
+                    "display_name": "Vices",
+                    "name": "cigarette",
+                    "icon": "https://cdn.fold.money/icons/cigarette.svg"
+                },
+                {
+                    "uuid": "f936af11-9e7f-4fd6-a664-6b0714f1b82e",
+                    "display_name": "Therapy",
+                    "name": "therapy",
+                    "icon": "https://cdn.fold.money/icons/therapy.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "07ef4989-6002-4fe2-98d8-c2a6429904e8",
+            "name": "Fitness",
+            "subtext": "Things to keep your biological machinery in tune",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "df003c2b-dc2e-4db5-9fd2-9732cda773eb",
+                    "display_name": "Gym",
+                    "name": "dumbbell",
+                    "icon": "https://cdn.fold.money/icons/dumbbell.svg"
+                },
+                {
+                    "uuid": "9802aa90-77d4-4290-a9be-9ed2d05f6a03",
+                    "display_name": "Badminton",
+                    "name": "fitness-shuttlecock",
+                    "icon": "https://cdn.fold.money/icons/shuttlecock.svg"
+                },
+                {
+                    "uuid": "6212d50e-b0ce-4a3c-a870-f5cb1c0fea36",
+                    "display_name": "Football",
+                    "name": "fitness-football",
+                    "icon": "https://cdn.fold.money/icons/football.svg"
+                },
+                {
+                    "uuid": "acaa0f99-7fcd-4dbe-a1ce-e03bb0acdec8",
+                    "display_name": "Cricket",
+                    "name": "fitness-cricket",
+                    "icon": "https://cdn.fold.money/icons/cricket.svg"
+                },
+                {
+                    "uuid": "07895639-e43a-425f-ae0c-8689cc3bf512",
+                    "display_name": "Classes",
+                    "name": "fitness-classes",
+                    "icon": "https://cdn.fold.money/icons/calendar-filled.svg"
+                },
+                {
+                    "uuid": "c9b415c8-fdba-4b53-b7be-d6a4ae5736b1",
+                    "display_name": "Equipment",
+                    "name": "fitness-sports-equipment",
+                    "icon": "https://cdn.fold.money/icons/sports-equipment.svg"
+                },
+                {
+                    "uuid": "2702b1d9-4fc1-4c3c-9865-754635559dad",
+                    "display_name": "Nutrition",
+                    "name": "fitness-sports-nutrition",
+                    "icon": "https://cdn.fold.money/icons/fitness-nutrition.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "ea8d1a84-e017-4d28-8f98-9e2b0f752936",
+            "name": "Services",
+            "subtext": "Professional tasks provided for a fee",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "ca53abff-47c7-436f-a38b-48570e121203",
+                    "display_name": "Laundry",
+                    "name": "services-cloth-hanger",
+                    "icon": "https://cdn.fold.money/icons/cloth-hanger.svg"
+                },
+                {
+                    "uuid": "826f7add-efeb-47d5-9b43-4da634707993",
+                    "display_name": "Courier",
+                    "name": "parcel",
+                    "icon": "https://cdn.fold.money/icons/parcel.svg"
+                },
+                {
+                    "uuid": "6a734a62-9a40-422e-bc09-b59123419f8a",
+                    "display_name": "Plumber",
+                    "name": "plumbing",
+                    "icon": "https://cdn.fold.money/icons/plumbing.svg"
+                },
+                {
+                    "uuid": "f798347b-b064-446a-aa38-06cd0190cf6c",
+                    "display_name": "Mechanic",
+                    "name": "mechanic",
+                    "icon": "https://cdn.fold.money/icons/mechanic.svg"
+                },
+                {
+                    "uuid": "07b5afae-aaee-4fed-907b-0c4daaf4f1eb",
+                    "display_name": "Photographer",
+                    "name": "service-camera",
+                    "icon": "https://cdn.fold.money/icons/camera.svg"
+                },
+                {
+                    "uuid": "3d459f2c-8ae9-4570-948c-e831a39fe1e3",
+                    "display_name": "Driver",
+                    "name": "services-steering-wheel",
+                    "icon": "https://cdn.fold.money/icons/steering-wheel.svg"
+                },
+                {
+                    "uuid": "08f98e26-c958-4633-9023-7094e650ba90",
+                    "display_name": "Vehicle Wash",
+                    "name": "services-clean-car",
+                    "icon": "https://cdn.fold.money/icons/clean-car.svg"
+                },
+                {
+                    "uuid": "03f82d3c-c671-4b14-8746-531b01675631",
+                    "display_name": "Electrician",
+                    "name": "services-zap",
+                    "icon": "https://cdn.fold.money/icons/zap.svg"
+                },
+                {
+                    "uuid": "82981498-290c-40ee-a7ba-2305f45e87bf",
+                    "display_name": "Painting",
+                    "name": "painting",
+                    "icon": "https://cdn.fold.money/icons/painting.svg"
+                },
+                {
+                    "uuid": "508b3e7d-7f62-4cd3-9f17-4aaef004fc41",
+                    "display_name": "Xerox",
+                    "name": "xerox",
+                    "icon": "https://cdn.fold.money/icons/xerox.svg"
+                },
+                {
+                    "uuid": "aa8068da-4c30-4f7d-a8c6-d8d07e2d1097",
+                    "display_name": "Legal",
+                    "name": "legal",
+                    "icon": "https://cdn.fold.money/icons/legal.svg"
+                },
+                {
+                    "uuid": "47342a03-4238-4791-8393-2945b33c5b1e",
+                    "display_name": "Advisor",
+                    "name": "services-advisor",
+                    "icon": "https://cdn.fold.money/icons/glasses.svg"
+                },
+                {
+                    "uuid": "5242029a-68bd-4388-a606-efc962b8fd9d",
+                    "display_name": "Repair",
+                    "name": "services-tools",
+                    "icon": "https://cdn.fold.money/icons/tools.svg"
+                },
+                {
+                    "uuid": "a795b6c2-8e29-46ec-8c9f-be0fd5994e53",
+                    "display_name": "Logistics",
+                    "name": "services-truck",
+                    "icon": "https://cdn.fold.money/icons/truck.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "e5f0f35e-716e-4557-a10f-fc6c18c253c4",
+            "name": "Bill",
+            "subtext": "Rent, Wi-fi, electricity and other bills",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "27144ce8-dbda-4633-bc2a-5c9faf13af3e",
+                    "display_name": "Phone",
+                    "name": "phone",
+                    "icon": "https://cdn.fold.money/icons/phone.svg"
+                },
+                {
+                    "uuid": "7a5947eb-e849-4b15-8e16-19df2f2f7758",
+                    "display_name": "Rent",
+                    "name": "home-bills",
+                    "icon": "https://cdn.fold.money/icons/home.svg"
+                },
+                {
+                    "uuid": "6c7cdedc-8a6b-4655-99aa-00a4fc33a8e6",
+                    "display_name": "Water",
+                    "name": "water-drop",
+                    "icon": "https://cdn.fold.money/icons/water-drop.svg"
+                },
+                {
+                    "uuid": "a0f13625-1148-42d3-8f0d-1b69f4f527f5",
+                    "display_name": "Electricity",
+                    "name": "zap",
+                    "icon": "https://cdn.fold.money/icons/zap.svg"
+                },
+                {
+                    "uuid": "40ddc143-9365-4ce8-8f1d-0118fbce7cec",
+                    "display_name": "Gas",
+                    "name": "lpg",
+                    "icon": "https://cdn.fold.money/icons/gas.svg"
+                },
+                {
+                    "uuid": "69ece3ec-bce8-41d7-a87a-90768cfc8720",
+                    "display_name": "Internet",
+                    "name": "wi-fi",
+                    "icon": "https://cdn.fold.money/icons/wi-fi.svg"
+                },
+                {
+                    "uuid": "287a3f0e-fb83-4bc8-b1eb-5b0fc7570dbd",
+                    "display_name": "House help",
+                    "name": "broom",
+                    "icon": "https://cdn.fold.money/icons/broom.svg"
+                },
+                {
+                    "uuid": "7d3c3f3b-4c68-4117-9237-d32088bf0c19",
+                    "display_name": "Education",
+                    "name": "college-hat-bills",
+                    "icon": "https://cdn.fold.money/icons/college-hat-v2.svg"
+                },
+                {
+                    "uuid": "c8311fdb-8f58-47ad-add2-04c26fde93b6",
+                    "display_name": "DTH",
+                    "name": "dth",
+                    "icon": "https://cdn.fold.money/icons/antenna-v2.svg"
+                },
+                {
+                    "uuid": "16cbd18c-af1e-4dc4-b046-f771c994f724",
+                    "display_name": "Cook",
+                    "name": "chef-hat",
+                    "icon": "https://cdn.fold.money/icons/chef-hat.svg"
+                },
+                {
+                    "uuid": "f8c86937-b9ed-477e-84d8-6cb079965d94",
+                    "display_name": "Maintenance",
+                    "name": "bill-maintenance",
+                    "icon": "https://cdn.fold.money/icons/society.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "a1ff63ba-1712-4753-a558-2a051c94e709",
+            "name": "Subscription",
+            "subtext": "Recurring payment to online services",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "3a368f75-77a9-4c9d-9d06-3d22865e9346",
+                    "display_name": "Software",
+                    "name": "subscription-compact-disc",
+                    "icon": "https://cdn.fold.money/icons/compact-disc.svg"
+                },
+                {
+                    "uuid": "c0e2b2af-522e-47c8-bc9d-14d730599a38",
+                    "display_name": "Netflix",
+                    "name": "netflix",
+                    "icon": "https://cdn.fold.money/icons/netflix.svg"
+                },
+                {
+                    "uuid": "e1504228-2c77-45ba-9455-9cec1885031f",
+                    "display_name": "Prime",
+                    "name": "amazon-subscription",
+                    "icon": "https://cdn.fold.money/icons/amazon.svg"
+                },
+                {
+                    "uuid": "3498b804-47a1-4588-9936-26ec29f0485e",
+                    "display_name": "YouTube",
+                    "name": "youtube",
+                    "icon": "https://cdn.fold.money/icons/youtube.svg"
+                },
+                {
+                    "uuid": "525875b0-fe4b-4d39-8325-148b14261c36",
+                    "display_name": "Spotify",
+                    "name": "spotify",
+                    "icon": "https://cdn.fold.money/icons/spotify.svg"
+                },
+                {
+                    "uuid": "1ac2bac3-6d2b-463e-9638-32f7e1865781",
+                    "display_name": "Google",
+                    "name": "google-subscriptions",
+                    "icon": "https://cdn.fold.money/icons/google.svg"
+                },
+                {
+                    "uuid": "df2ad4cb-ef51-425d-b122-d94d4aa4bd95",
+                    "display_name": "Learning",
+                    "name": "college-hat-subscriptions",
+                    "icon": "https://cdn.fold.money/icons/college-hat-v2.svg"
+                },
+                {
+                    "uuid": "1d6683a2-0a2b-4105-93f1-142b61fc0805",
+                    "display_name": "Apple",
+                    "name": "apple",
+                    "icon": "https://cdn.fold.money/icons/apple.svg"
+                },
+                {
+                    "uuid": "5255e6f9-9fd6-42c0-94f3-63f76c06d7ef",
+                    "display_name": "Bumble",
+                    "name": "bumble",
+                    "icon": "https://cdn.fold.money/icons/bumble.svg"
+                },
+                {
+                    "uuid": "6ce9dbb0-aced-4146-b88a-b9e0101ccfa3",
+                    "display_name": "News",
+                    "name": "subscription-newspaper",
+                    "icon": "https://cdn.fold.money/icons/newspaper.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "2f20c891-b2d4-4a1b-b3aa-d02c0deffb02",
+            "name": "EMI",
+            "subtext": "Repayment of Loan",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "62bc295e-49a3-4dde-8331-a10b4967d998",
+                    "display_name": "Electronics",
+                    "name": "socket-emi",
+                    "icon": "https://cdn.fold.money/icons/socket.svg"
+                },
+                {
+                    "uuid": "339d25e4-1d5d-4b3f-93ed-1d586b92b166",
+                    "display_name": "House",
+                    "name": "home-emi",
+                    "icon": "https://cdn.fold.money/icons/home.svg"
+                },
+                {
+                    "uuid": "1ea7917d-7b27-4511-a703-82fa4e8f57fa",
+                    "display_name": "Vehicle",
+                    "name": "car-emi",
+                    "icon": "https://cdn.fold.money/icons/car.svg"
+                },
+                {
+                    "uuid": "1682a959-c745-48a0-a28f-f441062f28d5",
+                    "display_name": "Education",
+                    "name": "college-hat-emi",
+                    "icon": "https://cdn.fold.money/icons/college-hat-v2.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "80b59092-aa0b-4b55-b136-4e7c8c68a31f",
+            "name": "Credit Bill",
+            "subtext": "Credit Card & BNPL services settlement",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "baccc733-0636-4b0a-8f0c-f94e6899da28",
+                    "display_name": "Credit card",
+                    "name": "card-credit-bills",
+                    "icon": "https://cdn.fold.money/icons/card.svg"
+                },
+                {
+                    "uuid": "e6af32a1-d7dd-4246-93f0-2eb93c99b522",
+                    "display_name": "Simpl",
+                    "name": "simpl",
+                    "icon": "https://cdn.fold.money/icons/simpl.svg"
+                },
+                {
+                    "uuid": "9c1d0db2-48bb-4551-858f-6567c5c92fa3",
+                    "display_name": "Slice",
+                    "name": "company-slice",
+                    "icon": "https://cdn.fold.money/icons/company-slice.svg"
+                },
+                {
+                    "uuid": "2b34d326-8ee1-45e7-991e-96f2478dfcb5",
+                    "display_name": "Lazypay",
+                    "name": "company-lazypay",
+                    "icon": "https://cdn.fold.money/icons/company-lazypay.svg"
+                },
+                {
+                    "uuid": "ad560af1-56b1-4ad9-b574-c0aae92ee465",
+                    "display_name": "Amazon Pay",
+                    "name": "amazon-credit-bills",
+                    "icon": "https://cdn.fold.money/icons/amazon.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "54b06ae4-b19e-402e-9940-af8b2fec6a3d",
+            "name": "Investment",
+            "subtext": "Money put towards investment",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "0f292cf6-3939-474d-95a5-61927020c55b",
+                    "display_name": "Mutual Funds",
+                    "name": "plant-investment",
+                    "icon": "https://cdn.fold.money/icons/plant.svg"
+                },
+                {
+                    "uuid": "9c3f4893-c40f-4c10-8902-139f66e87d7c",
+                    "display_name": "Stocks",
+                    "name": "stocks",
+                    "icon": "https://cdn.fold.money/icons/stocks.svg"
+                },
+                {
+                    "uuid": "b4ee2b03-ead6-4b4f-85ac-a1413eb4e216",
+                    "display_name": "PPF",
+                    "name": "investment-ppf",
+                    "icon": "https://cdn.fold.money/icons/ppf.svg"
+                },
+                {
+                    "uuid": "9d3f765c-3144-48d6-8c9a-495673e904b6",
+                    "display_name": "NPS",
+                    "name": "investment-nps",
+                    "icon": "https://cdn.fold.money/icons/nps.svg"
+                },
+                {
+                    "uuid": "f97f1ad6-b332-458f-9e2a-53eafab0c0f8",
+                    "display_name": "Fixed Deposit",
+                    "name": "locker",
+                    "icon": "https://cdn.fold.money/icons/locker.svg"
+                },
+                {
+                    "uuid": "aaadb7f0-e431-421b-b508-d2da15ead072",
+                    "display_name": "Recurring Deposit",
+                    "name": "recurring-deposit",
+                    "icon": "https://cdn.fold.money/icons/recurring-deposit.svg"
+                },
+                {
+                    "uuid": "c873130a-0527-4aa5-8823-f91e166630f7",
+                    "display_name": "Assets",
+                    "name": "piggy-bank",
+                    "icon": "https://cdn.fold.money/icons/piggy-bank.svg"
+                },
+                {
+                    "uuid": "acb5f78c-d523-4613-9eb1-72764414fc90",
+                    "display_name": "Crypto",
+                    "name": "bitcoin",
+                    "icon": "https://cdn.fold.money/icons/bitcoin.svg"
+                },
+                {
+                    "uuid": "85496044-6d08-4ecd-9872-40ffca43be6e",
+                    "display_name": "Gold",
+                    "name": "investment-gold",
+                    "icon": "https://cdn.fold.money/icons/gold-bars.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "f48dec4d-6f58-44ae-b6df-c34dfc1d6c83",
+            "name": "Support",
+            "subtext": "Financial support for loved ones",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "3555e7d6-2937-4c20-975e-7391ebf0e806",
+                    "display_name": "Parents",
+                    "name": "aid-walking-stick",
+                    "icon": "https://cdn.fold.money/icons/walking-stick.svg"
+                },
+                {
+                    "uuid": "e13a9156-a39c-448c-ada4-6839dec1cf55",
+                    "display_name": "Spouse",
+                    "name": "support-heart-jigsaw",
+                    "icon": "https://cdn.fold.money/icons/heart-jigsaw.svg"
+                },
+                {
+                    "uuid": "5c0609bb-a191-4c68-9da4-d9314e39a52f",
+                    "display_name": "Mom",
+                    "name": "aid-mother",
+                    "icon": "https://cdn.fold.money/icons/mother.svg"
+                },
+                {
+                    "uuid": "6e8ebd70-aa18-4c9f-aebb-982ce14562ae",
+                    "display_name": "Dad",
+                    "name": "aid-father",
+                    "icon": "https://cdn.fold.money/icons/father.svg"
+                },
+                {
+                    "uuid": "bf52633a-0879-490b-9b89-ade428437b18",
+                    "display_name": "Pocket Money",
+                    "name": "aid-pocket",
+                    "icon": "https://cdn.fold.money/icons/pocket.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "603f5dba-295d-4f2a-bf8b-9783f9c92364",
+            "name": "Insurance",
+            "subtext": "Payment towards insurance premiums",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "64e2c7e4-433a-43a2-9f3a-86f4ad2baee5",
+                    "display_name": "Health",
+                    "name": "medical-plus-insurance",
+                    "icon": "https://cdn.fold.money/icons/medical-plus.svg"
+                },
+                {
+                    "uuid": "caf54e68-c48b-4ec4-8d40-99d65788651d",
+                    "display_name": "Vehicle",
+                    "name": "car-insurance",
+                    "icon": "https://cdn.fold.money/icons/car.svg"
+                },
+                {
+                    "uuid": "55d8f9d8-8f2f-4750-83ad-f9a7e24203bb",
+                    "display_name": "Life",
+                    "name": "shield",
+                    "icon": "https://cdn.fold.money/icons/shield.svg"
+                },
+                {
+                    "uuid": "227fa06a-9824-40b0-838a-d8d70a1bfa1b",
+                    "display_name": "Electronics",
+                    "name": "socket-insurance",
+                    "icon": "https://cdn.fold.money/icons/socket.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "0c24ffa3-c870-4e49-974f-960e7d0da3ac",
+            "name": "Tax",
+            "subtext": "Income tax, property tax, e.t.c",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "bd9e1210-41ef-4590-9d51-6a76704eca92",
+                    "display_name": "Income Tax",
+                    "name": "tax-face-sad",
+                    "icon": "https://cdn.fold.money/icons/face-sad.svg"
+                },
+                {
+                    "uuid": "f6d452f6-92f5-4511-9713-b947f6f188d2",
+                    "display_name": "GST",
+                    "name": "tax-face-tear",
+                    "icon": "https://cdn.fold.money/icons/face-tear.svg"
+                },
+                {
+                    "uuid": "496d6ada-6742-44cc-80a8-be15a6759287",
+                    "display_name": "Property Tax",
+                    "name": "tax-key",
+                    "icon": "https://cdn.fold.money/icons/key.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "a9c18a13-2b0a-4006-847a-83e16045870c",
+            "name": "Top-up",
+            "subtext": "Money added to online wallets",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "9233b0d2-3251-4487-b67e-597282f0003e",
+                    "display_name": "UPI Lite",
+                    "name": "upi-lite",
+                    "icon": "https://cdn.fold.money/icons/upi.svg"
+                },
+                {
+                    "uuid": "3d2e3366-cd08-4b77-b1c5-eb73cb48a475",
+                    "display_name": "Paytm",
+                    "name": "paytm-topup",
+                    "icon": "https://cdn.fold.money/icons/paytm.svg"
+                },
+                {
+                    "uuid": "811f2a2e-95a9-4086-b6c6-1d9ecff89a26",
+                    "display_name": "Amazon",
+                    "name": "amazon-topup",
+                    "icon": "https://cdn.fold.money/icons/amazon.svg"
+                },
+                {
+                    "uuid": "b243d6e0-957a-4291-9d93-209f06bc8c15",
+                    "display_name": "PhonePe",
+                    "name": "phone-pe-topup",
+                    "icon": "https://cdn.fold.money/icons/phone-pe.svg"
+                },
+                {
+                    "uuid": "be5553bd-0837-4b8c-8e8b-46dc2a810908",
+                    "display_name": "Others",
+                    "name": "wallet",
+                    "icon": "https://cdn.fold.money/icons/wallet.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "0107b13d-a6f3-4eea-8ca7-7532e84c0eca",
+            "name": "Pet Care",
+            "subtext": "Money spent taking care of your snugglebug",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "afd80790-08fd-4850-ab82-2edcfbeaf3cb",
+                    "display_name": "Food",
+                    "name": "pet-food",
+                    "icon": "https://cdn.fold.money/icons/pet-food.svg"
+                },
+                {
+                    "uuid": "041468ca-fdb7-4652-b59f-344841531367",
+                    "display_name": "Toys",
+                    "name": "toys-pet-food",
+                    "icon": "https://cdn.fold.money/icons/toys.svg"
+                },
+                {
+                    "uuid": "ce3fff43-0c3b-41cc-98b3-c6964ed57f72",
+                    "display_name": "Grooming",
+                    "name": "comb",
+                    "icon": "https://cdn.fold.money/icons/comb.svg"
+                },
+                {
+                    "uuid": "d36d6a9b-b403-4f3d-bd96-0f804c10671a",
+                    "display_name": "Vet",
+                    "name": "syringe-pet-care",
+                    "icon": "https://cdn.fold.money/icons/syringe.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "6176feae-21c5-4874-9d9a-908a257e0ede",
+            "name": "Misc.",
+            "subtext": "Everything else",
+            "type": [
+                "OUTGOING",
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "bfb75731-d8db-4b31-8deb-54eca1c0a6ef",
+                    "display_name": "Tip",
+                    "name": "misc-tip",
+                    "icon": "https://cdn.fold.money/icons/tip.svg"
+                },
+                {
+                    "uuid": "ab9ff3b4-108d-45af-bc71-ef17db2a8578",
+                    "display_name": "Verification",
+                    "name": "misc-penny-verification",
+                    "icon": "https://cdn.fold.money/icons/penny-verification.svg"
+                },
+                {
+                    "uuid": "bcc2f1e2-4da4-405e-9317-962648b3551f",
+                    "display_name": "Forex",
+                    "name": "misc-globe",
+                    "icon": "https://cdn.fold.money/icons/globe.svg"
+                },
+                {
+                    "uuid": "bea53bb3-22fc-4187-83d7-c635877c1866",
+                    "display_name": "Others",
+                    "name": "others-dashed-circle",
+                    "icon": "https://cdn.fold.money/icons/others-dashed-circle.svg",
+                    "no_icon": true
+                }
+            ],
+            "single_icon": false,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "247e3e5d-59bf-4bf8-82ff-c152569893ea",
+            "name": "Self Transfer",
+            "subtext": "Transfer between personal Bank accounts",
+            "type": [
+                "OUTGOING",
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "9117b5d5-7d2f-4139-b6e8-feb5f7a346e7",
+                    "display_name": "Self transfer",
+                    "name": "self-transfer",
+                    "icon": "https://cdn.fold.money/icons/self-transfer.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": true
+        },
+        {
+            "uuid": "5a9e6ca6-1245-4b47-b0b2-6f778b98742c",
+            "name": "Savings",
+            "subtext": "For goals and dreams",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "785f6d1c-5f09-4a9e-bd5d-5c13134846e6",
+                    "display_name": "Savings",
+                    "name": "savings-gullak",
+                    "icon": "https://cdn.fold.money/icons/gullak.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "3d3a06cc-92cb-4d88-b9c9-4ce53de25c17",
+            "name": "Gift",
+            "subtext": "Money received as gift, not to return",
+            "type": [
+                "OUTGOING",
+                "INCOMING"
+            ],
+            "icons": [
+                {
+                    "uuid": "49d28ed8-6ad2-41a6-8357-18f6aea2ea18",
+                    "display_name": "Gift",
+                    "name": "incoming-gift",
+                    "icon": "https://cdn.fold.money/icons/gift.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "a4303fd3-a231-44fe-aae3-47561855689e",
+            "name": "Lent",
+            "subtext": "Money lent with expectation of return",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "ea9a2ac4-ed9c-4d60-beb1-71d2a8a3ddac",
+                    "display_name": "Lent",
+                    "name": "lend",
+                    "icon": "https://cdn.fold.money/icons/lend.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "478baaf7-fe5d-4f96-ba96-f5e570782886",
+            "name": "Donation",
+            "subtext": "Contributions to charities and NGOs",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "c638c82e-b9b7-46d4-b5bf-386d729801cc",
+                    "display_name": "Donation",
+                    "name": "donation",
+                    "icon": "https://cdn.fold.money/icons/donation.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "eeec0a99-9940-4361-92f6-12852fc8a051",
+            "name": "Hidden Charges",
+            "subtext": "Banks’ hidden subscription charges",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "7cb69d65-c873-4d1e-b366-fc31b347c5ac",
+                    "display_name": "Hidden Charges",
+                    "name": "hidden-charge-sparkles",
+                    "icon": "https://cdn.fold.money/icons/eye-mask.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        },
+        {
+            "uuid": "7505b993-d7fc-4461-9dc9-85c027a367ae",
+            "name": "Cash Withdrawal",
+            "subtext": "Cash taken out from ATM or Bank",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "7f8fb823-61ff-44b9-b5a0-4226b3ef2e10",
+                    "display_name": "Other sources",
+                    "name": "cash-stack-cash-withdrawal",
+                    "icon": "https://cdn.fold.money/icons/cash-stack.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": true
+        },
+        {
+            "uuid": "b3f7d021-7853-4ebd-836c-769f3f5539f0",
+            "name": "Return",
+            "subtext": "Borrowed money is returned",
+            "type": [
+                "OUTGOING"
+            ],
+            "icons": [
+                {
+                    "uuid": "d8bfe969-f8d5-4ded-89f9-a4b9557c5d34",
+                    "display_name": "Return",
+                    "name": "half-return-right",
+                    "icon": "https://cdn.fold.money/icons/half-return-right.svg"
+                }
+            ],
+            "single_icon": true,
+            "exclude_from_spending_summary": false
+        }
+    ]
+}
