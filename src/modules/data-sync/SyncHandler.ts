@@ -1,8 +1,13 @@
-import { generateHash, sortKeys } from "../common/json";
-import type { EntityMetadata, Metadata } from "./entities/Metadata";
-import type { Entity, EntityName } from "./interfaces/Entity";
-import type { EntityKeyData } from "./interfaces/EntityKeyData";
+import { Utils } from "../common/Utils";
+import type { Entity } from "./interfaces/Entity";
+import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
+import type { EntityKeyData, EntityName } from "./interfaces/types";
+import type { EntityMetadata, Metadata } from "./Metadata";
+import type { MetadataManager } from "./MetadataManager";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyEntityName = EntityName<any>;
 
 type TypedEntityKeyData = {
     [entityName: string]: {
@@ -16,12 +21,13 @@ type TypedEntity = { type: "active", data: Entity } | { type: "deleted", deleted
 type DifferenceBucket = Record<string, DifferenceOps>;
 type DifferenceOps = Record<string, DifferenceOp> | 'copy';
 type DifferenceOp =
-    | { type: 'save', entityName: EntityName, data: Entity }
-    | { type: 'delete', entityName: EntityName, deletedAt: Date }
+    | { type: 'save', entityName: AnyEntityName, data: Entity }
+    | { type: 'delete', entityName: AnyEntityName, deletedAt: Date }
 
 export class SyncHandler {
 
-    private prefix: string;
+    private logger: ILogger;
+    private metadataManager: MetadataManager;
     private persistenceA: IPersistence;
     private persistenceB: IPersistence;
     private metadataA: Metadata | undefined;
@@ -31,18 +37,20 @@ export class SyncHandler {
     private bucketA: DifferenceBucket = {};
     private bucketB: DifferenceBucket = {};
 
-    static sync = (prefix: string, persistenceA: IPersistence, persistenceB: IPersistence): Promise<void> => new SyncHandler(prefix, persistenceA, persistenceB).sync();
+    static sync = (logger: ILogger, metadataManager: MetadataManager, persistenceA: IPersistence, persistenceB: IPersistence): Promise<void> =>
+        new SyncHandler(logger, metadataManager, persistenceA, persistenceB).sync();
 
-    private constructor(prefix: string, persistenceA: IPersistence, persistenceB: IPersistence) {
-        this.prefix = prefix;
+    private constructor(logger: ILogger, metadataManager: MetadataManager, persistenceA: IPersistence, persistenceB: IPersistence) {
+        this.logger = logger;
+        this.metadataManager = metadataManager;
         this.persistenceA = persistenceA;
         this.persistenceB = persistenceB;
     }
 
     private async loadMetadata(): Promise<void> {
         const [metaA, metaB] = await Promise.all([
-            SyncHandler.getMetadata(this.prefix, this.persistenceA),
-            SyncHandler.getMetadata(this.prefix, this.persistenceB),
+            this.metadataManager.getMetadata(this.persistenceA),
+            this.metadataManager.getMetadata(this.persistenceB),
         ]);
         this.metadataA = metaA;
         this.metadataB = metaB;
@@ -56,6 +64,7 @@ export class SyncHandler {
 
         // Step 1: Load and compare metadata.updatedAt
         await this.loadMetadata();
+        this.logger.v(this.constructor.name, 'Metadata loaded');
 
         // return if metadata not loaded or updateAt are the same.
         if (!this.metadataA || !this.metadataB) return;
@@ -64,37 +73,66 @@ export class SyncHandler {
         // Step 2: partition entityKey to lists of missing items and hash mismatch
         const [entityKeysOnlyInA, entityKeysOnlyInB, entityKeysWithHashMismatch] = SyncHandler.partitionDifferences(
             this.metadataA.entityKeys,
+            // only keys that are loaded on A, B could have more keys that A doesn't know about.
             this.filterKeys(this.metadataB.entityKeys, this.metadataA ? Object.keys(this.metadataA.entityKeys) : []),
             (entityKeyA, entityKeyB) => entityKeyA.hash !== entityKeyB.hash
         );
+
+        this.logger.v(this.constructor.name, 'EntityKey differences computed', {
+            onlyA: Object.keys(entityKeysOnlyInA).length,
+            onlyB: Object.keys(entityKeysOnlyInB).length,
+            hashMismatch: Object.keys(entityKeysWithHashMismatch).length
+        });
 
         await Promise.all([
             this.loadEntityKeyData('A', [...Object.keys(entityKeysOnlyInA), ...Object.keys(entityKeysWithHashMismatch)]),
             this.loadEntityKeyData('B', [...Object.keys(entityKeysWithHashMismatch)]),
         ]);
 
+        this.logger.v(this.constructor.name, 'EntityKeyData loaded', {
+            A: Object.keys(this.EntityKeyDataMapA),
+            B: Object.keys(this.EntityKeyDataMapB)
+        });
+
         Object.keys(entityKeysOnlyInA).forEach(entityKey => this.bucketB[entityKey] = 'copy');
         Object.keys(entityKeysOnlyInB).forEach(entityKey => this.bucketA[entityKey] = 'copy');
 
         this.findDifferenceBuckets(Object.keys(entityKeysWithHashMismatch));
+        this.logger.v(this.constructor.name, 'Difference buckets computed', {
+            A: this.bucketA,
+            B: this.bucketB
+        });
+
+        this.logger.v(this.constructor.name, 'Applying bucket B');
         await this.applyBucket('B');
 
-        const newMetadataA = await SyncHandler.getMetadata(this.prefix, this.persistenceA);
+        const newMetadataA = await this.metadataManager.getMetadata(this.persistenceA);
         if (this.metadataA.updatedAt.getTime() === newMetadataA.updatedAt.getTime()) {
+            this.logger.v(this.constructor.name, 'Applying bucket A');
             await this.applyBucket('A');
+        } else {
+            this.logger.v(this.constructor.name, 'Metadata A changed during sync, skipping bucket A application');
         }
 
     }
 
     private async applyBucket(inPersistence: 'A' | 'B'): Promise<void> {
         const bucket = inPersistence === 'A' ? this.bucketA : this.bucketB;
+        const opCount = Object.values(bucket).reduce((sum, ops) => sum + (ops === 'copy' ? 1 : Object.keys(ops).length), 0);
+
+        if (opCount === 0) {
+            this.logger.v(this.constructor.name, `No ops to apply to persistence ${inPersistence}`);
+            return;
+        }
+
+        this.logger.i(this.constructor.name, `Applying ${opCount} ops to persistence ${inPersistence}`);
         await Promise.all(Object.entries(bucket).map(([entityKey, ops]) => this.applyOps(inPersistence, entityKey, ops)));
 
         const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
         const targetMetadata = inPersistence === 'A' ? this.metadataA : this.metadataB;
         if (!targetMetadata) throw new Error('Metadata not loaded');
         targetMetadata.updatedAt = new Date();
-        await SyncHandler.storeMetadata(this.prefix, target, targetMetadata);
+        await this.metadataManager.saveMetadata(target, targetMetadata);
     }
 
     private async applyOps(inPersistence: 'A' | 'B', entityKey: string, ops: DifferenceOps): Promise<void> {
@@ -146,20 +184,19 @@ export class SyncHandler {
     private updateEntityKeyMetadata(entityKey: string, entityKeyData: EntityKeyData, metadata: Metadata) {
         const updatedAt = new Date();
         const entities: Record<string, EntityMetadata> = {};
-        Object.keys(entityKeyData).forEach(k => {
-            if (k === 'deleted') {
-                entityKeyData[k] = sortKeys(entityKeyData[k]!);
+        Object.keys(entityKeyData).forEach(entityName => {
+            if (entityName === 'deleted') {
+                entityKeyData[entityName] = Utils.sortKeys(entityKeyData[entityName]!);
                 return;
             } else {
-                const entityName = k as EntityName;
-                entityKeyData[entityName] = sortKeys(entityKeyData[entityName]!);
+                entityKeyData[entityName] = Utils.sortKeys(entityKeyData[entityName]!);
                 entities[entityName] = {
                     count: Object.keys(entityKeyData[entityName] || {}).length,
                     deletedCount: entityKeyData.deleted && entityKeyData.deleted[entityName] ? Object.keys(entityKeyData.deleted[entityName]!).length : 0
                 }
             }
         });
-        const hash = generateHash(JSON.stringify(entityKeyData));
+        const hash = Utils.generateHash(Utils.stringifyJson(entityKeyData));
         metadata.entityKeys[entityKey] = { hash, updatedAt, entities };
     }
 
@@ -171,19 +208,19 @@ export class SyncHandler {
 
     private addEntityNamesToBucket(missingEntityNames: TypedEntityKeyData, bucket: DifferenceBucket, entityKey: string) {
         Object.entries(missingEntityNames).forEach(([entityName, entities]) => (
-            this.addEntitiesToBucket(entities, bucket, entityKey, entityName as EntityName)
+            this.addEntitiesToBucket(entities, bucket, entityKey, entityName)
         ));
     }
 
-    private addEntitiesToBucket(missingEntities: Record<string, TypedEntity>, bucket: DifferenceBucket, entityKey: string, entityName: EntityName) {
+    private addEntitiesToBucket(missingEntities: Record<string, TypedEntity>, bucket: DifferenceBucket, entityKey: string, entityName: AnyEntityName) {
         Object.entries(missingEntities).forEach(([id, typedEntity]) => {
             this.addDifferenceOp(bucket, entityKey, id, typedEntity.type === 'active'
-                ? { type: 'save', entityName: entityName as EntityName, data: typedEntity.data }
-                : { type: 'delete', entityName: entityName as EntityName, deletedAt: typedEntity.deletedAt });
+                ? { type: 'save', entityName: entityName, data: typedEntity.data }
+                : { type: 'delete', entityName: entityName, deletedAt: typedEntity.deletedAt });
         })
     }
 
-    private resolveEntity(id: string, entityKey: string, entityName: EntityName, a: TypedEntity, b: TypedEntity) {
+    private resolveEntity(id: string, entityKey: string, entityName: AnyEntityName, a: TypedEntity, b: TypedEntity) {
         // Extract timestamps
         let timeA = a.type === 'active' ? a.data.updatedAt?.getTime() : a.deletedAt?.getTime();
         let timeB = b.type === 'active' ? b.data.updatedAt?.getTime() : b.deletedAt?.getTime();
@@ -228,8 +265,7 @@ export class SyncHandler {
             this.addEntityNamesToBucket(entityNamesOnlyInA, this.bucketB, entityKey);
             this.addEntityNamesToBucket(entityNamesOnlyInB, this.bucketA, entityKey);
 
-            for (const [name, [entitiesA, entitiesB]] of Object.entries(entityNamesInBoth)) {
-                const entityName = name as EntityName;
+            for (const [entityName, [entitiesA, entitiesB]] of Object.entries(entityNamesInBoth)) {
                 const [
                     entitiesOnlyInA,
                     entitiesOnlyInB,
@@ -250,9 +286,8 @@ export class SyncHandler {
 
     private convertToTypedData(data: EntityKeyData): TypedEntityKeyData {
         const typedData: TypedEntityKeyData = {};
-        for (const name of Object.keys(data)) {
-            if (name === 'deleted') continue;
-            const entityName = name as EntityName;
+        for (const entityName of Object.keys(data)) {
+            if (entityName === 'deleted') continue;
             typedData[entityName] = {};
             const entities = data[entityName] || {};
             for (const id of Object.keys(entities)) {
@@ -260,7 +295,7 @@ export class SyncHandler {
             }
         }
         if (data.deleted) {
-            for (const entityName of Object.keys(data.deleted) as EntityName[]) {
+            for (const entityName of Object.keys(data.deleted) as AnyEntityName[]) {
                 if (!typedData[entityName]) typedData[entityName] = {};
                 const entities = data.deleted[entityName] || {};
                 for (const id of Object.keys(entities)) {
@@ -332,28 +367,5 @@ export class SyncHandler {
         }
 
         return [onlyLeft, onlyRight, ...filterResults];
-    }
-
-    private static async getMetadata(prefix: string, persistence: IPersistence): Promise<Metadata> {
-        const metadataKey = `${prefix}.metadata`;
-        const data = await persistence.loadData(metadataKey);
-        if (data && data.Metadata) return Object.values(data.Metadata)[0] as Metadata;
-
-        const defaultMetadata: Metadata = {
-            updatedAt: new Date(0),
-            entityKeys: {}
-        }
-        await SyncHandler.storeMetadata(prefix, persistence, defaultMetadata);
-        return defaultMetadata;
-    }
-
-    private static async storeMetadata(prefix: string, persistence: IPersistence, metadata: Metadata): Promise<void> {
-        const metadataKey = `${prefix}.metadata`;
-        metadata.id = 'id';
-        metadata.entityKeys = sortKeys(metadata.entityKeys);
-
-        const entityKeyData: EntityKeyData = { Metadata: {} };
-        entityKeyData.Metadata![metadata.id!] = metadata;
-        await persistence.storeData(metadataKey, entityKeyData);
     }
 }

@@ -1,4 +1,4 @@
-import type { Entity } from "../interfaces/Entity";
+import type { Entity } from "@/modules/data-sync/interfaces/Entity";
 
 export interface UserAccount extends Entity {
     name: string;

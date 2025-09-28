@@ -1,4 +1,4 @@
-import type { Entity } from '../interfaces/Entity';
+import type { Entity } from "./interfaces/Entity";
 
 export interface Metadata extends Entity {
     updatedAt: Date;

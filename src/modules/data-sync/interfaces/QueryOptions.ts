@@ -1,16 +1,13 @@
 import type { Entity } from "./Entity";
-import type { EntityConfig } from "./EntityConfig";
 
 export interface QueryOptions {
     ids?: string[];
     where?: Partial<Entity>;
-    year: number;
     sort?: { field: string; direction: 'asc' | 'desc' }[];
 }
 
-export function filterEntities<T extends Entity>(config: EntityConfig<T>, data: Array<T>, options?: QueryOptions): Array<T> {
+export function filterEntities<T extends Entity>(data: Array<T>, options?: QueryOptions): Array<T> {
     if (!options) return data
-    if (!options.year) options.year = new Date().getFullYear();
 
     if (options.ids) data = data
         .filter(item => item.id && options.ids!.includes(item.id));
@@ -18,9 +15,6 @@ export function filterEntities<T extends Entity>(config: EntityConfig<T>, data: 
     if (options.where) data = data
         .filter(item => Object.entries(options.where!)
             .every(([key, value]) => item[key as keyof T] === value));
-
-    if (options.year) data = data
-        .filter(item => !config.getKeyDate || options.year === config.getKeyDate(item).getFullYear());
 
     if (options.sort) {
         options.sort.forEach(({ field, direction }) => {

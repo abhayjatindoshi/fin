@@ -1,4 +1,4 @@
-import type { EntityKeyData } from "./EntityKeyData";
+import type { EntityKeyData } from "./types";
 
 export interface IPersistence {
     loadData(key: string): Promise<EntityKeyData | null>;

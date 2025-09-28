@@ -1,14 +1,11 @@
-import { initializeApp } from "@/modules/app/AppInitializer";
 import { useTheme } from "@/modules/base-ui/components/theme-provider";
 import { Button } from "@/modules/base-ui/components/ui/Button";
-import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../common/Logo";
 
 const Dashboard: React.FC = () => {
     const { theme, setTheme } = useTheme();
-    const [isLoaded, setIsLoaded] = useState(false);
     const [isDarkTheme, setIsDarkTheme] = useState(theme === 'dark');
     const navigate = useNavigate();
 
@@ -17,16 +14,8 @@ const Dashboard: React.FC = () => {
         setIsDarkTheme(!isDarkTheme);
     }
 
-    useEffect(() => {
-        initializeApp().then(() => setIsLoaded(true));
-    }, [])
-
     return (
-        !isLoaded ? <div>
-            <Logo size="small" />
-            <h1>Loading...</h1>
-            <Spinner size={48} />
-        </div> : <div>
+        <div>
             <Logo size="small" />
             <h1>Welcome to the Dashboard</h1>
             <p>This is a stub for the dashboard page.</p>
