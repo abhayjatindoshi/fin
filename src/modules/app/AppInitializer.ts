@@ -1,6 +1,5 @@
 import { DataOrchestrator } from "../data-sync/DataOrchestrator";
 import type { DateStrategyOptions } from "../data-sync/strategies/EntityKeyDateStrategy";
-import { EntityNames } from "./entities/types";
 import { DateStrategy } from "./store/DateStrategy";
 import { DrivePersistence } from "./store/DrivePersistence";
 import { GoogleDriveLogin } from "./store/GoogleDriveLogin";
@@ -55,7 +54,7 @@ export class AppInitializer {
             store: new MemStore(),
             local: new LocalPersistence(),
             cloud: DrivePersistence.getInstance(),
-            strategy: new DateStrategy(EntityNames),
+            strategy: new DateStrategy(),
         });
     }
 }

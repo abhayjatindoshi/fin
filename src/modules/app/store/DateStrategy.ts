@@ -1,17 +1,12 @@
 import type { Entity } from "@/modules/data-sync/interfaces/Entity";
 import type { EntityName } from "@/modules/data-sync/interfaces/types";
 import { EntityKeyDateStrategy } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
-import type { EntityConfig } from "../entities/types";
+import type { EntityConfigDefinition } from "../entities/types";
+import { EntityConfig } from "../entities/entities";
 
 export class DateStrategy extends EntityKeyDateStrategy {
     separator = '.';
     identifierLength = 8;
-    config: Record<string, EntityConfig<Entity>>;
-
-    constructor(config: Record<string, EntityConfig<Entity>>) {
-        super();
-        this.config = config;
-    }
 
     getEntityKeyWithoutPrefix<E extends Entity>(entityName: EntityName<E>, entity: E): string {
         const entityConfig = this.getConfig(entityName);
@@ -50,8 +45,8 @@ export class DateStrategy extends EntityKeyDateStrategy {
         }
     }
 
-    private getConfig<E extends Entity>(entityName: EntityName<E>): EntityConfig<E> {
-        const entityConfig = this.config[entityName as string];
+    private getConfig<E extends Entity>(entityName: EntityName<E>): EntityConfigDefinition<E> {
+        const entityConfig = EntityConfig[entityName as keyof typeof EntityConfig] as EntityConfigDefinition<E>;
         if (!entityConfig) throw new Error(`No entity config found for entity name: ${entityName as string}`);
         return entityConfig;
     }

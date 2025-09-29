@@ -15,6 +15,7 @@ export class GoogleDriveLogin {
     private scope = 'https://www.googleapis.com/auth/drive.file'
     private discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     private localStorageKey = 'drive_local_key';
+    private prompt: "" | "none" | "consent" | "select_account" = 'none';
     status: Status = 'waitingForScript';
 
     getToken = () => window.gapi.client.getToken()?.access_token || null;
@@ -46,9 +47,16 @@ export class GoogleDriveLogin {
             const tokenClient = window.google.accounts.oauth2.initTokenClient({
                 client_id: this.clientId,
                 scope: this.scope,
+                prompt: this.prompt,
                 callback: async (resp) => {
                     if (resp.error) {
-                        reject(resp.error);
+                        if (resp.error === "interaction_required") {
+                            this.prompt = 'consent';
+                            resolve();
+                            return;
+                        } else {
+                            reject(resp.error);
+                        }
                     } else {
                         localStorage.setItem(this.localStorageKey, resp.access_token);
                         window.gapi.client.setToken({ access_token: resp.access_token });
@@ -57,7 +65,7 @@ export class GoogleDriveLogin {
                     }
                 }
             });
-            tokenClient.requestAccessToken({ prompt: 'none' });
+            tokenClient.requestAccessToken();
         });
     }
 
@@ -89,7 +97,10 @@ export class GoogleDriveLogin {
 
     private async checkLocalToken(): Promise<boolean> {
         const token = localStorage.getItem(this.localStorageKey);
-        if (!token) return false;
+        if (!token) {
+            this.status = 'needLogin';
+            return false;
+        }
         let valid = false;
 
         try {
