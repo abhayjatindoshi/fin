@@ -20,6 +20,16 @@ export type SchemasOf<U> = U extends EntityUtil<infer S> ? S : never;
 export type EntityNameOf<U> = keyof SchemasOf<U> & string;
 export type EntityTypeOf<U, N extends EntityNameOf<U>> = z.infer<SchemasOf<U>[N]> & z.infer<typeof EntitySchema>;
 
+export type InputArgs<U extends EntityUtil<SchemaMap>, FilterOptions> = {
+    util: U;
+    prefix: string;
+    store: IStore<U>;
+    local: IPersistence;
+    cloud?: IPersistence;
+    strategy: IEntityKeyStrategy<U, FilterOptions>;
+    logger?: ILogger;
+}
+
 export type Context<U extends EntityUtil<SchemaMap>, FilterOptions> = {
 
     util: U;

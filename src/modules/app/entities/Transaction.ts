@@ -1,12 +1,13 @@
 import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import { zodReference } from "@/modules/data-sync/interfaces/ZodOverrides";
 import z from "zod";
 
 export const TransactionSchema = EntitySchema.extend({
-    accountId: z.string(),
-    tagId: z.string(),
-    subTagId: z.string().optional(),
-    transferAccountId: z.string().optional(),
-    merchantId: z.string().optional(),
+    accountId: zodReference("MoneyAccount"),
+    tagId: zodReference("Tag"),
+    subTagId: zodReference("SubTag").optional(),
+    transferAccountId: zodReference("MoneyAccount").optional(),
+    merchantId: zodReference("Merchant").optional(),
     title: z.string(),
     narration: z.string(),
     transactionAt: z.date(),

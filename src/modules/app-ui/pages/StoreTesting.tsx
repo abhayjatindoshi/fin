@@ -1,49 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AppInitializer } from "@/modules/app/AppInitializer";
-import { EntityName } from "@/modules/app/entities/entities";
+import { EntityName, util } from "@/modules/app/entities/entities";
 import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
 import { GoogleDriveLogin } from "@/modules/app/store/GoogleDriveLogin";
 import { Button } from "@/modules/base-ui/components/ui/Button";
 import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
 import { DataOrchestrator } from "@/modules/data-sync/DataOrchestrator";
-import type { DataRepository } from "@/modules/data-sync/DataRepository";
+import { useDataSync } from "@/modules/data-sync/DataSyncProvider";
+import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { useEffect, useState, type JSX } from "react";
 
 
 export default function StoreTesting() {
     const [entities, setEntities] = useState<Tag[]>([]);
     const [loadingMessage, setLoadingMessage] = useState<string | null>('Loading...');
-    const [repo, setRepo] = useState<DataRepository<any, any, any> | undefined>();
     const [syncing, setSyncing] = useState(false);
+    const { orchestrator, setPrefix } = useDataSync<typeof util, DateStrategyOptions>();
 
     useEffect(() => {
         initialize();
-    }, []);
+        if (orchestrator) {
+            loadEntities();
+        }
+    }, [orchestrator]);
 
     const initialize = async (): Promise<void> => {
         while (true) {
-            if (AppInitializer.getInstance().status === 'ready') {
-                setLoadingMessage(null);
-                break;
-            }
-
-            let message = 'App status: ' + AppInitializer.getInstance().status;
-            if (AppInitializer.getInstance().status === 'loggingIn') {
-                message += '; Login status: ' + GoogleDriveLogin.getInstance().status;
-            }
-            setLoadingMessage(message);
-
-            await AppInitializer.getInstance().load();
+            const status = GoogleDriveLogin.getInstance().status;
+            if (status === 'ready') break;
+            setLoadingMessage(`Login status: ${status}`);
+            await GoogleDriveLogin.getInstance().op();
         }
 
-        setLoadingMessage('Loading entities...');
-        await loadEntities();
         setLoadingMessage(null);
+        setPrefix('app');
     }
 
     const loadEntities = async () => {
-        const repo = DataOrchestrator.getInstance().repo(EntityName.Tag);
-        setRepo(repo);
+        if (!orchestrator) return;
+        const repo = orchestrator.repo(EntityName.Tag);
         const observable = await repo.observeAll();
         observable.subscribe(all => {
             // Map or cast to Tag[] if possible
@@ -52,10 +46,14 @@ export default function StoreTesting() {
     }
 
     const handleDelete = async (id: string) => {
-        await repo?.delete(id);
+        if (!orchestrator) return;
+        const repo = orchestrator.repo(EntityName.Tag);
+        await repo.delete(id);
     };
 
     const handleCreate = async () => {
+        if (!orchestrator) return;
+        const repo = orchestrator.repo(EntityName.Tag);
         // Simple create logic for demo, customize per entity
         const newEntity: Tag = TagSchema.parse({
             name: 'Tag',
@@ -66,6 +64,8 @@ export default function StoreTesting() {
     };
 
     const handleUpdate = async (id: string) => {
+        if (!orchestrator) return;
+        const repo = orchestrator.repo(EntityName.Tag);
         // Simple update logic for demo, customize per entity
         const entity = entities.find(e => e.id === id);
         if (!entity) return;

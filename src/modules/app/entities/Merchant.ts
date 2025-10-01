@@ -1,9 +1,9 @@
 import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
 import z from "zod";
 
-export const TagSchema = EntitySchema.extend({
+export const MerchantSchema = EntitySchema.extend({
     name: z.string(),
     icon: z.string(),
 });
 
-export type Tag = z.infer<typeof TagSchema>;
+export type Merchant = z.infer<typeof MerchantSchema>;

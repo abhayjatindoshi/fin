@@ -25,4 +25,4 @@ export const EntityConfig: EntityConfigMap<typeof util> = {
         getKeyDate: (entity: Transaction) => entity.transactionAt
     },
     UserAccount: { scope: 'global' },
-} as const;
+};

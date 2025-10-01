@@ -1,8 +1,9 @@
 import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import { zodReference } from "@/modules/data-sync/interfaces/ZodOverrides";
 import z from "zod";
 
 export const SubTagSchema = EntitySchema.extend({
-    tagId: z.string(),
+    tagId: zodReference("Tag"),
     name: z.string(),
     icon: z.string(),
 });
