@@ -1,5 +1,8 @@
+import type { EntityEventHandler } from "./EntityEventHandler";
+import type { EntityUtil } from "./EntityUtil";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
+import type { SchemaMap } from "./interfaces/types";
 import type { MetadataManager } from "./MetadataManager";
 import { SyncHandler } from "./SyncHandler";
 
@@ -12,17 +15,20 @@ type SyncItem = {
     reject: (error: unknown) => void;
 }
 
-export class SyncScheduler {
+export class SyncScheduler<U extends EntityUtil<SchemaMap>> {
     private logger: ILogger;
     private queue: Array<SyncItem> = [];
     private running = false;
-    private metadataManager: MetadataManager;
+    private metadataManager: MetadataManager<U>;
+    private entityEventHandler: EntityEventHandler<U>;
     private shuttingDown = false;
+    private timeout = 200;
 
-    constructor(logger: ILogger, metadataManager: MetadataManager) {
+    constructor(logger: ILogger, metadataManager: MetadataManager<U>, entityEventHandler: EntityEventHandler<U>) {
         this.logger = logger;
         this.metadataManager = metadataManager;
-        setTimeout(() => this.tick(), 200);
+        this.entityEventHandler = entityEventHandler;
+        setTimeout(() => this.tick(), this.timeout);
     }
 
     async sync(source: IPersistence, target: IPersistence): Promise<void> {
@@ -68,7 +74,7 @@ export class SyncScheduler {
             const time = new Date();
             this.logger.i(this.constructor.name, `Starting sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
             try {
-                await SyncHandler.sync(this.logger, this.metadataManager, item.source, item.target);
+                await SyncHandler.sync(this.logger, this.metadataManager, this.entityEventHandler, item.source, item.target);
                 item.resolve();
                 this.logger.i(this.constructor.name, `Completed sync [${item.source.constructor.name}] -> [${item.target.constructor.name}] time: ${new Date().getTime() - time.getTime()}ms`, item);
             } catch (err) {
@@ -77,49 +83,6 @@ export class SyncScheduler {
             }
         }
 
-        setTimeout(() => this.tick(), 200);
+        setTimeout(() => this.tick(), this.timeout);
     }
-
-    // private async runWorker(): Promise<void> {
-    //     // if (this.running) return;
-    //     // this.running = true;
-
-    //     try {
-    //         while (this.queue.length > 0) {
-    //             const item = this.queue.shift()!;
-    //             this.logger.i(this.constructor.name, `Starting sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
-
-    //             try {
-    //                 await SyncHandler.sync(this.logger, this.metadataManager, item.source, item.target);
-    //                 item.resolve();
-    //                 this.logger.i(this.constructor.name, `Completed sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
-    //             } catch (err) {
-    //                 item.reject(err);
-    //                 this.logger.e(this.constructor.name, `Sync failed [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, { error: err, item });
-    //             }
-    //         }
-    //     } finally {
-    //         // this.running = false;
-    //     }
-    // }
-
-    // private next(): void {
-    //     if (this.running) return;
-    //     const item = this.queue.shift();
-    //     if (!item) return;
-    //     this.running = true;
-    //     this.executeSync(item)
-    //         .finally(() => {
-    //             this.running = false;
-    //             this.next();
-    //         });
-    // }
-
-    // private executeSync = async (item: SyncItem): Promise<void> => {
-    //     this.logger.i(this.constructor.name, `Starting sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
-    //     await SyncHandler.sync(this.logger, this.metadataManager, item.source, item.target)
-    //         .then(item.resolve)
-    //         .catch(item.reject);
-    //     this.logger.i(this.constructor.name, `Completed sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
-    // }
 }

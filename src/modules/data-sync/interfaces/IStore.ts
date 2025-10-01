@@ -1,10 +1,10 @@
-import type { Entity } from "./Entity";
+import type { EntityUtil } from "../EntityUtil";
 import type { IPersistence } from "./IPersistence";
-import type { EntityName } from "./types";
+import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./types";
 
-export interface IStore extends IPersistence {
-    get<E extends Entity>(key: string, entityName: EntityName<E>, id: string): E | null;
-    getAll<E extends Entity>(key: string, entityName: EntityName<E>): E[];
-    save<E extends Entity>(key: string, entityName: EntityName<E>, data: E): boolean;
-    delete<E extends Entity>(key: string, entityName: EntityName<E>, id: string): void;
+export interface IStore<U extends EntityUtil<SchemaMap>> extends IPersistence {
+    get<N extends EntityNameOf<U>>(key: string, entityName: N, id: string): EntityTypeOf<U, N> | null;
+    getAll<N extends EntityNameOf<U>>(key: string, entityName: N): EntityTypeOf<U, N>[];
+    save<N extends EntityNameOf<U>>(key: string, entityName: N, data: EntityTypeOf<U, N>): boolean;
+    delete<N extends EntityNameOf<U>>(key: string, entityName: N, id: string): void;
 }

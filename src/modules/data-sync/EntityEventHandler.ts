@@ -1,11 +1,11 @@
 import { BehaviorSubject, Observable } from "rxjs";
-import type { Entity } from "./interfaces/Entity";
+import type { EntityUtil } from "./EntityUtil";
 import type { ILogger } from "./interfaces/ILogger";
-import type { EntityEvent, EntityEventType, EntityKeyEvent, EntityName } from "./interfaces/types";
+import type { EntityEvent, EntityEventType, EntityId, EntityKey, EntityKeyEvent, EntityNameOf, SchemaMap } from "./interfaces/types";
 
-export class EntityEventHandler {
+export class EntityEventHandler<U extends EntityUtil<SchemaMap>> {
 
-    private entitySubject = new BehaviorSubject<EntityEvent | null>(null);
+    private entitySubject = new BehaviorSubject<EntityEvent<U> | null>(null);
     private entityKeySubject = new BehaviorSubject<EntityKeyEvent | null>(null);
     private logger: ILogger;
 
@@ -13,19 +13,19 @@ export class EntityEventHandler {
         this.logger = logger;
     }
 
-    notifyEntityEvent<E extends Entity>(type: EntityEventType, entityKey: string, entityName: EntityName<E>, id: string): void {
-        const event: EntityEvent = { type, entityKey, entityName, id };
+    notifyEntityEvent<N extends EntityNameOf<U>>(type: EntityEventType, entityKey: EntityKey, entityName: N, entityId: EntityId): void {
+        const event: EntityEvent<U> = { type, entityKey, entityName, entityId };
         this.logger.v(this.constructor.name, 'EntityEvent received', event);
         this.entitySubject.next(event);
     }
 
-    notifyEntityKeyEvent(entityKey: string): void {
+    notifyEntityKeyEvent(entityKey: EntityKey): void {
         const event: EntityKeyEvent = { type: 'save', entityKey };
         this.logger.v(this.constructor.name, 'EntityKeyEvent received', event);
         this.entityKeySubject.next(event);
     }
 
-    observeEntityChanges(): Observable<EntityEvent | null> {
+    observeEntityChanges(): Observable<EntityEvent<U> | null> {
         return this.entitySubject.asObservable()
     }
 

@@ -1,14 +1,14 @@
-import type { Entity } from "@/modules/data-sync/interfaces/Entity";
-import type { EntityName } from "@/modules/data-sync/interfaces/types";
+import type { EntityNameOf, EntityTypeOf } from "@/modules/data-sync/interfaces/types";
 import { EntityKeyDateStrategy } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
+import { EntityConfig, util } from "../entities/entities";
 import type { EntityConfigDefinition } from "../entities/types";
-import { EntityConfig } from "../entities/entities";
 
-export class DateStrategy extends EntityKeyDateStrategy {
+export class DateStrategy extends EntityKeyDateStrategy<typeof util> {
+
     separator = '.';
     identifierLength = 8;
 
-    getEntityKeyWithoutPrefix<E extends Entity>(entityName: EntityName<E>, entity: E): string {
+    generateKeyForYear<N extends EntityNameOf<typeof util>>(entityName: N, entity: EntityTypeOf<typeof util, N>): string {
         const entityConfig = this.getConfig(entityName);
         switch (entityConfig.scope) {
             case 'global':
@@ -26,7 +26,7 @@ export class DateStrategy extends EntityKeyDateStrategy {
         }
     }
 
-    generateAllEntityKeys<E extends Entity>(prefix: string, entityName: EntityName<E>, year: number): string[] {
+    generateAllKeysForYear<N extends EntityNameOf<typeof util>>(prefix: string, entityName: N, year: number): string[] {
         const entityConfig = this.getConfig(entityName);
         switch (entityConfig.scope) {
             case 'global':
@@ -45,8 +45,8 @@ export class DateStrategy extends EntityKeyDateStrategy {
         }
     }
 
-    private getConfig<E extends Entity>(entityName: EntityName<E>): EntityConfigDefinition<E> {
-        const entityConfig = EntityConfig[entityName as keyof typeof EntityConfig] as EntityConfigDefinition<E>;
+    private getConfig<N extends EntityNameOf<typeof util>>(entityName: N): EntityConfigDefinition<typeof util, N> {
+        const entityConfig = EntityConfig[entityName as keyof typeof EntityConfig] as EntityConfigDefinition<typeof util, N>;
         if (!entityConfig) throw new Error(`No entity config found for entity name: ${entityName as string}`);
         return entityConfig;
     }

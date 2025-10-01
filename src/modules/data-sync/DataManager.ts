@@ -1,25 +1,32 @@
+import { Utils } from "../common/Utils";
 import type { EntityEventHandler } from "./EntityEventHandler";
 import type { EntityKeyHandler } from "./EntityKeyHandler";
-import type { Entity } from "./interfaces/Entity";
+import type { EntityUtil } from "./EntityUtil";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
 import type { IStore } from "./interfaces/IStore";
 import { filterEntities, type QueryOptions } from "./interfaces/QueryOptions";
-import type { EntityName } from "./interfaces/types";
+import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
 import type { MetadataManager } from "./MetadataManager";
 
-export class DataManager<FilterOptions> {
+export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions> {
 
     private logger: ILogger;
-    private metadataManager: MetadataManager;
-    private keyHandler: EntityKeyHandler<FilterOptions>;
-    private eventHandler: EntityEventHandler;
-    private store: IStore;
+    private util: U;
+    private metadataManager: MetadataManager<U>;
+    private keyHandler: EntityKeyHandler<U, FilterOptions>;
+    private eventHandler: EntityEventHandler<U>;
+    private store: IStore<U>;
     private local: IPersistence;
     private cloud?: IPersistence;
 
-    constructor(logger: ILogger, metadataManager: MetadataManager, keyHandler: EntityKeyHandler<FilterOptions>, eventHandler: EntityEventHandler, store: IStore, local: IPersistence, cloud?: IPersistence) {
+    constructor(
+        logger: ILogger, util: U, metadataManager: MetadataManager<U>,
+        keyHandler: EntityKeyHandler<U, FilterOptions>, eventHandler: EntityEventHandler<U>,
+        store: IStore<U>, local: IPersistence, cloud?: IPersistence
+    ) {
         this.logger = logger;
+        this.util = util;
         this.metadataManager = metadataManager;
         this.keyHandler = keyHandler;
         this.eventHandler = eventHandler;
@@ -28,49 +35,53 @@ export class DataManager<FilterOptions> {
         this.cloud = cloud;
     }
 
-    public async get<E extends Entity>(entityName: EntityName<E>, id: string): Promise<E | null> {
+    public async get<N extends EntityNameOf<U>>(entityName: N, id: string): Promise<EntityTypeOf<U, N> | null> {
         const entityKey = this.keyHandler.getEntityKeyFromId(id);
         await this.ensureEntityKey(entityKey);
-        return this.store.get<E>(entityKey, entityName, id);
+        return this.store.get<N>(entityKey, entityName, id);
     }
 
-    public async getAll<E extends Entity>(entityName: EntityName<E>, options?: QueryOptions & FilterOptions): Promise<Array<E>> {
+    public async getAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions & FilterOptions): Promise<Array<EntityTypeOf<U, N>>> {
         const entityKeys = this.keyHandler.getEntityKeys(entityName, options);
-        const results = await Promise.all(entityKeys.map(entityKey => this.getFiltered(entityName, entityKey, options) as Promise<Array<E>>));
+        const results = await Promise.all(
+            entityKeys.map(entityKey => this.getFiltered(entityName, entityKey, options) as Promise<Array<EntityTypeOf<U, N>>>)
+        );
         return results.flat();
     }
 
-    public save<E extends Entity>(entityName: EntityName<E>, entity: E): string {
+    public save<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string {
+        entity = this.util.parse(entityName, entity) as EntityTypeOf<U, N>;
         this.ensureEntityId(entityName, entity);
         const entityKey = this.keyHandler.getEntityKeyFromId(entity.id!);
         entity.createdAt = entity.createdAt || new Date();
         entity.updatedAt = new Date();
         entity.version = (entity.version || 0) + 1;
+        entity = Utils.sortKeys(entity) as EntityTypeOf<U, N>;
         this.store.save(entityKey, entityName, entity);
         this.logger.i(this.constructor.name, 'Entity saved', { entityKey, entityName, entityId: entity.id! });
         this.eventHandler.notifyEntityEvent('save', entityKey, entityName, entity.id!);
         return entity.id!;
     }
 
-    public delete<E extends Entity>(entityName: EntityName<E>, id: string): void {
+    public delete<N extends EntityNameOf<U>>(entityName: N, id: string): void {
         const entityKey = this.keyHandler.getEntityKeyFromId(id);
         this.store.delete(entityKey, entityName, id);
         this.logger.i(this.constructor.name, 'Entity deleted', { entityKey, entityName, entityId: id });
         this.eventHandler.notifyEntityEvent('delete', entityKey, entityName, id);
     }
 
-    async getEntityKeyData<E extends Entity>(entityName: string, entityKey: string): Promise<Array<E>> {
+    async getEntityKeyData<N extends EntityNameOf<U>>(entityName: string, entityKey: string): Promise<Array<EntityTypeOf<U, N>>> {
         await this.ensureEntityKey(entityKey);
         return this.store.getAll(entityKey, entityName);
     }
 
-    private async getFiltered<E extends Entity>(entityName: EntityName<E>, entityKey: string, options?: QueryOptions): Promise<Array<E>> {
+    private async getFiltered<N extends EntityNameOf<U>>(entityName: N, entityKey: string, options?: QueryOptions): Promise<Array<EntityTypeOf<U, N>>> {
         await this.ensureEntityKey(entityKey);
-        const results = this.store.getAll<E>(entityKey, entityName);
+        const results = this.store.getAll<N>(entityKey, entityName);
         return filterEntities(results, options);
     }
 
-    private ensureEntityId<E extends Entity>(entityName: EntityName<E>, entity: E): void {
+    private ensureEntityId<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): void {
         if (entity.id) {
             const entityKey = this.keyHandler.getEntityKeyFromId(entity.id);
             const existingEntity = this.store.get(entityKey, entityName, entity.id);

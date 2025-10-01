@@ -1,12 +1,14 @@
+import type { DeletedEntityRecord, EntityName } from "@/modules/data-sync copy/interfaces/types";
 import type { Entity } from "@/modules/data-sync/interfaces/Entity";
 import type { IStore } from "@/modules/data-sync/interfaces/IStore";
-import type { DeletedEntityRecord, EntityKeyData, EntityName } from "@/modules/data-sync/interfaces/types";
+import type { EntityKeyData } from "@/modules/data-sync/interfaces/types";
+import type { util } from "../entities/entities";
 
 type StoreData = {
     [key: string]: EntityKeyData
 }
 
-export class MemStore implements IStore {
+export class MemStore implements IStore<typeof util> {
 
     private store: StoreData = {};
 

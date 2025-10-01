@@ -1,9 +1,9 @@
-import type { Entity } from "./Entity";
-import type { EntityName } from "./types";
+import type { EntityUtil } from "../EntityUtil";
+import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./types";
 
-export interface IEntityKeyStrategy<FilterOptions> {
+export interface IEntityKeyStrategy<U extends EntityUtil<SchemaMap>, FilterOptions> {
     separator: string;
     identifierLength: number;
-    getKey<E extends Entity>(entityName: EntityName<E>, entity: E): string;
-    entityKeyFilter<E extends Entity>(prefix: string, entityName: EntityName<E>, options?: FilterOptions): string[];
+    generateKeyFor<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string;
+    generateAllKeysFor<N extends EntityNameOf<U>>(prefix: string, entityName: N, options?: FilterOptions): string[];
 }

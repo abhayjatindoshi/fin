@@ -1,13 +1,15 @@
 import { Utils } from "../common/Utils";
+import type { EntityEventHandler } from "./EntityEventHandler";
+import type { EntityUtil } from "./EntityUtil";
 import type { Entity } from "./interfaces/Entity";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
-import type { EntityKeyData, EntityName } from "./interfaces/types";
+import type { EntityKeyData, SchemaMap } from "./interfaces/types";
 import type { EntityMetadata, Metadata } from "./Metadata";
 import type { MetadataManager } from "./MetadataManager";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyEntityName = EntityName<any>;
+
+type AnyEntityName = string;
 
 type TypedEntityKeyData = {
     [entityName: string]: {
@@ -24,10 +26,11 @@ type DifferenceOp =
     | { type: 'save', entityName: AnyEntityName, data: Entity }
     | { type: 'delete', entityName: AnyEntityName, deletedAt: Date }
 
-export class SyncHandler {
+export class SyncHandler<U extends EntityUtil<SchemaMap>> {
 
     private logger: ILogger;
-    private metadataManager: MetadataManager;
+    private metadataManager: MetadataManager<U>;
+    private entityEventHandler: EntityEventHandler<U>;
     private persistenceA: IPersistence;
     private persistenceB: IPersistence;
     private metadataA: Metadata | undefined;
@@ -37,12 +40,13 @@ export class SyncHandler {
     private bucketA: DifferenceBucket = {};
     private bucketB: DifferenceBucket = {};
 
-    static sync = (logger: ILogger, metadataManager: MetadataManager, persistenceA: IPersistence, persistenceB: IPersistence): Promise<void> =>
-        new SyncHandler(logger, metadataManager, persistenceA, persistenceB).sync();
+    static sync = <U extends EntityUtil<SchemaMap>>(logger: ILogger, metadataManager: MetadataManager<U>, entityEventHandler: EntityEventHandler<U>, persistenceA: IPersistence, persistenceB: IPersistence): Promise<void> =>
+        new SyncHandler(logger, metadataManager, entityEventHandler, persistenceA, persistenceB).sync();
 
-    private constructor(logger: ILogger, metadataManager: MetadataManager, persistenceA: IPersistence, persistenceB: IPersistence) {
+    private constructor(logger: ILogger, metadataManager: MetadataManager<U>, entityEventHandler: EntityEventHandler<U>, persistenceA: IPersistence, persistenceB: IPersistence) {
         this.logger = logger;
         this.metadataManager = metadataManager;
+        this.entityEventHandler = entityEventHandler;
         this.persistenceA = persistenceA;
         this.persistenceB = persistenceB;
     }
@@ -179,6 +183,7 @@ export class SyncHandler {
 
         this.updateEntityKeyMetadata(entityKey, entityKeyData, targetMetadata);
         await target.storeData(entityKey, entityKeyData);
+        this.entityEventHandler.notifyEntityKeyEvent(entityKey);
     }
 
     private updateEntityKeyMetadata(entityKey: string, entityKeyData: EntityKeyData, metadata: Metadata) {

@@ -1,15 +1,15 @@
-import type { Entity } from "@/modules/data-sync/interfaces/Entity";
+import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import * as z from "zod";
 
-export type AccountType =
-    | 'SavingsAccount'
-    | 'CreditCard'
-    | 'Cash'
+const AccountTypeSchema = z.enum(['SavingsAccount', 'CreditCard', 'Cash']);
 
-export interface MoneyAccount extends Entity {
-    name: string;
-    initialBalance: number;
-    bankName: string;
-    accountType: AccountType;
-}
+export type AccountType = z.infer<typeof AccountTypeSchema>;
 
-// TODO: define associations
+export const MoneyAccountSchema = EntitySchema.extend({
+    name: z.string(),
+    initialBalance: z.number(),
+    bankName: z.string(),
+    accountType: AccountTypeSchema,
+})
+
+export type MoneyAccount = z.infer<typeof MoneyAccountSchema>;

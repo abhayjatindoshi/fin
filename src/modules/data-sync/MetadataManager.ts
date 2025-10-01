@@ -1,15 +1,16 @@
 import { map } from "rxjs";
 import { Utils } from "../common/Utils";
 import type { EntityEventHandler } from "./EntityEventHandler";
+import type { EntityUtil } from "./EntityUtil";
+import type { Entity } from "./interfaces/Entity";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
-import type { IStore } from "./interfaces/IStore";
-import type { DeletedEntityRecord, EntityKeyData, EntityNameRecord, EntityRecord } from "./interfaces/types";
+import type { DeletedEntityIdRecord, EntityIdRecord, EntityKeyData, EntityNameRecord, SchemaMap } from "./interfaces/types";
 import type { EntityKeyMetadata, EntityMetadata, Metadata } from "./Metadata";
 
 type PersistenceType = "store" | "local" | "cloud";
 
-export class MetadataManager {
+export class MetadataManager<U extends EntityUtil<SchemaMap>> {
 
     private static defaultMetadata: Metadata = {
         id: 'id',
@@ -21,7 +22,7 @@ export class MetadataManager {
 
     private logger: ILogger;
     private metadataKey: string;
-    private store: IStore;
+    private store: IPersistence;
     private local: IPersistence;
     private cloud?: IPersistence;
     private storeKeys: string[] = [];
@@ -30,7 +31,7 @@ export class MetadataManager {
     private storeMetadata: Metadata;
     private lastHashComputeTime = new Date(0);
 
-    constructor(logger: ILogger, prefix: string, eventHandler: EntityEventHandler, store: IStore, local: IPersistence, cloud?: IPersistence) {
+    constructor(logger: ILogger, prefix: string, eventHandler: EntityEventHandler<U>, store: IPersistence, local: IPersistence, cloud?: IPersistence) {
         this.logger = logger;
         this.metadataKey = `${prefix}.metadata`;
         this.store = store;
@@ -171,12 +172,12 @@ export class MetadataManager {
             if (entityName === 'deleted') {
                 data.deleted = Object.entries(records).reduce((data, [deletedEntityName, deletedRecords]) => {
                     if (!deletedRecords) return data;
-                    data[deletedEntityName] = Utils.sortKeys(deletedRecords as DeletedEntityRecord);
+                    data[deletedEntityName] = Utils.sortKeys(deletedRecords as DeletedEntityIdRecord);
                     return data;
-                }, {} as EntityNameRecord<DeletedEntityRecord>);
+                }, {} as EntityNameRecord<DeletedEntityIdRecord>);
                 return data;
             }
-            data[entityName] = Utils.sortKeys(records as EntityRecord);
+            data[entityName] = Utils.sortKeys(records as EntityIdRecord<Entity>);
             return data;
         }, {} as EntityKeyData);
     }

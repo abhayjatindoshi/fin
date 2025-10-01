@@ -1,24 +1,25 @@
-import type { Entity } from "../interfaces/Entity";
+import type { EntityUtil } from "../EntityUtil";
 import type { IEntityKeyStrategy } from "../interfaces/IEntityKeyStrategy";
-import type { EntityName } from "../interfaces/types";
+import type { EntityNameOf, EntityTypeOf, SchemaMap } from "../interfaces/types";
 
 export type DateStrategyOptions = {
     years: number[];
 }
 
-export abstract class EntityKeyDateStrategy implements IEntityKeyStrategy<DateStrategyOptions> {
+export abstract class EntityKeyDateStrategy<U extends EntityUtil<SchemaMap>> implements IEntityKeyStrategy<U, DateStrategyOptions> {
+
     abstract separator: string;
     abstract identifierLength: number;
-    abstract getEntityKeyWithoutPrefix<E extends Entity>(entityName: EntityName<E>, entity: E): string;
-    abstract generateAllEntityKeys<E extends Entity>(prefix: string, entityName: EntityName<E>, year: number): string[];
+    abstract generateKeyForYear<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string;
+    abstract generateAllKeysForYear<N extends EntityNameOf<U>>(prefix: string, entityName: N, year: number): string[];
 
-    entityKeyFilter<E extends Entity>(prefix: string, entityName: EntityName<E>, options?: DateStrategyOptions | undefined): string[] {
+    generateAllKeysFor<N extends EntityNameOf<U>>(prefix: string, entityName: N, options?: DateStrategyOptions | undefined): string[] {
         if (!options) options = { years: [new Date().getFullYear()] };
-        return options.years.map(year => this.generateAllEntityKeys(prefix, entityName, year)).flat();
+        return options.years.map(year => this.generateAllKeysForYear(prefix, entityName, year)).flat();
     }
 
-    getKey<E extends Entity>(entityName: EntityName<E>, entity: E): string {
-        return this.getEntityKeyWithoutPrefix(entityName, entity);
+    generateKeyFor<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string {
+        return this.generateKeyForYear(entityName, entity);
     }
 
 }

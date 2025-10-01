@@ -1,36 +1,36 @@
 import type { Observable } from "rxjs";
 import type { DataManager } from "./DataManager";
-import type { Entity } from "./interfaces/Entity";
+import type { EntityUtil } from "./EntityUtil";
 import type { QueryOptions } from "./interfaces/QueryOptions";
-import type { EntityName } from "./interfaces/types";
+import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
 import type { ObservableManager } from "./ObservableManager";
 
-export class DataRepository<E extends Entity, FilterOptions> {
-    private entityName: EntityName<E>;
-    private dataManager: DataManager<FilterOptions>;
-    private observableManager: ObservableManager<FilterOptions>;
+export class DataRepository<U extends EntityUtil<SchemaMap>, N extends EntityNameOf<U>, FilterOptions> {
+    private entityName: N;
+    private dataManager: DataManager<U, FilterOptions>;
+    private observableManager: ObservableManager<U, FilterOptions>;
 
-    constructor(entityName: EntityName<E>, dataManager: DataManager<FilterOptions>, observableManager: ObservableManager<FilterOptions>) {
+    constructor(entityName: N, dataManager: DataManager<U, FilterOptions>, observableManager: ObservableManager<U, FilterOptions>) {
         this.entityName = entityName;
         this.dataManager = dataManager;
         this.observableManager = observableManager;
     }
 
-    public get = (id: string): Promise<E | null> =>
+    public get = (id: string): Promise<EntityTypeOf<U, N> | null> =>
         this.dataManager.get(this.entityName, id);
 
-    public getAll = (options?: FilterOptions & QueryOptions): Promise<E[]> =>
+    public getAll = (options?: FilterOptions & QueryOptions): Promise<Array<EntityTypeOf<U, N>>> =>
         this.dataManager.getAll(this.entityName, options);
 
-    public save = (entity: E): string =>
+    public save = (entity: EntityTypeOf<U, N>): string =>
         this.dataManager.save(this.entityName, entity);
 
     public delete = (id: string): void =>
         this.dataManager.delete(this.entityName, id);
 
-    public observe = async (id: string): Promise<Observable<E | null>> =>
+    public observe = async (id: string): Promise<Observable<EntityTypeOf<U, N> | null>> =>
         this.observableManager.observe(this.entityName, id);
 
-    public observeAll = async (options?: FilterOptions & QueryOptions): Promise<Observable<Array<E>>> =>
+    public observeAll = async (options?: FilterOptions & QueryOptions): Promise<Observable<Array<EntityTypeOf<U, N>>>> =>
         this.observableManager.observeAll(this.entityName, options);
 }

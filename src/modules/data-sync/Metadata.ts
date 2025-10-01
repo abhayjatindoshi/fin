@@ -1,19 +1,21 @@
-import type { Entity } from "./interfaces/Entity";
+import * as z from "zod";
+import { EntitySchema } from "./interfaces/Entity";
 
-export interface Metadata extends Entity {
-    updatedAt: Date;
-    entityKeys: {
-        [entityKey: string]: EntityKeyMetadata
-    }
-}
+const EntityMetadataSchema = z.object({
+    count: z.number(),
+    deletedCount: z.number()
+});
 
-export interface EntityKeyMetadata {
-    updatedAt: Date;
-    hash: number;
-    entities: Record<string, EntityMetadata>;
-}
+const EntityKeyMetadataSchema = z.object({
+    updatedAt: z.date(),
+    hash: z.number(),
+    entities: z.record(z.string(), EntityMetadataSchema)
+});
 
-export interface EntityMetadata {
-    count: number;
-    deletedCount: number;
-}
+export const MetadataSchema = EntitySchema.extend({
+    entityKeys: z.record(z.string(), EntityKeyMetadataSchema),
+})
+
+export type Metadata = z.infer<typeof MetadataSchema>;
+export type EntityKeyMetadata = z.infer<typeof EntityKeyMetadataSchema>;
+export type EntityMetadata = z.infer<typeof EntityMetadataSchema>;

@@ -1,56 +1,43 @@
+import * as z from "zod";
 import { ConsoleLogHandler } from "./ConsoleLogHandler";
 import { DataManager } from "./DataManager";
 import { DataRepository } from "./DataRepository";
 import { EntityEventHandler } from "./EntityEventHandler";
 import { EntityKeyHandler } from "./EntityKeyHandler";
-import type { Entity } from "./interfaces/Entity";
+import type { EntityUtil } from "./EntityUtil";
 import type { IEntityKeyStrategy } from "./interfaces/IEntityKeyStrategy";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
 import type { IStore } from "./interfaces/IStore";
-import type { EntityName } from "./interfaces/types";
+import type { Context, EntityNameOf, SchemaMap } from "./interfaces/types";
 import { Logger } from "./Logger";
 import { MetadataManager } from "./MetadataManager";
 import { ObservableManager } from "./ObservableManager";
 import { SyncScheduler } from "./SyncScheduler";
 
-type Context<FilterOptions> = {
+type InputArgs<U extends EntityUtil<SchemaMap>, FilterOptions> = {
+    util: U;
     prefix: string;
-    store: IStore;
+    store: IStore<U>;
     local: IPersistence;
     cloud?: IPersistence;
-    dataManager: DataManager<FilterOptions>;
-    entityEventHandler: EntityEventHandler;
-    entityKeyHandler: EntityKeyHandler<FilterOptions>;
-    logger: ILogger;
-    metadataManager: MetadataManager;
-    observableManager: ObservableManager<FilterOptions>;
-    strategy: IEntityKeyStrategy<FilterOptions>;
-    syncScheduler: SyncScheduler;
-}
-
-type InputArgs<FilterOptions> = {
-    prefix: string;
-    store: IStore;
-    local: IPersistence;
-    cloud?: IPersistence;
-    strategy: IEntityKeyStrategy<FilterOptions>;
+    strategy: IEntityKeyStrategy<U, FilterOptions>;
     logger?: ILogger;
 }
 
-export class DataOrchestrator<FilterOptions> {
+export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private static instance: DataOrchestrator<any> | null = null;
+    private static instance: DataOrchestrator<any, any> | null = null;
 
-    public static getInstance<FilterOptions>(): DataOrchestrator<FilterOptions> {
+    public static getInstance<U extends EntityUtil<SchemaMap>, FilterOptions>(): DataOrchestrator<U, FilterOptions> {
         if (!DataOrchestrator.instance) {
             throw new Error("DataOrchestrator is not loaded");
         }
         return DataOrchestrator.instance;
     }
 
-    public static async load<FilterOptions>(args: InputArgs<FilterOptions>): Promise<void> {
+    public static async load<U extends EntityUtil<SchemaMap>, FilterOptions>(args: InputArgs<U, FilterOptions>): Promise<void> {
         if (DataOrchestrator.instance && args.prefix === DataOrchestrator.instance.ctx.prefix) return;
         await DataOrchestrator.unload();
         DataOrchestrator.instance = new DataOrchestrator(args);
@@ -62,22 +49,22 @@ export class DataOrchestrator<FilterOptions> {
         DataOrchestrator.instance = null;
     }
 
-    private ctx: Context<FilterOptions>;
+    protected ctx: Context<U, FilterOptions>;
     private intervals: Array<NodeJS.Timeout> = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private repoMap: Record<string, DataRepository<any, FilterOptions>> = {};
+    private repoMap: Record<string, DataRepository<U, any, FilterOptions>> = {};
 
-    constructor(args: InputArgs<FilterOptions>) {
-        const { prefix, store, local, cloud, strategy } = args;
+    constructor(args: InputArgs<U, FilterOptions>) {
+        const { util, prefix, store, local, cloud, strategy } = args;
         const logger = args.logger ?? new Logger(new ConsoleLogHandler());
         const entityEventHandler = new EntityEventHandler(logger);
         const entityKeyHandler = new EntityKeyHandler(logger, prefix, strategy);
         const metadataManager = new MetadataManager(logger, prefix, entityEventHandler, store, local, cloud);
-        const syncScheduler = new SyncScheduler(logger, metadataManager);
-        const dataManager = new DataManager(logger, metadataManager, entityKeyHandler, entityEventHandler, store, local, cloud);
-        const observableManager = new ObservableManager(logger, dataManager, entityKeyHandler, entityEventHandler);
+        const syncScheduler = new SyncScheduler(logger, metadataManager, entityEventHandler);
+        const dataManager = new DataManager<U, FilterOptions>(logger, util, metadataManager, entityKeyHandler, entityEventHandler, store, local, cloud);
+        const observableManager = new ObservableManager<U, FilterOptions>(logger, dataManager, entityKeyHandler, entityEventHandler);
         this.ctx = {
-            prefix, store, local, cloud, strategy, syncScheduler,
+            util, prefix, store, local, cloud, strategy, syncScheduler,
             entityKeyHandler, entityEventHandler, metadataManager,
             dataManager, observableManager, logger
         };
@@ -107,11 +94,28 @@ export class DataOrchestrator<FilterOptions> {
         this.intervals = [];
     }
 
-    public repo<E extends Entity>(entityName: EntityName<E>): DataRepository<E, FilterOptions> {
+    public repo<N extends EntityNameOf<U>>(entityName: N): DataRepository<U, N, FilterOptions> {
         if (!this.repoMap[entityName]) {
             this.repoMap[entityName] = new DataRepository(entityName, this.ctx.dataManager, this.ctx.observableManager);
         }
-        return this.repoMap[entityName] as DataRepository<E, FilterOptions>;
+        return this.repoMap[entityName] as DataRepository<U, N, FilterOptions>;
     }
 
+    public async syncNow(): Promise<void> {
+        await this.ctx.syncScheduler.sync(this.ctx.store, this.ctx.local);
+        if (this.ctx.cloud) await this.ctx.syncScheduler.sync(this.ctx.local, this.ctx.cloud);
+    }
+
+    validateId<N extends EntityNameOf<U>>(entityName: N, id: string): boolean {
+        const entityKey = this.ctx.entityKeyHandler.getEntityKeyFromId(id);
+        if (!entityKey) return false;
+        return this.ctx.store.get(entityKey, entityName, id) !== null;
+    }
+
+    static zodReference<U extends EntityUtil<SchemaMap>, N extends EntityNameOf<U>>(entityName: N) {
+        return z.string().brand<`${N}Id`>().refine((id) => {
+            if (!entityName) throw new Error("Entity name must be provided to ref()");
+            return DataOrchestrator.getInstance().validateId(entityName, id);
+        }, 'Invalid reference');
+    }
 }

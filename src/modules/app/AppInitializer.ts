@@ -1,5 +1,5 @@
 import { DataOrchestrator } from "../data-sync/DataOrchestrator";
-import type { DateStrategyOptions } from "../data-sync/strategies/EntityKeyDateStrategy";
+import { util } from "./entities/entities";
 import { DateStrategy } from "./store/DateStrategy";
 import { DrivePersistence } from "./store/DrivePersistence";
 import { GoogleDriveLogin } from "./store/GoogleDriveLogin";
@@ -49,7 +49,8 @@ export class AppInitializer {
     }
 
     async loadOrchestrator(): Promise<void> {
-        await DataOrchestrator.load<DateStrategyOptions>({
+        await DataOrchestrator.load({
+            util,
             prefix: this.prefix,
             store: new MemStore(),
             local: new LocalPersistence(),

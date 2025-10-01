@@ -1,18 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AppInitializer } from "@/modules/app/AppInitializer";
-import type { UserAccount } from "@/modules/app/entities/UserAccount";
+import { EntityName } from "@/modules/app/entities/entities";
+import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
 import { GoogleDriveLogin } from "@/modules/app/store/GoogleDriveLogin";
 import { Button } from "@/modules/base-ui/components/ui/Button";
 import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
 import { DataOrchestrator } from "@/modules/data-sync/DataOrchestrator";
 import type { DataRepository } from "@/modules/data-sync/DataRepository";
-import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { useEffect, useState, type JSX } from "react";
 
 
 export default function StoreTesting() {
-    const [entities, setEntities] = useState<UserAccount[]>([]);
+    const [entities, setEntities] = useState<Tag[]>([]);
     const [loadingMessage, setLoadingMessage] = useState<string | null>('Loading...');
-    const [repo, setRepo] = useState<DataRepository<UserAccount, DateStrategyOptions> | undefined>();
+    const [repo, setRepo] = useState<DataRepository<any, any, any> | undefined>();
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         initialize();
@@ -40,11 +42,12 @@ export default function StoreTesting() {
     }
 
     const loadEntities = async () => {
-        const repo = DataOrchestrator.getInstance().repo<UserAccount>('UserAccounts');
+        const repo = DataOrchestrator.getInstance().repo(EntityName.Tag);
         setRepo(repo);
         const observable = await repo.observeAll();
         observable.subscribe(all => {
-            setEntities(all);
+            // Map or cast to Tag[] if possible
+            return setEntities(all as Tag[]);
         })
     }
 
@@ -54,10 +57,11 @@ export default function StoreTesting() {
 
     const handleCreate = async () => {
         // Simple create logic for demo, customize per entity
-        const newEntity: UserAccount = {
-            name: 'New User',
-            email: 'new@example.com',
-        }
+        const newEntity: Tag = TagSchema.parse({
+            name: 'Tag',
+            icon: 'tag-icon',
+            referenceId: 'global.1LtPZL27',
+        });
         await repo?.save(newEntity);
     };
 
@@ -66,7 +70,7 @@ export default function StoreTesting() {
         const entity = entities.find(e => e.id === id);
         if (!entity) return;
         const updated = { ...entity };
-        (updated as UserAccount).name = ((updated as UserAccount).name || '') + ' (edited)';
+        (updated as Tag).name = ((updated as Tag).name || '') + ' (edited)';
         await repo?.save(updated);
     };
 
@@ -80,12 +84,19 @@ export default function StoreTesting() {
         }
     }
 
+    async function syncNow() {
+        setSyncing(true);
+        await DataOrchestrator.getInstance().syncNow();
+        setSyncing(false);
+    }
+
     return (
         <div style={{ padding: 24 }}>
             <h2>Store Testing</h2>
             <InitializeDriveComp>
                 <div style={{ marginTop: 24 }}>
                     <Button onClick={handleCreate}>Create New</Button>
+                    <Button disabled={syncing} onClick={syncNow}>Sync Now</Button>
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
                         <thead>
                             <tr>
@@ -101,8 +112,9 @@ export default function StoreTesting() {
                                 const id = entity.id as string;
                                 return (
                                     <tr key={id}>
-                                        {Object.entries(entity).map(([key, value]) => (
-                                            <td key={key} style={{ border: '1px solid #eee', padding: 4 }}>{String(value)}</td>
+                                        {Object.keys(entities[0]).map(key => (
+
+                                            <td key={key} style={{ border: '1px solid #eee', padding: 4 }}>{String((entity as any)[key])}</td>
                                         ))}
                                         <td>
                                             <Button onClick={() => handleUpdate(id)} style={{ marginRight: 8 }}>

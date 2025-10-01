@@ -1,6 +1,9 @@
-import type { Entity } from "@/modules/data-sync/interfaces/Entity";
+import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import z from "zod";
 
-export interface UserAccount extends Entity {
-    name: string;
-    email: string;
-}
+export const UserAccountSchema = EntitySchema.extend({
+    name: z.string(),
+    email: z.email(),
+});
+
+export type UserAccount = z.infer<typeof UserAccountSchema>;

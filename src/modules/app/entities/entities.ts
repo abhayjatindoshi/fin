@@ -1,27 +1,28 @@
-import { createEntityNames, type EntityConfigMap } from "./types";
-import type { MoneyAccount } from "./MoneyAccount";
-import type { SubTag } from "./SubTag";
-import type { Tag } from "./Tag";
-import type { Transaction } from "./Transaction";
-import type { UserAccount } from "./UserAccount";
+import { EU } from "@/modules/data-sync/EntityUtil";
+import { MoneyAccountSchema } from "./MoneyAccount";
+import { SubTagSchema } from "./SubTag";
+import { TagSchema } from "./Tag";
+import { TransactionSchema, type Transaction } from "./Transaction";
+import { type EntityConfigMap } from "./types";
+import { UserAccountSchema } from "./UserAccount";
 
-export type EntityTypeMap = {
-    MoneyAccounts: MoneyAccount;
-    SubTag: SubTag;
-    Tag: Tag;
-    Transaction: Transaction;
-    UserAccounts: UserAccount;
-};
+export const util = EU
+    .register("MoneyAccount", MoneyAccountSchema)
+    .register("SubTag", SubTagSchema)
+    .register("Tag", TagSchema)
+    .register("Transaction", TransactionSchema)
+    .register("UserAccount", UserAccountSchema)
+    ;
 
-export const EntityName = createEntityNames<EntityTypeMap>();
+export const EntityName = util.entityNames();
 
-export const EntityConfig: EntityConfigMap<EntityTypeMap> = {
-    MoneyAccounts: { scope: 'global' },
+export const EntityConfig: EntityConfigMap<typeof util> = {
+    MoneyAccount: { scope: 'global' },
     SubTag: { scope: 'global' },
     Tag: { scope: 'global' },
     Transaction: {
         scope: 'monthly',
         getKeyDate: (entity: Transaction) => entity.transactionAt
     },
-    UserAccounts: { scope: 'global' },
+    UserAccount: { scope: 'global' },
 } as const;
