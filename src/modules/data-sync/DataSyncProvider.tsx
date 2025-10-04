@@ -68,7 +68,8 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions>
 
 export const useDataSync = <U extends EntityUtil<SchemaMap>, FilterOptions>(): DataSyncProviderState<U, FilterOptions> => {
     const context = useContext(DataSyncProviderContext);
-    if (context === undefined)
+    if (!context) {
         throw new Error("useDataSync must be used within a DataSyncProvider");
+    }
     return context as DataSyncProviderState<U, FilterOptions>;
 }
