@@ -1,4 +1,3 @@
-import type { DeletedEntityRecord, EntityName } from "@/modules/data-sync copy/interfaces/types";
 import type { Entity } from "@/modules/data-sync/interfaces/Entity";
 import type { IStore } from "@/modules/data-sync/interfaces/IStore";
 import type { EntityKeyData } from "@/modules/data-sync/interfaces/types";

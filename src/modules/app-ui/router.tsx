@@ -1,13 +1,16 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
+import { AppLoader } from './AppLoader';
 import StoreTesting from './pages/StoreTesting';
 
 export default function AppRouter() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/store-testing" element={<StoreTesting />} />
+                <Route path="/" element={<AppLoader />}>
+                    <Route path="/:householdId">
+                        <Route path="" element={<StoreTesting />} />
+                    </Route>
+                </Route>
             </Routes>
         </BrowserRouter>
     );

@@ -1,3 +1,4 @@
+import { Utils } from "@/modules/auth/Utils";
 
 type Status = 'waitingForScript' | 'scriptLoaded' | 'discoveryDocsLoaded' | 'needLogin' | 'ready';
 
@@ -20,7 +21,9 @@ export class GoogleDriveLogin {
 
     getToken = () => window.gapi.client.getToken()?.access_token || null;
 
-    private constructor() { }
+    private constructor() {
+        Utils.loadScript('https://apis.google.com/js/api.js');
+    }
 
     async op(): Promise<void> {
         switch (this.status) {
@@ -47,7 +50,7 @@ export class GoogleDriveLogin {
             const tokenClient = window.google.accounts.oauth2.initTokenClient({
                 client_id: this.clientId,
                 scope: this.scope,
-                prompt: this.prompt,
+                // prompt: this.prompt,
                 callback: async (resp) => {
                     if (resp.error) {
                         if (resp.error === "interaction_required") {

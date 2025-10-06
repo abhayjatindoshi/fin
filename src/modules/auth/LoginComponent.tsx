@@ -15,8 +15,11 @@ export const LoginComponent: React.FC = () => {
 
     const login = async (type: AuthType) => {
         setCurrentTypeLoggingIn(type);
-        await auth.login(type);
-        setCurrentTypeLoggingIn(null);
+        try {
+            await auth.login(type);
+        } finally {
+            setCurrentTypeLoggingIn(null);
+        }
     }
 
     return <div>

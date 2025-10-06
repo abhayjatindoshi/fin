@@ -5,62 +5,51 @@ import type { InputArgs, SchemaMap } from "./interfaces/types"
 
 type DataSyncProviderState<U extends EntityUtil<SchemaMap>, FilterOptions> = {
     orchestrator: DataOrchestrator<U, FilterOptions> | null,
-    prefix: string | null,
-    setPrefix: (prefix: string) => void,
+    config: InputArgs<U, FilterOptions> | null,
+    setConfig: (config: InputArgs<U, FilterOptions>) => void,
+    loading: boolean,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DataSyncProviderContext = createContext<DataSyncProviderState<any, any> | null>(null);
 
-type DataSyncProviderProps<U extends EntityUtil<SchemaMap>, FilterOptions> = {
-    config: Omit<InputArgs<U, FilterOptions>, 'prefix'>,
-    children: React.ReactNode,
-    loadingComponent?: React.ReactNode,
-}
 
-const DefaultLoadingComponent = <div>Loading...</div>;
 
 export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions>({
-    config,
-    children,
-    loadingComponent = DefaultLoadingComponent
-}: DataSyncProviderProps<U, FilterOptions>) => {
+    children }: { children: React.ReactNode }) => {
 
     const [loading, setLoading] = useState<boolean>(false);
-    const [prefix, setPrefix] = useState<string | null>(null);
+    const [config, setConfig] = useState<InputArgs<U, FilterOptions> | null>(null);
     const [orchestrator, setOrchestrator] = useState<DataOrchestrator<U, FilterOptions> | null>(null);
 
     const loadOrchestrator = useCallback(async () => {
         setLoading(true);
-        if (!prefix) {
+        if (!config) {
             if (orchestrator) {
                 await DataOrchestrator.unload();
             }
         } else {
-            await DataOrchestrator.load<U, FilterOptions>({
-                ...config,
-                prefix,
-            });
+            await DataOrchestrator.load<U, FilterOptions>(config);
             setOrchestrator(DataOrchestrator.getInstance<U, FilterOptions>());
         }
         setLoading(false);
 
         return async () => {
             setLoading(true);
-            if (prefix && orchestrator) {
+            if (config && orchestrator) {
                 await DataOrchestrator.unload();
                 setOrchestrator(null);
             }
             setLoading(false);
         }
-    }, [prefix, config]);
+    }, [config]);
 
     useEffect(() => {
         loadOrchestrator();
     }, [loadOrchestrator]);
 
-    return (loading ? loadingComponent :
-        <DataSyncProviderContext.Provider value={{ prefix, setPrefix, orchestrator }}>
+    return (
+        <DataSyncProviderContext.Provider value={{ loading, config, setConfig, orchestrator }}>
             {children}
         </DataSyncProviderContext.Provider>
     )
