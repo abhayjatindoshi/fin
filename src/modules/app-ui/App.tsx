@@ -9,11 +9,13 @@ export const App: React.FC = () => {
 
     return (
         <ThemeProvider defaultTheme='dark' storageKey='fin-ui-theme'>
-            <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
-                <DataSyncProvider>
-                    <AppRouter />
-                </DataSyncProvider>
-            </AuthProvider>
+            <div className="grainy h-full bg-gradient-to-r from-background to-muted/10">
+                <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
+                    <DataSyncProvider>
+                        <AppRouter />
+                    </DataSyncProvider>
+                </AuthProvider>
+            </div>
         </ThemeProvider>
     )
 }

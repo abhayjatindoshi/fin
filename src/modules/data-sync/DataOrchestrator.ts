@@ -25,8 +25,9 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
     public static async load<U extends EntityUtil<SchemaMap>, FilterOptions>(args: InputArgs<U, FilterOptions>): Promise<void> {
         if (DataOrchestrator.instance && args.prefix === DataOrchestrator.instance.ctx.prefix) return;
         await DataOrchestrator.unload();
-        DataOrchestrator.instance = new DataOrchestrator(args);
-        await DataOrchestrator.instance.load();
+        const instance = new DataOrchestrator(args);
+        await instance.load();
+        DataOrchestrator.instance = instance;
     }
 
     public static async unload(): Promise<void> {
@@ -63,6 +64,8 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
 
     private async unload(): Promise<void> {
         this.stopIntervals();
+        await this.ctx.syncScheduler.sync(this.ctx.store, this.ctx.local);
+        if (this.ctx.cloud) await this.ctx.syncScheduler.sync(this.ctx.local, this.ctx.cloud);
         await this.ctx.syncScheduler.gracefullyShutdown();
     }
 

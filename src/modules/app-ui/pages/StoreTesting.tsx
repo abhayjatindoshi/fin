@@ -7,19 +7,23 @@ import { useDataSync } from "@/modules/data-sync/DataSyncProvider";
 import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { useEffect, useState } from "react";
 import Logo from "../common/Logo";
+import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
+import { ThemeSwitcher } from "../common/ThemeSwitcher";
 
 
 export default function StoreTesting() {
     const [entities, setEntities] = useState<Tag[]>([]);
     const [syncing, setSyncing] = useState(false);
-    const { orchestrator } = useDataSync<typeof util, DateStrategyOptions>();
+    const { orchestrator, loading } = useDataSync<typeof util, DateStrategyOptions>();
+
+    console.log(loading, orchestrator);
 
     useEffect(() => {
         // initialize();
-        if (orchestrator) {
+        if (!loading && orchestrator != null) {
             loadEntities();
         }
-    }, [orchestrator]);
+    }, [loading, orchestrator]);
 
     // const initialize = async (): Promise<void> => {
     //     while (true) {
@@ -90,10 +94,11 @@ export default function StoreTesting() {
 
     return (
         <div style={{ padding: 24 }}>
-            <Logo />
+            <Logo /> <ThemeSwitcher />
             <h2>Store Testing</h2>
+            {loading || !orchestrator && <Spinner />}
             {/* <InitializeDriveComp> */}
-            <div style={{ marginTop: 24 }}>
+            {!loading && <div style={{ marginTop: 24 }}>
                 <Button onClick={handleCreate}>Create New</Button>
                 <Button disabled={syncing} onClick={syncNow}>Sync Now</Button>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
@@ -128,7 +133,7 @@ export default function StoreTesting() {
                         })}
                     </tbody>
                 </table>
-            </div>
+            </div>}
             {/* </InitializeDriveComp> */}
         </div >
     );

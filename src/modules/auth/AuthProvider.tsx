@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Utils } from "../common/Utils";
 import { GoogleAuthHandler, type GoogleAuthConfig } from "./google/GoogleAuthHandler";
 import type { AuthHandler, AuthType, Token, UserDetails } from "./types";
+import { useEffectDebugger } from "../app-ui/AppLoader";
 
 type BaseAuthConfig = {
     type: AuthType;
@@ -47,7 +48,7 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
         setCurrentUser(null);
     }
 
-    const restore = async () => {
+    const restore = useCallback(async () => {
         const storedTokenString = localStorage.getItem(storageKey);
         if (!storedTokenString) return;
 
@@ -66,25 +67,26 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
             if (!user) return clearSession('Could not obtain user after restore');
 
             setHandler(newHandler);
+            console.log('[AuthProvider] Restored session for user:', user);
             setCurrentUser(user);
 
         } catch (e) {
             return clearSession('Error during restore: ' + (e as Error).message);
         }
-    }
+    }, [config]);
 
-    useEffect(() => {
+    useEffectDebugger(() => {
         restore();
-    }, []);
+    }, [restore], ['restore']);
 
-    const token = async (): Promise<Token | null> => {
+    const token = useCallback(async (): Promise<Token | null> => {
         if (!handler) return null;
         const t = await handler.getToken();
         if (t) localStorage.setItem(storageKey, Utils.stringifyJson(t));
         return t;
-    }
+    }, [handler]);
 
-    const login = async (type: AuthType): Promise<void> => {
+    const login = useCallback(async (type: AuthType): Promise<void> => {
         const conf = config.find(c => c.type === type);
         if (!conf) throw new Error(`No configuration found for auth type: ${type}`);
 
@@ -98,12 +100,12 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
 
         const user = await newHandler.getUserDetails();
         setCurrentUser(user);
-    }
+    }, [config]);
 
-    const logout = async (): Promise<void> => {
+    const logout = useCallback(async (): Promise<void> => {
         await handler?.logout();
         clearSession();
-    }
+    }, [handler]);
 
     return <AuthProviderContext.Provider value={{ currentUser, supportedAuthTypes, login, token, logout, }}>
         {children}

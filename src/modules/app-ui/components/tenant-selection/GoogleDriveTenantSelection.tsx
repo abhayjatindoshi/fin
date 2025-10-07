@@ -29,7 +29,7 @@ export const GoogleDriveTenantSelection: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col gap-2 items-center">
+        <div className="flex flex-col gap-2 items-center w-full max-w-[400px] p-2">
             {!config ?
                 <Spinner /> :
                 <>
@@ -42,7 +42,7 @@ export const GoogleDriveTenantSelection: React.FC = () => {
                             <EmptyOpenBox animated={false} tone="accent" />
                             <p className="text-muted-foreground">No households found.</p>
                         </div> :
-                        <div className="max-w-96 p-2">
+                        <div className="w-full">
                             {config.households.map(t => (
                                 <Link key={t.id} to={`/${t.id}`}>
                                     <Button key={t.id} variant="outline" className="w-full h-16 m-1">

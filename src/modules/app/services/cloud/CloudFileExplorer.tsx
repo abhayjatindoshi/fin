@@ -168,7 +168,7 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
                 </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-col gap-2 max-h-[60vh] max-w-115">
+            <div className="flex flex-col gap-2 max-h-[60vh] max-w-[80vw]">
                 <Tabs value={currentSpace?.id}>
                     <TabsList>{spaces?.map(space => (
                         <TabsTrigger value={space.id} key={space.id}
@@ -224,12 +224,12 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
                             const isSelected = selected?.id === file.id;
                             const disabled = validator?.isFileEnabled(file) === false;
                             return <li key={file.id}
-                                onClick={() => handleSingleClick(file)}
-                                onDoubleClick={() => handleDoubleClick(file)}
+                                onClick={() => handleDoubleClick(file)}
+                                // onDoubleClick={() => handleDoubleClick(file)}
                                 className={cn(
                                     isSelected && 'bg-accent',
                                     disabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer hover:bg-muted',
-                                    'flex flex-row items-center gap-2 px-4 py-2 text-sm [&>svg]:size-4 '
+                                    'flex flex-row items-center gap-2 px-4 py-2 text-sm [&>svg]:size-4'
                                 )}>
                                 {file.isFolder ? <Folder /> : <File />}
                                 <span className={`truncate flex-1`} title={file.name}>{file.name}</span>
