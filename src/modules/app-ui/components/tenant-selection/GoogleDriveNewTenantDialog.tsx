@@ -1,5 +1,5 @@
 import type { Folder, Space } from '@/modules/app/services/cloud/types'
-import { Button } from '@/modules/base-ui/components/ui/Button'
+import { Button } from '@/modules/base-ui/components/ui/button'
 import { Checkbox } from '@/modules/base-ui/components/ui/checkbox'
 import {
     Dialog,

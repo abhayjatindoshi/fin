@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { EntityName, util } from "@/modules/app/entities/entities";
 import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
-import { Button } from "@/modules/base-ui/components/ui/Button";
+import { Button } from "@/modules/base-ui/components/ui/button";
+import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { DataOrchestrator } from "@/modules/data-sync/DataOrchestrator";
 import { useDataSync } from "@/modules/data-sync/DataSyncProvider";
 import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { useEffect, useState } from "react";
-import Logo from "../common/Logo";
-import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
-import { ThemeSwitcher } from "../common/ThemeSwitcher";
+import PageLayout from "../common/PageLayout";
 
 
 export default function StoreTesting() {
@@ -21,6 +20,7 @@ export default function StoreTesting() {
     useEffect(() => {
         // initialize();
         if (!loading && orchestrator != null) {
+            console.log('Orchestrator is ready, loading entities');
             loadEntities();
         }
     }, [loading, orchestrator]);
@@ -93,8 +93,7 @@ export default function StoreTesting() {
     }
 
     return (
-        <div style={{ padding: 24 }}>
-            <Logo /> <ThemeSwitcher />
+        <PageLayout title="Store Testing">
             <h2>Store Testing</h2>
             {loading || !orchestrator && <Spinner />}
             {/* <InitializeDriveComp> */}
@@ -135,6 +134,6 @@ export default function StoreTesting() {
                 </table>
             </div>}
             {/* </InitializeDriveComp> */}
-        </div >
+        </PageLayout>
     );
 }

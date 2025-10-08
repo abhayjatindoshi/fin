@@ -23,7 +23,6 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
     }
 
     public static async load<U extends EntityUtil<SchemaMap>, FilterOptions>(args: InputArgs<U, FilterOptions>): Promise<void> {
-        if (DataOrchestrator.instance && args.prefix === DataOrchestrator.instance.ctx.prefix) return;
         await DataOrchestrator.unload();
         const instance = new DataOrchestrator(args);
         await instance.load();

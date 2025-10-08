@@ -1,10 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useRef, useState } from "react"
 import { DataOrchestrator } from "./DataOrchestrator"
 import type { EntityUtil } from "./EntityUtil"
 import type { InputArgs, SchemaMap } from "./interfaces/types"
 
 type DataSyncProviderState<U extends EntityUtil<SchemaMap>, FilterOptions> = {
     orchestrator: DataOrchestrator<U, FilterOptions> | null,
+    prefix: string | null,
     // config: InputArgs<U, FilterOptions> | null,
     load: (config: InputArgs<U, FilterOptions>) => void,
     unload: () => void,
@@ -45,29 +46,39 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions>
     const chain = useRef(Promise.resolve());
 
     const load = useCallback(async (config: InputArgs<U, FilterOptions>) => {
+        console.log('[DataSyncProvider] Loading orchestrator with config', config);
         chain.current = chain.current.then(async () => {
+            console.log('[DataSyncProvider] Loading orchestrator');
             setLoading(true);
 
             if (orchestrator) {
+                console.log('[DataSyncProvider] Unloading existing orchestrator before loading new one');
                 await DataOrchestrator.unload();
+                console.log('[DataSyncProvider] Existing orchestrator unloaded');
                 setOrchestrator(null);
             }
 
+            console.log('[DataSyncProvider] Loading orchestrator with config', config);
             await DataOrchestrator.load<U, FilterOptions>(config);
+            console.log('[DataSyncProvider] Orchestrator loaded', DataOrchestrator.getInstance<U, FilterOptions>());
             setOrchestrator(DataOrchestrator.getInstance<U, FilterOptions>());
             setLoading(false);
         });
+
+        return chain.current;
     }, [orchestrator]);
 
     const unload = useCallback(async () => {
         chain.current = chain.current.then(async () => {
+            if (!orchestrator) return;
             setLoading(true);
-            if (orchestrator) {
-                await DataOrchestrator.unload();
-                setOrchestrator(null);
-            }
+            console.log('[DataSyncProvider] Unloading orchestrator');
+            await DataOrchestrator.unload();
+            console.log('[DataSyncProvider] Orchestrator unloaded');
+            setOrchestrator(null);
             setLoading(false);
         });
+        return chain.current;
     }, [orchestrator]);
 
     // useEffect(() => {
@@ -75,7 +86,7 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions>
     // }, [loadOrchestrator]);
 
     return (
-        <DataSyncProviderContext.Provider value={{ loading, load: load, unload: unload, orchestrator }}>
+        <DataSyncProviderContext.Provider value={{ loading, prefix: orchestrator?.ctx.prefix || null, load, unload, orchestrator }}>
             {children}
         </DataSyncProviderContext.Provider>
     )

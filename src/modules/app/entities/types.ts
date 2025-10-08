@@ -1,6 +1,5 @@
 import type { EntityUtil } from "@/modules/data-sync/EntityUtil";
-import type { SchemaMap } from "@/modules/data-sync/interfaces/types";
-import type { EntityNameOf, EntityTypeOf } from "@/modules/dump/framework";
+import type { EntityNameOf, EntityTypeOf, SchemaMap } from "@/modules/data-sync/interfaces/types";
 
 export type EntityScope = 'global' | 'yearly' | 'monthly';
 

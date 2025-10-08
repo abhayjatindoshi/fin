@@ -1,4 +1,4 @@
-import { Button } from '@/modules/base-ui/components/ui/Button'
+import { Button } from '@/modules/base-ui/components/ui/button'
 import * as React from 'react'
 import { EmptyCalendar } from '../svg/EmptyCalendar'
 import { EmptyCards } from '../svg/EmptyCards'

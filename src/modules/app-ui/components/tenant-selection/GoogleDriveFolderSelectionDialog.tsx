@@ -1,6 +1,6 @@
 import { GoogleDriveFileService } from '@/modules/app/services/cloud/google-drive/GoogleDriveFileService';
 import type { DriveEntry, Folder, Space } from '@/modules/app/services/cloud/types';
-import { Button } from '@/modules/base-ui/components/ui/Button';
+import { Button } from '@/modules/base-ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/modules/base-ui/components/ui/dialog';
-import { Spinner } from '@/modules/base-ui/components/ui/Spinner';
+import { Spinner } from '@/modules/base-ui/components/ui/spinner';
 import { cn } from '@/modules/base-ui/lib/utils';
 import { File as FileIcon, Folder as FolderIcon, RefreshCw } from 'lucide-react';
 import React from 'react';

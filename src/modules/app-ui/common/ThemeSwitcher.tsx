@@ -1,19 +1,43 @@
 import { useTheme, type Theme } from "@/modules/base-ui/components/theme-provider";
-import { Button } from "@/modules/base-ui/components/ui/Button";
-import { ButtonGroup } from "@/modules/base-ui/components/ui/ButtonGroup";
-import { Laptop, Moon, Sun } from "lucide-react";
+import { Button } from "@/modules/base-ui/components/ui/button";
+import { ButtonGroup } from "@/modules/base-ui/components/ui/button-group";
+import { Moon, Sun, SunMoon } from "lucide-react";
 import { createElement } from "react";
 
-export const ThemeSwitcher: React.FC = () => {
+interface ThemeSwitcherProps {
+    variant?: 'icon' | 'icons' | 'active-text'
+    className?: string
+}
+
+export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ variant = 'icons', className }: ThemeSwitcherProps) => {
     const { theme, setTheme } = useTheme();
 
-    const allThemes: Theme[] = ["dark", "system", "light"];
-    const allThemeIcons = [Moon, Laptop, Sun];
+    const themeMap: Record<Theme, { label: string, icon: React.ElementType }> = {
+        dark: { label: "Dark", icon: Moon },
+        system: { label: "Auto", icon: SunMoon },
+        light: { label: "Light", icon: Sun },
+    };
 
-    return <ButtonGroup>
-        {allThemes.map((t, index) => (
-            <Button key={t} variant={theme === t ? "default" : "outline"} onClick={() => setTheme(t)}>
-                {createElement(allThemeIcons[index])}
+    const toggleTheme = () => {
+        switch (theme) {
+            case 'dark': setTheme('system'); break;
+            case 'light': setTheme('dark'); break;
+            case 'system': setTheme('light'); break;
+        }
+    }
+
+    if (variant === 'icon') {
+        const { icon: Icon } = themeMap[theme];
+        return <Button variant="outline" size="icon-sm" className={className} onClick={toggleTheme}>
+            <Icon />
+        </Button>;
+    }
+
+    return <ButtonGroup className={className}>
+        {Object.entries(themeMap).map(([key, { label, icon }]) => (
+            <Button key={key} variant={theme === key ? "default" : "outline"} onClick={() => setTheme(key as Theme)}>
+                {createElement(icon)}
+                {variant === 'active-text' && theme === key && <span>{label}</span>}
             </Button>
         ))}
     </ButtonGroup>;

@@ -1,10 +1,10 @@
 import EmptyOpenBox from "@/modules/app-ui/svg/EmptyOpenBox";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/modules/base-ui/components/ui/breadcrumb";
-import { Button } from "@/modules/base-ui/components/ui/Button";
+import { Button } from "@/modules/base-ui/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/modules/base-ui/components/ui/dialog";
 import { Input } from "@/modules/base-ui/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/modules/base-ui/components/ui/popover";
-import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
+import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/modules/base-ui/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/base-ui/components/ui/tooltip";
 import { cn } from "@/modules/base-ui/lib/utils";

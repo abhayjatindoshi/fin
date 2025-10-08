@@ -1,8 +1,8 @@
 import EmptyOpenBox from "@/modules/app-ui/svg/EmptyOpenBox";
 import CloudFileExplorer from "@/modules/app/services/cloud/CloudFileExplorer";
 import { GoogleDriveFileService } from "@/modules/app/services/cloud/google-drive/GoogleDriveFileService";
-import { Button } from "@/modules/base-ui/components/ui/Button";
-import { Spinner } from "@/modules/base-ui/components/ui/Spinner";
+import { Button } from "@/modules/base-ui/components/ui/button";
+import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { ChevronRight, ExternalLink, FolderOpen, Home, Plus } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";

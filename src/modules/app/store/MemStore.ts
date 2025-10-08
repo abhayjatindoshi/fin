@@ -1,6 +1,5 @@
-import type { Entity } from "@/modules/data-sync/interfaces/Entity";
 import type { IStore } from "@/modules/data-sync/interfaces/IStore";
-import type { EntityKeyData } from "@/modules/data-sync/interfaces/types";
+import type { DeletedEntityIdRecord, EntityKeyData, EntityNameOf, EntityTypeOf } from "@/modules/data-sync/interfaces/types";
 import type { util } from "../entities/entities";
 
 type StoreData = {
@@ -8,33 +7,42 @@ type StoreData = {
 }
 
 export class MemStore implements IStore<typeof util> {
+    private static instance: MemStore | null = null;
+    public static getInstance(): MemStore {
+        if (!MemStore.instance) {
+            MemStore.instance = new MemStore();
+        }
+        return MemStore.instance;
+    }
+
+    private constructor() { }
 
     private store: StoreData = {};
 
-    get<E extends Entity>(key: string, entityName: EntityName<E>, id: string): E | null {
+    get<N extends EntityNameOf<typeof util>>(key: string, entityName: N, id: string): EntityTypeOf<typeof util, N> | null {
         if (this.store[key]?.[entityName]?.[id]) {
-            return this.store[key][entityName][id] as E;
+            return this.store[key][entityName][id] as EntityTypeOf<typeof util, N>;
         }
         return null;
     }
 
-    getAll<E extends Entity>(key: string, entityName: EntityName<E>): E[] {
-        return Object.values(this.store[key]?.[entityName] || {}) as E[];
+    getAll<N extends EntityNameOf<typeof util>>(key: string, entityName: N): EntityTypeOf<typeof util, N>[] {
+        return Object.values(this.store[key]?.[entityName] || {}) as EntityTypeOf<typeof util, N>[];
     }
 
-    save<E extends Entity>(key: string, entityName: EntityName<E>, data: E): boolean {
+    save<N extends EntityNameOf<typeof util>>(key: string, entityName: N, data: EntityTypeOf<typeof util, N>): boolean {
         if (!this.store[key]) this.store[key] = {};
         if (!this.store[key][entityName]) this.store[key][entityName] = {};
-        this.store[key][entityName][data.id!] = data;
+        (this.store[key][entityName] as Record<string, typeof data>)[data.id!] = data;
         return true;
     }
 
-    delete<E extends Entity>(key: string, entityName: EntityName<E>, id: string): void {
+    delete<N extends EntityNameOf<typeof util>>(key: string, entityName: N, id: string): void {
         if (this.store[key]?.[entityName]?.[id]) {
             delete this.store[key][entityName][id];
             this.store[key].deleted = this.store[key].deleted || {};
 
-            const deletedEntityRecord: DeletedEntityRecord = this.store[key].deleted![entityName] || {};
+            const deletedEntityRecord: DeletedEntityIdRecord = this.store[key].deleted![entityName] || {};
             deletedEntityRecord[id] = new Date();
             this.store[key].deleted![entityName] = deletedEntityRecord;
         }

@@ -9,7 +9,7 @@ export const App: React.FC = () => {
 
     return (
         <ThemeProvider defaultTheme='dark' storageKey='fin-ui-theme'>
-            <div className="grainy h-full bg-gradient-to-r from-background to-muted/10">
+            <div className="h-full grainy bg-gradient-to-r from-background to-muted/10">
                 <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
                     <DataSyncProvider>
                         <AppRouter />

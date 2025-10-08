@@ -66,7 +66,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(96.257% 0.00675 286.038);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.21 0.006 285.885);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -101,7 +101,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar: oklch(0.23 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -172,7 +172,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 600 600\'%3E%3Cfilter id=\'a\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'.5\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23a)\'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 182px;
-  opacity: 0.12;
+  opacity: 0.22;
   top: 0;
   left: 0;
   position: absolute;
@@ -180,5 +180,23 @@
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
-  filter: grayscale(1) blur(0.2px)
+  filter: blur(0.2px)
+}
+
+.glass {
+  position: relative;
+  /* padding: 1.3rem; */
+  /* backdrop-filter: blur(10px); */
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  border: 2px solid transparent;
+  background: radial-gradient(ellipse at top, oklch(from var(--foreground) l c h / 0.2), rgba(255, 255, 255, 0) 70%) border-box;
+  /* background: linear-gradient(140deg, red, orange, yellow, green, indigo, blue) border-box; */
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
 }

@@ -27,7 +27,7 @@ export class ConsoleLogHandler implements ILogHandler {
             case 'DEBUG':
                 return console.debug;
             case 'INFO':
-                return console.info;
+                return console.debug;
             case 'WARN':
                 return console.warn;
             case 'ERROR':
