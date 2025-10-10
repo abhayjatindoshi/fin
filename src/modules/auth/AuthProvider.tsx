@@ -1,5 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { useEffectDebugger } from "../app-ui/AppLoader";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Utils } from "../common/Utils";
 import { GoogleAuthHandler, type GoogleAuthConfig } from "./google/GoogleAuthHandler";
 import type { AuthHandler, AuthType, Token, UserDetails } from "./types";
@@ -75,9 +74,9 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
         }
     }, [config]);
 
-    useEffectDebugger(() => {
+    useEffect(() => {
         restore();
-    }, [restore], ['restore']);
+    }, [restore]);
 
     const token = useCallback(async (): Promise<Token | null> => {
         if (!handler) return null;

@@ -1,6 +1,8 @@
+import type { Observable } from "rxjs";
 import { ConsoleLogHandler } from "./ConsoleLogHandler";
 import { DataManager } from "./DataManager";
 import { DataRepository } from "./DataRepository";
+import { DirtyTracker } from "./DirtyTracker";
 import type { Tenant } from "./entities/Tenant";
 import { EntityEventHandler } from "./EntityEventHandler";
 import { EntityKeyHandler } from "./EntityKeyHandler";
@@ -43,16 +45,17 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions, T 
     constructor(args: InputArgs<U, FilterOptions, T>) {
         const { util, tenant, store, local, cloud, strategy } = args;
         const logger = args.logger ?? new Logger(new ConsoleLogHandler());
+        const dirtyTracker = new DirtyTracker<T>(store, local, cloud);
         const entityEventHandler = new EntityEventHandler(logger);
         const entityKeyHandler = new EntityKeyHandler(logger, strategy);
         const metadataManager = new MetadataManager(logger, tenant, entityEventHandler, store, local, cloud);
-        const syncScheduler = new SyncScheduler(logger, tenant, metadataManager, entityEventHandler);
-        const dataManager = new DataManager<U, FilterOptions, T>(logger, util, tenant, metadataManager, entityKeyHandler, entityEventHandler, store, local, cloud);
+        const syncScheduler = new SyncScheduler(logger, tenant, metadataManager, entityEventHandler, dirtyTracker);
+        const dataManager = new DataManager<U, FilterOptions, T>(logger, util, tenant, metadataManager, entityKeyHandler, entityEventHandler, dirtyTracker, store, local, cloud);
         const observableManager = new ObservableManager<U, FilterOptions, T>(logger, dataManager, entityKeyHandler, entityEventHandler);
         this.ctx = {
             util, tenant, store, local, cloud, strategy, syncScheduler,
-            entityKeyHandler, entityEventHandler, metadataManager,
-            dataManager, observableManager, logger
+            entityKeyHandler, entityEventHandler, dirtyTracker,
+            metadataManager, dataManager, observableManager, logger
         };
     }
 
@@ -92,5 +95,13 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions, T 
     public async syncNow(): Promise<void> {
         await this.ctx.syncScheduler.sync(this.ctx.store, this.ctx.local);
         if (this.ctx.cloud) await this.ctx.syncScheduler.sync(this.ctx.local, this.ctx.cloud);
+    }
+
+    public isDirty(): boolean {
+        return this.ctx.dirtyTracker.isDirty();
+    }
+
+    public observeDirty(): Observable<boolean> {
+        return this.ctx.dirtyTracker.observe();
     }
 }

@@ -304,7 +304,7 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence<H
             name: fileName,
             mimeType: 'text/plain',
         };
-        if (spaceId === 'appDataFolder') metadata['parents'] = ['appDataFolder'];
+        // if (spaceId === 'appDataFolder') metadata['parents'] = ['appDataFolder'];
         const fileBlob = new Blob([content], { type: 'text/plain' });
         const formData = new FormData();
         formData.append('metadata', new Blob([Utils.stringifyJson(metadata)], { type: 'application/json' }));

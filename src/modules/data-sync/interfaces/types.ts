@@ -1,5 +1,6 @@
 import * as z from "zod";
 import type { DataManager } from "../DataManager";
+import type { DirtyTracker } from "../DirtyTracker";
 import type { EntityEventHandler } from "../EntityEventHandler";
 import type { EntityKeyHandler } from "../EntityKeyHandler";
 import type { EntityUtil } from "../EntityUtil";
@@ -48,6 +49,7 @@ export type Context<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Te
 
     entityKeyHandler: EntityKeyHandler<U, FilterOptions>;
     entityEventHandler: EntityEventHandler<U>;
+    dirtyTracker: DirtyTracker<T>;
     metadataManager: MetadataManager<U, T>;
     syncScheduler: SyncScheduler<U, T>;
 }

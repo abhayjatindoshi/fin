@@ -4,7 +4,7 @@ import { AppSidebar } from "./AppSidebar";
 
 const BaseLayout: React.FC = () => {
     return <SidebarProvider defaultOpen={true}>
-        <div className="w-screen h-screen flex flex-row">
+        <div className="w-screen h-screen flex flex-row bg-sidebar">
             <AppSidebar />
             {/* <SidebarInset> */}
             <div className="flex-1 bg-sidebar p-2">

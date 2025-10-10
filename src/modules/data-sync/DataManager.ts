@@ -1,4 +1,5 @@
 import { Utils } from "../common/Utils";
+import type { DirtyTracker } from "./DirtyTracker";
 import type { Tenant } from "./entities/Tenant";
 import type { EntityEventHandler } from "./EntityEventHandler";
 import type { EntityKeyHandler } from "./EntityKeyHandler";
@@ -18,6 +19,7 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
     private metadataManager: MetadataManager<U, T>;
     private keyHandler: EntityKeyHandler<U, FilterOptions>;
     private eventHandler: EntityEventHandler<U>;
+    private dirtyTracker: DirtyTracker<T>;
     private store: IStore<U, T>;
     private local: IPersistence<T>;
     private cloud?: IPersistence<T>;
@@ -25,7 +27,7 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
     constructor(
         logger: ILogger, util: U, tenant: T, metadataManager: MetadataManager<U, T>,
         keyHandler: EntityKeyHandler<U, FilterOptions>, eventHandler: EntityEventHandler<U>,
-        store: IStore<U, T>, local: IPersistence<T>, cloud?: IPersistence<T>
+        dirtyTracker: DirtyTracker<T>, store: IStore<U, T>, local: IPersistence<T>, cloud?: IPersistence<T>
     ) {
         this.logger = logger;
         this.util = util;
@@ -33,6 +35,7 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
         this.metadataManager = metadataManager;
         this.keyHandler = keyHandler;
         this.eventHandler = eventHandler;
+        this.dirtyTracker = dirtyTracker;
         this.store = store;
         this.local = local;
         this.cloud = cloud;
@@ -63,6 +66,7 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
         this.store.save(this.tenant, entityKey, entityName, entity);
         this.logger.i(this.constructor.name, 'Entity saved', { entityKey, entityName, entityId: entity.id! });
         this.eventHandler.notifyEntityEvent('save', entityKey, entityName, entity.id!);
+        this.dirtyTracker.notifyStoreUpdated();
         return entity.id!;
     }
 
@@ -71,6 +75,7 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
         this.store.delete(this.tenant, entityKey, entityName, id);
         this.logger.i(this.constructor.name, 'Entity deleted', { entityKey, entityName, entityId: id });
         this.eventHandler.notifyEntityEvent('delete', entityKey, entityName, id);
+        this.dirtyTracker.notifyStoreUpdated();
     }
 
     async getEntityKeyData<N extends EntityNameOf<U>>(entityName: string, entityKey: string): Promise<Array<EntityTypeOf<U, N>>> {

@@ -2,7 +2,7 @@ import EmptyOpenBox from "@/modules/app-ui/svg/EmptyOpenBox";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { ChevronRight, FolderOpen, Home, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Tenant } from "../entities/Tenant";
 import type { EntityUtil } from "../EntityUtil";
 import type { SchemaMap } from "../interfaces/types";
@@ -23,12 +23,21 @@ export interface TenantDialogProps {
 
 const TenantSelectionComponent = <U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant>({ tenantStr = 'tenant', onSelect }: TenantProps<T>) => {
 
-    const { manager, tenants, setCurrentTenant, loading, settings } = useTenant<U, FilterOptions, T>();
+    const { manager, setCurrentTenant, loading } = useTenant<U, FilterOptions, T>();
     const [newDialogOpen, setNewDialogOpen] = useState(false);
     const [openDialogOpen, setOpenDialogOpen] = useState(false);
+    const [tenants, setTenants] = useState<T[] | null>(null);
 
+    const settings = useMemo(() => manager?.combinedSettings() || null, [manager]);
     const lowerTenantStr = tenantStr.toLowerCase();
     const capitalizedTenantStr = tenantStr.charAt(0).toUpperCase() + tenantStr.slice(1).toLowerCase();
+
+    useEffect(() => {
+        if (!manager) return;
+        const subscription = manager.observeAll().subscribe(setTenants);
+
+        return () => subscription.unsubscribe();
+    }, [manager]);
 
     const selectTenant = (tenant: T) => {
         setCurrentTenant(tenant);
@@ -37,7 +46,7 @@ const TenantSelectionComponent = <U extends EntityUtil<SchemaMap>, FilterOptions
 
     return (
         <div className="flex flex-col gap-2 items-center w-full max-w-[400px] p-2">
-            {loading ?
+            {loading || settings == null || tenants == null ?
                 <Spinner /> :
                 <>
                     <div className="flex flex-row gap-5 mb-5 w-full">
@@ -66,7 +75,7 @@ const TenantSelectionComponent = <U extends EntityUtil<SchemaMap>, FilterOptions
                 </>
             }
 
-            {settings.newForm && settings.newForm.steps.length > 0 &&
+            {settings && settings.newForm && settings.newForm.steps.length > 0 &&
                 <TenantStepDialog<T>
                     open={newDialogOpen}
                     onOpenChange={setNewDialogOpen}
@@ -83,7 +92,7 @@ const TenantSelectionComponent = <U extends EntityUtil<SchemaMap>, FilterOptions
                 />
             }
 
-            {settings.openForm && settings.openForm.steps.length > 0 &&
+            {settings && settings.openForm && settings.openForm.steps.length > 0 &&
                 <TenantStepDialog<T>
                     open={openDialogOpen}
                     onOpenChange={setOpenDialogOpen}

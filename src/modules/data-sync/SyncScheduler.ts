@@ -1,3 +1,4 @@
+import type { DirtyTracker } from "./DirtyTracker";
 import type { Tenant } from "./entities/Tenant";
 import type { EntityEventHandler } from "./EntityEventHandler";
 import type { EntityUtil } from "./EntityUtil";
@@ -23,14 +24,16 @@ export class SyncScheduler<U extends EntityUtil<SchemaMap>, T extends Tenant> {
     private running = false;
     private metadataManager: MetadataManager<U, T>;
     private entityEventHandler: EntityEventHandler<U>;
+    private dirtyTracker: DirtyTracker<T>;
     private shuttingDown = false;
     private timeout = 200;
 
-    constructor(logger: ILogger, tenant: T, metadataManager: MetadataManager<U, T>, entityEventHandler: EntityEventHandler<U>) {
+    constructor(logger: ILogger, tenant: T, metadataManager: MetadataManager<U, T>, entityEventHandler: EntityEventHandler<U>, dirtyTracker: DirtyTracker<T>) {
         this.logger = logger;
         this.tenant = tenant;
         this.metadataManager = metadataManager;
         this.entityEventHandler = entityEventHandler;
+        this.dirtyTracker = dirtyTracker;
         setTimeout(() => this.tick(), this.timeout);
     }
 
@@ -77,6 +80,7 @@ export class SyncScheduler<U extends EntityUtil<SchemaMap>, T extends Tenant> {
             const time = new Date();
             this.logger.i(this.constructor.name, `Starting sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
             try {
+                const sourceVersion = this.dirtyTracker.getVersion(item.source);
                 await SyncHandler.sync({
                     logger: this.logger,
                     tenant: this.tenant,
@@ -85,6 +89,7 @@ export class SyncScheduler<U extends EntityUtil<SchemaMap>, T extends Tenant> {
                     persistenceA: item.source,
                     persistenceB: item.target
                 });
+                this.dirtyTracker.setVersion(item.target, sourceVersion);
                 item.resolve();
                 this.logger.i(this.constructor.name, `Completed sync [${item.source.constructor.name}] -> [${item.target.constructor.name}] time: ${new Date().getTime() - time.getTime()}ms`, item);
             } catch (err) {

@@ -4,6 +4,7 @@ import { useTenant } from "@/modules/data-sync/providers/TenantProvider"
 import { ArrowRightLeft, ChevronsLeft, FlaskConical, Home, Import, PieChart, Settings } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import Logo from "./Logo"
+import SyncStatus from "./SyncStatus"
 import { ThemeSwitcher } from "./ThemeSwitcher"
 import UserProfile from "./UserProfile"
 
@@ -57,8 +58,10 @@ export function AppSidebar() {
                         <SidebarMenu>
                             <SidebarMenuItem key="logo">
                                 {/* <SidebarMenuButton size="lg"> */}
-                                <div className="flex flex-row items-center justify-between w-full" >
+                                <div className="flex flex-row items-center w-full" >
                                     {state == 'expanded' && <Logo />}
+                                    {state == 'expanded' && <SyncStatus />}
+                                    <div className="flex-grow" />
                                     {!isMobile && <Button variant="outline" size="icon-sm" className="p-0" onClick={toggleSidebar}>
                                         <ChevronsLeft className={`cursor-pointer transition-transform duration-300 ease-linear ${state == 'collapsed' ? 'rotate-180' : ''}`} />
                                     </Button>}

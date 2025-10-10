@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type DependencyList, type EffectCallback } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { util } from "../app/entities/entities";
 import { DateStrategy } from "../app/store/DateStrategy";
@@ -16,8 +16,8 @@ import { ThemeSwitcher } from "./common/ThemeSwitcher";
 
 export const AppLoader: React.FC = () => {
     const { currentUser, token } = useAuth();
-    const { load: loadDataSync, unload, loading: dataSyncLoading } = useDataSync();
-    const { load: loadTenant, tenants, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
+    const { load: loadDataSync, orchestrator, unload, loading: dataSyncLoading } = useDataSync();
+    const { load: loadTenant, manager, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
     const { householdId } = useParams();
     const navigate = useNavigate();
 
@@ -29,16 +29,18 @@ export const AppLoader: React.FC = () => {
     }, [currentUser, token]);
 
     useEffect(() => {
-        if (!householdId || tenants.length === 0) return;
-        if (currentTenant == null) {
-            const tenant = tenants.find(t => t.id === householdId);
-            if (tenant) {
-                setCurrentTenant(tenant);
-            } else {
-                navigate('/');
-            }
+        if (!householdId) {
+            setCurrentTenant(null);
         }
-    }, [householdId, currentTenant, tenants, setCurrentTenant, navigate]);
+    }, [householdId, setCurrentTenant]);
+
+    useEffect(() => {
+        if (!householdId || !manager) return;
+        if (!currentTenant) {
+            manager.get(householdId)
+                .then(tenant => setCurrentTenant(tenant))
+        }
+    }, [householdId, currentTenant, manager, setCurrentTenant]);
 
     useEffect(() => {
         if (!cloudService) return;
@@ -53,24 +55,23 @@ export const AppLoader: React.FC = () => {
 
     useEffect(() => {
         const beforeUnload = async (e: Event) => {
-            if (!householdId) return;
-            navigate('/');
-            e.preventDefault();
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            return true;
+            if (!orchestrator) return;
+            if (orchestrator.isDirty()) {
+                e.preventDefault();
+                unload();
+                if (window.location.pathname !== '/') {
+                    setCurrentTenant(null);
+                    navigate('/');
+                }
+            }
         };
 
         window.addEventListener('beforeunload', beforeUnload);
 
-        // clearing orchestrator if householdId is missing
-        if (!householdId) {
-            unload();
-        }
-
         return () => {
             window.removeEventListener('beforeunload', beforeUnload);
         };
-    }, [householdId, unload]);
+    }, [orchestrator, unload]);
 
     useEffect(() => {
         if (!cloudService || !currentTenant) return;
@@ -87,50 +88,17 @@ export const AppLoader: React.FC = () => {
 
     }, [cloudService, currentTenant, loadDataSync]);
 
-    return (currentUser && currentTenant && !loading) ? <Outlet /> :
-        <div className="flex flex-col items-center h-full w-full">
-            <div className="absolute top-8 right-8">
-                <ThemeSwitcher />
-            </div>
-            <div className="mt-32 mb-8">
-                <Logo size="large" />
-            </div>
-            {loading && <Spinner />}
-            {!loading && !currentUser && <LoginComponent />}
-            {!loading && currentUser && !householdId && <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => navigate('/' + tenant.id)} />}
+    if (orchestrator) return <Outlet />;
+
+    return <div className="flex flex-col items-center h-full w-full">
+        <div className="absolute top-8 right-8">
+            <ThemeSwitcher />
         </div>
+        <div className="mt-32 mb-8">
+            <Logo size="large" />
+        </div>
+        {loading && <Spinner />}
+        {!loading && !currentUser && <LoginComponent />}
+        {!loading && currentUser && !householdId && <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => navigate('/' + tenant.id)} />}
+    </div>
 }
-
-
-const usePrevious = <T,>(value: T, initialValue: T) => {
-    const ref = useRef(initialValue);
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-};
-
-export const useEffectDebugger = (effectHook: EffectCallback, dependencies: DependencyList, dependencyNames: string[] = []) => {
-    const previousDeps = usePrevious(dependencies, []);
-
-    const changedDeps = dependencies.reduce<Record<string | number, { before: unknown; after: unknown }>>((accum, dependency, index) => {
-        if (dependency !== previousDeps[index]) {
-            const keyName = dependencyNames[index] || index;
-            return {
-                ...accum,
-                [keyName]: {
-                    before: previousDeps[index],
-                    after: dependency
-                }
-            };
-        }
-
-        return accum;
-    }, {});
-
-    if (Object.keys(changedDeps).length) {
-        console.log('[use-effect-debugger] ', changedDeps);
-    }
-
-    useEffect(effectHook, dependencies);
-};

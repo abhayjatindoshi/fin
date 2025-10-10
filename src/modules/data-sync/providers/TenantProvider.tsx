@@ -1,18 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import type { Tenant } from "../entities/Tenant"
 import type { EntityUtil } from "../EntityUtil"
-import type { TenantSettings } from "../interfaces/IPersistence"
 import type { SchemaMap } from "../interfaces/types"
 import { TenantManager, type TenantManagerConfig } from "../TenantManager"
 
 type TenantProviderState<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> = {
     load: (config: TenantManagerConfig<U, FilterOptions, T>) => void,
-    tenants: T[],
     currentTenant: T | null,
     manager: TenantManager<U, FilterOptions, T> | null,
     setCurrentTenant: (tenant: T | null) => void,
     loading: boolean,
-    settings: TenantSettings<T>,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,8 +25,6 @@ export const TenantProvider = <U extends EntityUtil<SchemaMap>, FilterOptions, T
 
     const [loading, setLoading] = useState<boolean>(false);
     const [manager, setManager] = useState<TenantManager<U, FilterOptions, T> | null>(null);
-    const [tenants, setTenants] = useState<T[]>([]);
-    const [settings, setSettings] = useState<TenantSettings<T>>({});
     const [currentTenant, setCurrentTenant] = useState<T | null>(null);
 
     const chain = useRef(Promise.resolve());
@@ -37,14 +32,8 @@ export const TenantProvider = <U extends EntityUtil<SchemaMap>, FilterOptions, T
     const load = useCallback(async (config: TenantManagerConfig<U, FilterOptions, T>) => {
         chain.current = chain.current.then(async () => {
             setLoading(true);
-
             const manager = TenantManager.load<U, FilterOptions, T>(config);
             setManager(manager);
-
-            const tenants = await manager.getTenants();
-            setTenants(tenants);
-
-            setSettings(manager.combinedSettings());
             setLoading(false);
         });
         return chain.current;
@@ -56,7 +45,7 @@ export const TenantProvider = <U extends EntityUtil<SchemaMap>, FilterOptions, T
     }, [config]);
 
     return (
-        <TenantProviderContext.Provider value={{ load, tenants, currentTenant, manager, setCurrentTenant, loading, settings }}>
+        <TenantProviderContext.Provider value={{ load, currentTenant, manager, setCurrentTenant, loading }}>
             {children}
         </TenantProviderContext.Provider>
     );
