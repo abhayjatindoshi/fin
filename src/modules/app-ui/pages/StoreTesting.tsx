@@ -4,7 +4,8 @@ import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { DataOrchestrator } from "@/modules/data-sync/DataOrchestrator";
-import { useDataSync } from "@/modules/data-sync/DataSyncProvider";
+import type { Tenant } from "@/modules/data-sync/entities/Tenant";
+import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { useEffect, useState } from "react";
 import PageLayout from "../common/PageLayout";
@@ -13,7 +14,7 @@ import PageLayout from "../common/PageLayout";
 export default function StoreTesting() {
     const [entities, setEntities] = useState<Tag[]>([]);
     const [syncing, setSyncing] = useState(false);
-    const { orchestrator, loading } = useDataSync<typeof util, DateStrategyOptions>();
+    const { orchestrator, loading } = useDataSync<typeof util, DateStrategyOptions, Tenant>();
 
     console.log(loading, orchestrator);
 

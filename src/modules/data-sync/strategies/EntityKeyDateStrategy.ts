@@ -11,11 +11,11 @@ export abstract class EntityKeyDateStrategy<U extends EntityUtil<SchemaMap>> imp
     abstract separator: string;
     abstract identifierLength: number;
     abstract generateKeyForYear<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string;
-    abstract generateAllKeysForYear<N extends EntityNameOf<U>>(prefix: string, entityName: N, year: number): string[];
+    abstract generateAllKeysForYear<N extends EntityNameOf<U>>(entityName: N, year: number): string[];
 
-    generateAllKeysFor<N extends EntityNameOf<U>>(prefix: string, entityName: N, options?: DateStrategyOptions | undefined): string[] {
+    generateAllKeysFor<N extends EntityNameOf<U>>(entityName: N, options?: DateStrategyOptions | undefined): string[] {
         if (!options) options = { years: [new Date().getFullYear()] };
-        return options.years.map(year => this.generateAllKeysForYear(prefix, entityName, year)).flat();
+        return options.years.map(year => this.generateAllKeysForYear(entityName, year)).flat();
     }
 
     generateKeyFor<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string {

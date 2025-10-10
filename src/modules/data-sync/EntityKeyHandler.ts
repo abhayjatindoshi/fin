@@ -5,25 +5,15 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
 
 /**
- * Entity ID Format:
- *  global:   <nanoid>
- *  other:    <key>.<nanoid>
- */
-
-/**
- * Entity Key Format:
- *  global:   <prefix>.global
- *  other:    <prefix>.<key>
+ * Entity ID Format: <key>.<nanoid>
  */
 
 export class EntityKeyHandler<U extends EntityUtil<SchemaMap>, FilterOptions> {
     private logger: ILogger;
-    private prefix: string;
     private strategy: IEntityKeyStrategy<U, FilterOptions>;
 
-    constructor(logger: ILogger, prefix: string, strategy: IEntityKeyStrategy<U, FilterOptions>) {
+    constructor(logger: ILogger, strategy: IEntityKeyStrategy<U, FilterOptions>) {
         this.logger = logger;
-        this.prefix = prefix;
         this.strategy = strategy;
     }
 
@@ -37,13 +27,12 @@ export class EntityKeyHandler<U extends EntityUtil<SchemaMap>, FilterOptions> {
 
     public getEntityKeyFromId(id: string): string {
         const parts = id.split(this.strategy.separator);
-        if (parts.length <= 1) return `${this.prefix}${this.strategy.separator}global`;
-        parts.pop();
+        parts.pop(); // Remove the nanoid part
         const key = parts.join(this.strategy.separator);
-        return `${this.prefix}${this.strategy.separator}${key}`;
+        return `${key}`;
     }
 
     public getEntityKeys<N extends EntityNameOf<U>>(entityName: N, options?: FilterOptions): string[] {
-        return this.strategy.generateAllKeysFor(this.prefix, entityName, options);
+        return this.strategy.generateAllKeysFor(entityName, options);
     }
 }

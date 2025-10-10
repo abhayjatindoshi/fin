@@ -1,13 +1,13 @@
 import { Utils } from "../common/Utils";
+import type { Entity } from "./entities/Entity";
+import type { EntityMetadata, Metadata } from "./entities/Metadata";
+import type { Tenant } from "./entities/Tenant";
 import type { EntityEventHandler } from "./EntityEventHandler";
 import type { EntityUtil } from "./EntityUtil";
-import type { Entity } from "./interfaces/Entity";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
 import type { EntityKeyData, SchemaMap } from "./interfaces/types";
-import type { EntityMetadata, Metadata } from "./Metadata";
 import type { MetadataManager } from "./MetadataManager";
-
 
 type AnyEntityName = string;
 
@@ -26,13 +26,23 @@ type DifferenceOp =
     | { type: 'save', entityName: AnyEntityName, data: Entity }
     | { type: 'delete', entityName: AnyEntityName, deletedAt: Date }
 
-export class SyncHandler<U extends EntityUtil<SchemaMap>> {
+type SyncInputArgs<U extends EntityUtil<SchemaMap>, T extends Tenant> = {
+    logger: ILogger;
+    tenant: T;
+    metadataManager: MetadataManager<U, T>;
+    entityEventHandler: EntityEventHandler<U>;
+    persistenceA: IPersistence<T>;
+    persistenceB: IPersistence<T>;
+}
+
+export class SyncHandler<U extends EntityUtil<SchemaMap>, T extends Tenant> {
 
     private logger: ILogger;
-    private metadataManager: MetadataManager<U>;
+    private tenant: T;
+    private metadataManager: MetadataManager<U, T>;
     private entityEventHandler: EntityEventHandler<U>;
-    private persistenceA: IPersistence;
-    private persistenceB: IPersistence;
+    private persistenceA: IPersistence<T>;
+    private persistenceB: IPersistence<T>;
     private metadataA: Metadata | undefined;
     private metadataB: Metadata | undefined;
     private EntityKeyDataMapA: Record<string, EntityKeyData> = {};
@@ -40,15 +50,16 @@ export class SyncHandler<U extends EntityUtil<SchemaMap>> {
     private bucketA: DifferenceBucket = {};
     private bucketB: DifferenceBucket = {};
 
-    static sync = <U extends EntityUtil<SchemaMap>>(logger: ILogger, metadataManager: MetadataManager<U>, entityEventHandler: EntityEventHandler<U>, persistenceA: IPersistence, persistenceB: IPersistence): Promise<void> =>
-        new SyncHandler(logger, metadataManager, entityEventHandler, persistenceA, persistenceB).sync();
+    static sync = <U extends EntityUtil<SchemaMap>, T extends Tenant>(args: SyncInputArgs<U, T>): Promise<void> =>
+        new SyncHandler(args).sync();
 
-    private constructor(logger: ILogger, metadataManager: MetadataManager<U>, entityEventHandler: EntityEventHandler<U>, persistenceA: IPersistence, persistenceB: IPersistence) {
-        this.logger = logger;
-        this.metadataManager = metadataManager;
-        this.entityEventHandler = entityEventHandler;
-        this.persistenceA = persistenceA;
-        this.persistenceB = persistenceB;
+    private constructor(args: SyncInputArgs<U, T>) {
+        this.logger = args.logger;
+        this.tenant = args.tenant;
+        this.metadataManager = args.metadataManager;
+        this.entityEventHandler = args.entityEventHandler;
+        this.persistenceA = args.persistenceA;
+        this.persistenceB = args.persistenceB;
     }
 
     private async loadMetadata(): Promise<void> {
@@ -150,7 +161,7 @@ export class SyncHandler<U extends EntityUtil<SchemaMap>> {
 
         if (ops === 'copy') {
             const data = sourceEntityKeyDataMap[entityKey];
-            if (data) await target.storeData(entityKey, data);
+            if (data) await target.storeData(this.tenant, entityKey, data);
             targetMetadata.entityKeys[entityKey] = sourceMetadata.entityKeys[entityKey];
             targetMetadata.entityKeys[entityKey].updatedAt = new Date();
             return;
@@ -182,7 +193,7 @@ export class SyncHandler<U extends EntityUtil<SchemaMap>> {
         });
 
         this.updateEntityKeyMetadata(entityKey, entityKeyData, targetMetadata);
-        await target.storeData(entityKey, entityKeyData);
+        await target.storeData(this.tenant, entityKey, entityKeyData);
         this.entityEventHandler.notifyEntityKeyEvent(entityKey);
     }
 
@@ -314,7 +325,7 @@ export class SyncHandler<U extends EntityUtil<SchemaMap>> {
     private async loadEntityKeyData(inPersistence: 'A' | 'B', entityKeys: string[]): Promise<void> {
         const target = inPersistence === 'A' ? this.persistenceA : this.persistenceB;
         const entityKeyDataMap = inPersistence === 'A' ? this.EntityKeyDataMapA : this.EntityKeyDataMapB;
-        await Promise.all(entityKeys.map(entityKey => target.loadData(entityKey)
+        await Promise.all(entityKeys.map(entityKey => target.loadData(this.tenant, entityKey)
             .then(data => {
                 if (data) entityKeyDataMap[entityKey] = data;
             })

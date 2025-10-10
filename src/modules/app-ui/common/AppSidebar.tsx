@@ -1,6 +1,6 @@
 import { Button } from "@/modules/base-ui/components/ui/button"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/modules/base-ui/components/ui/sidebar"
-import { useDataSync } from "@/modules/data-sync/DataSyncProvider"
+import { useTenant } from "@/modules/data-sync/providers/TenantProvider"
 import { ArrowRightLeft, ChevronsLeft, FlaskConical, Home, Import, PieChart, Settings } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import Logo from "./Logo"
@@ -43,11 +43,11 @@ const items = [
 
 export function AppSidebar() {
 
-    const { prefix } = useDataSync();
+    const { currentTenant: tenant } = useTenant();
     const { state, toggleSidebar, isMobile } = useSidebar();
     const location = useLocation();
 
-    if (!prefix) return <></>;
+    if (!tenant) return <></>;
 
     return (
         <Sidebar collapsible="icon" className="border-sidebar">
@@ -66,7 +66,7 @@ export function AppSidebar() {
                                 {/* </SidebarMenuButton> */}
                             </SidebarMenuItem>
                             {items.map((item) => {
-                                const url = `/${prefix}${item.url}`;
+                                const url = `/${tenant.id}${item.url}`;
                                 return <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild isActive={location.pathname.endsWith(url)}>
                                         <Link to={url}>

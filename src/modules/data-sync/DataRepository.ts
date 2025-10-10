@@ -1,16 +1,17 @@
 import type { Observable } from "rxjs";
 import type { DataManager } from "./DataManager";
+import type { Tenant } from "./entities/Tenant";
 import type { EntityUtil } from "./EntityUtil";
 import type { QueryOptions } from "./interfaces/QueryOptions";
 import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
 import type { ObservableManager } from "./ObservableManager";
 
-export class DataRepository<U extends EntityUtil<SchemaMap>, N extends EntityNameOf<U>, FilterOptions> {
+export class DataRepository<U extends EntityUtil<SchemaMap>, N extends EntityNameOf<U>, FilterOptions, T extends Tenant> {
     private entityName: N;
-    private dataManager: DataManager<U, FilterOptions>;
-    private observableManager: ObservableManager<U, FilterOptions>;
+    private dataManager: DataManager<U, FilterOptions, T>;
+    private observableManager: ObservableManager<U, FilterOptions, T>;
 
-    constructor(entityName: N, dataManager: DataManager<U, FilterOptions>, observableManager: ObservableManager<U, FilterOptions>) {
+    constructor(entityName: N, dataManager: DataManager<U, FilterOptions, T>, observableManager: ObservableManager<U, FilterOptions, T>) {
         this.entityName = entityName;
         this.dataManager = dataManager;
         this.observableManager = observableManager;

@@ -1,4 +1,4 @@
-import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import { EntitySchema } from "@/modules/data-sync/entities/Entity";
 import z from "zod";
 
 export const MerchantSchema = EntitySchema.extend({

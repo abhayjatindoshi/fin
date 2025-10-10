@@ -1,11 +1,13 @@
-export type Household = {
-    id: string;
-    name: string;
-    location: {
-        space: CloudSpace,
-        folder?: CloudFile,
-    }
-}
+// export type Household = {
+//     id: string;
+//     name: string;
+//     location: {
+//         space: CloudSpace,
+//         folder?: CloudFile,
+//     }
+// }
+
+import type { Household } from "../../entities/Household";
 
 export type Config = {
     households: Household[];

@@ -26,17 +26,17 @@ export class DateStrategy extends EntityKeyDateStrategy<typeof util> {
         }
     }
 
-    generateAllKeysForYear<N extends EntityNameOf<typeof util>>(prefix: string, entityName: N, year: number): string[] {
+    generateAllKeysForYear<N extends EntityNameOf<typeof util>>(entityName: N, year: number): string[] {
         const entityConfig = this.getConfig(entityName);
         switch (entityConfig.scope) {
             case 'global':
-                return [`${prefix}${this.separator}global`];
+                return [`global`];
             case 'yearly':
-                return [`${prefix}${this.separator}${year}`];
+                return [`${year}`];
             case 'monthly': {
                 const keys: string[] = [];
                 for (let month = 1; month <= 12; month++) {
-                    keys.push(`${prefix}${this.separator}${year}${this.separator}${month.toString().padStart(2, '0')}`);
+                    keys.push(`${year}${this.separator}${month.toString().padStart(2, '0')}`);
                 }
                 return keys;
             }

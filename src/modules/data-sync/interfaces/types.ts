@@ -6,7 +6,8 @@ import type { EntityUtil } from "../EntityUtil";
 import type { MetadataManager } from "../MetadataManager";
 import type { ObservableManager } from "../ObservableManager";
 import type { SyncScheduler } from "../SyncScheduler";
-import type { Entity, EntitySchema } from "./Entity";
+import type { Entity, EntitySchema } from "../entities/Entity";
+import type { Tenant } from "../entities/Tenant";
 import type { IEntityKeyStrategy } from "./IEntityKeyStrategy";
 import type { ILogger } from "./ILogger";
 import type { IPersistence } from "./IPersistence";
@@ -20,35 +21,35 @@ export type SchemasOf<U> = U extends EntityUtil<infer S> ? S : never;
 export type EntityNameOf<U> = keyof SchemasOf<U> & string;
 export type EntityTypeOf<U, N extends EntityNameOf<U>> = z.infer<SchemasOf<U>[N]> & z.infer<typeof EntitySchema>;
 
-export type InputArgs<U extends EntityUtil<SchemaMap>, FilterOptions> = {
+export type InputArgs<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> = {
     util: U;
-    prefix: string;
-    store: IStore<U>;
-    local: IPersistence;
-    cloud?: IPersistence;
+    tenant: T;
+    store: IStore<U, T>;
+    local: IPersistence<T>;
+    cloud?: IPersistence<T>;
     strategy: IEntityKeyStrategy<U, FilterOptions>;
     logger?: ILogger;
 }
 
-export type Context<U extends EntityUtil<SchemaMap>, FilterOptions> = {
+export type Context<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> = {
 
     util: U;
-    prefix: string;
+    tenant: T;
     strategy: IEntityKeyStrategy<U, FilterOptions>;
 
-    store: IStore<U>;
-    local: IPersistence;
-    cloud?: IPersistence;
+    store: IStore<U, T>;
+    local: IPersistence<T>;
+    cloud?: IPersistence<T>;
 
     logger: ILogger;
 
-    dataManager: DataManager<U, FilterOptions>;
-    observableManager: ObservableManager<U, FilterOptions>;
+    dataManager: DataManager<U, FilterOptions, T>;
+    observableManager: ObservableManager<U, FilterOptions, T>;
 
     entityKeyHandler: EntityKeyHandler<U, FilterOptions>;
     entityEventHandler: EntityEventHandler<U>;
-    metadataManager: MetadataManager<U>;
-    syncScheduler: SyncScheduler<U>;
+    metadataManager: MetadataManager<U, T>;
+    syncScheduler: SyncScheduler<U, T>;
 }
 
 export type EntityId = string;
@@ -78,3 +79,6 @@ export type EntityKeyEvent = {
     type: Exclude<EntityEventType, 'delete'>;
     entityKey: EntityKey;
 }
+
+type ExtendsShape<ShapeType extends z.ZodRawShape> = z.ZodObject<z.ZodRawShape & ShapeType>;
+export type ExtendsEntity = ExtendsShape<typeof EntitySchema.shape>;

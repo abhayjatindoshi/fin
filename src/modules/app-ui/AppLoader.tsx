@@ -7,16 +7,21 @@ import { MemStore } from "../app/store/MemStore";
 import { useAuth } from "../auth/AuthProvider";
 import { LoginComponent } from "../auth/LoginComponent";
 import { Spinner } from "../base-ui/components/ui/spinner";
-import { useDataSync } from "../data-sync/DataSyncProvider";
-import { AuthHouseholdPageMap, AuthServiceMap } from "./AuthMap";
+import { useDataSync } from "../data-sync/providers/DataSyncProvider";
+import { useTenant } from "../data-sync/providers/TenantProvider";
+import TenantSelectionComponent from "../data-sync/ui/TenantSelectionComponent";
+import { AuthServiceMap } from "./AuthMap";
 import Logo from "./common/Logo";
 import { ThemeSwitcher } from "./common/ThemeSwitcher";
 
 export const AppLoader: React.FC = () => {
     const { currentUser, token } = useAuth();
-    const { load, unload, loading } = useDataSync();
+    const { load: loadDataSync, unload, loading: dataSyncLoading } = useDataSync();
+    const { load: loadTenant, tenants, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
     const { householdId } = useParams();
     const navigate = useNavigate();
+
+    const loading = dataSyncLoading || tenantLoading;
 
     const cloudService = useMemo(() => {
         if (!currentUser || !token) return null;
@@ -24,11 +29,34 @@ export const AppLoader: React.FC = () => {
     }, [currentUser, token]);
 
     useEffect(() => {
+        if (!householdId || tenants.length === 0) return;
+        if (currentTenant == null) {
+            const tenant = tenants.find(t => t.id === householdId);
+            if (tenant) {
+                setCurrentTenant(tenant);
+            } else {
+                navigate('/');
+            }
+        }
+    }, [householdId, currentTenant, tenants, setCurrentTenant, navigate]);
+
+    useEffect(() => {
+        if (!cloudService) return;
+        loadTenant({
+            util: util,
+            store: MemStore.getInstance(),
+            local: new LocalPersistence(),
+            cloud: cloudService,
+            strategy: new DateStrategy(),
+        });
+    }, [cloudService, loadTenant]);
+
+    useEffect(() => {
         const beforeUnload = async (e: Event) => {
             if (!householdId) return;
             navigate('/');
             e.preventDefault();
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 10000));
             return true;
         };
 
@@ -44,23 +72,22 @@ export const AppLoader: React.FC = () => {
         };
     }, [householdId, unload]);
 
-    useEffectDebugger(() => {
-        if (!currentUser || !householdId || !token || !cloudService) return;
-        console.log('AppLoader useEffect', { currentUser, householdId, token, cloudService });
+    useEffect(() => {
+        if (!cloudService || !currentTenant) return;
         const newConfig = {
-            prefix: householdId,
             util: util,
+            tenant: currentTenant,
             store: MemStore.getInstance(),
             local: new LocalPersistence(),
             cloud: cloudService,
             strategy: new DateStrategy(),
         }
 
-        load(newConfig);
+        loadDataSync(newConfig);
 
-    }, [currentUser, householdId, token, cloudService], ['currentUser', 'householdId', 'token', 'cloudService']);
+    }, [cloudService, currentTenant, loadDataSync]);
 
-    return (currentUser && householdId && !loading) ? <Outlet /> :
+    return (currentUser && currentTenant && !loading) ? <Outlet /> :
         <div className="flex flex-col items-center h-full w-full">
             <div className="absolute top-8 right-8">
                 <ThemeSwitcher />
@@ -70,10 +97,7 @@ export const AppLoader: React.FC = () => {
             </div>
             {loading && <Spinner />}
             {!loading && !currentUser && <LoginComponent />}
-            {!loading && currentUser && !householdId && (() => {
-                const HouseholdPage = AuthHouseholdPageMap[currentUser.type];
-                return <HouseholdPage />;
-            })()}
+            {!loading && currentUser && !householdId && <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => navigate('/' + tenant.id)} />}
         </div>
 }
 

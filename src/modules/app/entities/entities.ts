@@ -1,4 +1,5 @@
 import { EU } from "@/modules/data-sync/EntityUtil";
+import { HouseholdSchema } from "./Household";
 import { MoneyAccountSchema } from "./MoneyAccount";
 import { SubTagSchema } from "./SubTag";
 import { TagSchema } from "./Tag";
@@ -7,6 +8,7 @@ import { type EntityConfigMap } from "./types";
 import { UserAccountSchema } from "./UserAccount";
 
 export const util = EU
+    .register("Tenant", HouseholdSchema)
     .register("MoneyAccount", MoneyAccountSchema)
     .register("SubTag", SubTagSchema)
     .register("Tag", TagSchema)

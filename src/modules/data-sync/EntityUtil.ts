@@ -1,10 +1,7 @@
 import * as z from "zod";
-import type { EntitySchema } from "./interfaces/Entity";
-import type { SchemaMap } from "./interfaces/types";
-import { MetadataSchema } from "./Metadata";
-
-type BaseShape = typeof EntitySchema.shape;
-type ExtendsBaseEntity<Shape extends z.ZodRawShape> = z.ZodObject<Shape & BaseShape>;
+import { MetadataSchema } from "./entities/Metadata";
+import { TenantSchema } from "./entities/Tenant";
+import type { ExtendsEntity, SchemaMap } from "./interfaces/types";
 
 export class EntityUtil<S extends SchemaMap = Record<string, never>> {
     #schemas: S;
@@ -13,9 +10,8 @@ export class EntityUtil<S extends SchemaMap = Record<string, never>> {
         this.#schemas = schemas;
     }
 
-    register<Name extends string, Shape extends z.ZodRawShape>(
-        name: Name,
-        schema: ExtendsBaseEntity<Shape>
+    register<Name extends string>(
+        name: Name, schema: ExtendsEntity
     ): EntityUtil<S & { [K in Name]: typeof schema }> {
         return new EntityUtil({ ...(this.#schemas as object), [name]: schema } as S & { [K in Name]: typeof schema });
     }
@@ -36,4 +32,5 @@ export class EntityUtil<S extends SchemaMap = Record<string, never>> {
 }
 
 export const EU = new EntityUtil()
-    .register("Metadata", MetadataSchema);
+    .register("Metadata", MetadataSchema)
+    .register("Tenant", TenantSchema)

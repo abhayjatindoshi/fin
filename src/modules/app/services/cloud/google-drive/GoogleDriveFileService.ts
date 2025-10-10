@@ -1,10 +1,14 @@
+import type { Household } from "@/modules/app/entities/Household";
 import type { AuthConfig } from "@/modules/auth/AuthProvider";
 import type { Token } from "@/modules/auth/types";
 import { Utils } from "@/modules/common/Utils";
-import type { IPersistence } from "@/modules/data-sync/interfaces/IPersistence";
+import type { Tenant } from "@/modules/data-sync/entities/Tenant";
+import type { IPersistence, TenantSettings } from "@/modules/data-sync/interfaces/IPersistence";
 import type { EntityKeyData } from "@/modules/data-sync/interfaces/types";
+import NameInputStep from "@/modules/data-sync/ui/NameInputStep";
 import type { ICloudFileService } from "../ICloudFileService";
-import type { CloudFile, CloudSpace, Config } from "../types";
+import type { CloudFile, CloudSpace } from "../types";
+import GoogleDriveFolderSelectionStep from "./GoogleDriveFolderSelectionStep";
 
 export type GoogleDriveSpaceId = 'drive' | 'appDataFolder' | 'sharedWithMe';
 
@@ -33,7 +37,7 @@ export const GoogleAuthConfig: AuthConfig = {
     ]
 };
 
-export class GoogleDriveFileService implements ICloudFileService, IPersistence {
+export class GoogleDriveFileService implements ICloudFileService, IPersistence<Household> {
     private static instance: GoogleDriveFileService | null = null;
 
     public static load(getToken: () => Promise<Token | null>): GoogleDriveFileService {
@@ -55,35 +59,45 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
     // space vs folderId vs filename vs fileId
     private fileMap: { [key in GoogleDriveSpaceId]?: Record<string, Record<string, string>> } = {};
     private getToken: () => Promise<Token | null>;
-    private config: Config | null = null;
+    // private config: Config | null = null;
+    private defaultHousehold: Household = {
+        id: 'default',
+        name: 'Default Household',
+        spaceId: 'appDataFolder',
+        folderId: undefined,
+        folderName: undefined,
+        createdAt: new Date(0),
+        updatedAt: new Date(0),
+        version: 1,
+    };
 
     private constructor(getToken: () => Promise<Token | null>) {
         this.getToken = getToken;
     }
 
-    async getConfig(): Promise<Config | null> {
-        if (this.config) return this.config;
-        await this.ensureFileMapEntry('appDataFolder', 'root', 'config.json');
-        const fileId = this.fileMap['appDataFolder']?.['root']?.['config.json'];
-        if (!fileId) {
-            this.config = { households: [] };
-            return this.config;
-        }
-        const content = await this.readFile({ id: 'appDataFolder', displayName: 'App Folder' }, fileId);
-        this.config = Utils.parseJson<Config>(content);
-        return this.config;
-    }
+    // async getConfig(): Promise<Config | null> {
+    //     if (this.config) return this.config;
+    //     await this.ensureFileMapEntry('appDataFolder', 'root', 'config.json');
+    //     const fileId = this.fileMap['appDataFolder']?.['root']?.['config.json'];
+    //     if (!fileId) {
+    //         this.config = { households: [] };
+    //         return this.config;
+    //     }
+    //     const content = await this.readFile({ id: 'appDataFolder', displayName: 'App Folder' }, fileId);
+    //     this.config = Utils.parseJson<Config>(content);
+    //     return this.config;
+    // }
 
-    async saveConfig(config: Config): Promise<void> {
-        const content = Utils.stringifyJson(config);
-        await this.ensureFileMapEntry('appDataFolder', 'root', 'config.json');
-        const fileId = this.fileMap['appDataFolder']?.['root']?.['config.json'];
-        if (fileId) {
-            await this.updateFile({ id: 'appDataFolder', displayName: 'App Folder' }, fileId, 'config.json', content);
-        } else {
-            await this.createFile({ id: 'appDataFolder', displayName: 'App Folder' }, 'config.json', content);
-        }
-    }
+    // async saveConfig(config: Config): Promise<void> {
+    //     const content = Utils.stringifyJson(config);
+    //     await this.ensureFileMapEntry('appDataFolder', 'root', 'config.json');
+    //     const fileId = this.fileMap['appDataFolder']?.['root']?.['config.json'];
+    //     if (fileId) {
+    //         await this.updateFile({ id: 'appDataFolder', displayName: 'App Folder' }, fileId, 'config.json', content);
+    //     } else {
+    //         await this.createFile({ id: 'appDataFolder', displayName: 'App Folder' }, 'config.json', content);
+    //     }
+    // }
 
     getSpaces = (): Promise<GoogleDriveSpace[]> => Promise.resolve([
         { id: 'drive', displayName: 'My Drive' },
@@ -171,57 +185,68 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
         };
     }
 
-    async loadData(key: string): Promise<EntityKeyData | null> {
-        const householdId = key.split('.')[0];
+    tenantSettings: TenantSettings<Tenant> = {
+        newForm: {
+            title: 'New Household',
+            description: 'Create a new household in Google Drive.',
+            steps: [
+                {
+                    name: 'Name',
+                    component: NameInputStep,
+                },
+                {
+                    name: 'Folder Selection',
+                    component: GoogleDriveFolderSelectionStep,
+                }
+            ]
+        },
+    }
+
+    async loadData(household: Household | null, key: string): Promise<EntityKeyData | null> {
+        if (!household) household = this.defaultHousehold;
         await this.ensureConfig();
-        const household = this.config?.households.find(h => h.id === householdId);
-        if (!household) return null;
         await this.ensureFileMapEntry(
-            household.location.space.id as GoogleDriveSpaceId,
-            household.location.folder?.id || 'root', key);
-        const fileId = this.fileMap[household.location.space.id as GoogleDriveSpaceId]?.[household.location.folder?.id || 'root']?.[key];
+            household.spaceId as GoogleDriveSpaceId,
+            household.folderId || 'root', key);
+        const fileId = this.fileMap[household.spaceId as GoogleDriveSpaceId]?.[household.folderId || 'root']?.[key];
         if (!fileId) return null;
-        const content = await this.readFile(household.location.space as GoogleDriveSpace, fileId);
+        const content = await this.readFile(household.spaceId as GoogleDriveSpaceId, fileId);
         return Utils.parseJson<EntityKeyData>(content);
     }
 
-    async storeData(key: string, data: EntityKeyData): Promise<void> {
-        const householdId = key.split('.')[0];
+    async storeData(household: Household | null, key: string, data: EntityKeyData): Promise<void> {
+        if (!household) household = this.defaultHousehold;
         await this.ensureConfig();
-        const household = this.config?.households.find(h => h.id === householdId);
-        if (!household) throw new Error(`Household with ID ${householdId} not found in config`);
         const content = Utils.stringifyJson(data);
         await this.ensureFileMapEntry(
-            household.location.space.id as GoogleDriveSpaceId,
-            household.location.folder?.id || 'root', key);
-        const fileId = this.fileMap[household.location.space.id as GoogleDriveSpaceId]?.[household.location.folder?.id || 'root']?.[key];
+            household.spaceId as GoogleDriveSpaceId,
+            household.folderId || 'root', key);
+        const fileId = this.fileMap[household.spaceId as GoogleDriveSpaceId]?.[household.folderId || 'root']?.[key];
         if (fileId) {
-            await this.updateFile(household.location.space as GoogleDriveSpace, fileId, key, content);
+            await this.updateFile(household.spaceId as GoogleDriveSpaceId, fileId, key, content);
         } else {
-            await this.createFile(household.location.space as GoogleDriveSpace, key, content, household.location.folder?.id);
+            await this.createFile(household.spaceId as GoogleDriveSpaceId, key, content, household.folderId);
         }
     }
 
-    async clearData(key: string): Promise<void> {
-        const householdId = key.split('.')[0];
+    async clearData(household: Household | null, key: string): Promise<void> {
+        if (!household) household = this.defaultHousehold;
         await this.ensureConfig();
-        const household = this.config?.households.find(h => h.id === householdId);
-        if (!household) throw new Error(`Household with ID ${householdId} not found in config`);
         await this.ensureFileMapEntry(
-            household.location.space.id as GoogleDriveSpaceId,
-            household.location.folder?.id || 'root', key);
-        const fileId = this.fileMap[household.location.space.id as GoogleDriveSpaceId]?.[household.location.folder?.id || 'root']?.[key];
+            household.spaceId as GoogleDriveSpaceId,
+            household.folderId || 'root', key);
+        const fileId = this.fileMap[household.spaceId as GoogleDriveSpaceId]?.[household.folderId || 'root']?.[key];
         if (fileId) {
-            await this.deleteFile(household.location.space as GoogleDriveSpace, fileId);
+            await this.deleteFile(household.spaceId as GoogleDriveSpaceId, fileId);
         }
     }
 
-    private async readFile(space: GoogleDriveSpace, fileId: string): Promise<string> {
+    private async readFile(spaceId: GoogleDriveSpaceId, fileId: string): Promise<string> {
         const token = await this.getToken();
         if (!token) throw new Error('No auth token available');
         const params = new URLSearchParams();
         params.set('alt', 'media');
-        if (space.id === 'appDataFolder') params.set('spaces', 'appDataFolder');
+        if (spaceId === 'appDataFolder') params.set('spaces', 'appDataFolder');
         const response = await fetch(`${GoogleDriveFileService.API_BASE}/${fileId}?${params.toString()}`, {
             headers: {
                 Authorization: `Bearer ${token.token}`,
@@ -233,10 +258,10 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
         return await response.text();
     }
 
-    private async createFile(space: GoogleDriveSpace, name: string, content: string, parentFolderId?: string): Promise<FileResponse> {
-        if (space.id === 'appDataFolder' && parentFolderId) throw new Error('Cannot specify parent folder when creating file in App Data Folder');
-        if (space.id === 'sharedWithMe' && !parentFolderId) throw new Error('Must specify parent folder when creating file in Shared With Me');
-        if (space.id === 'drive' && !parentFolderId) parentFolderId = 'root';
+    private async createFile(spaceId: GoogleDriveSpaceId, name: string, content: string, parentFolderId?: string): Promise<FileResponse> {
+        if (spaceId === 'appDataFolder' && parentFolderId) throw new Error('Cannot specify parent folder when creating file in App Data Folder');
+        if (spaceId === 'sharedWithMe' && !parentFolderId) throw new Error('Must specify parent folder when creating file in Shared With Me');
+        if (spaceId === 'drive' && !parentFolderId) parentFolderId = 'root';
 
         const token = await this.getToken();
         if (!token) throw new Error('No auth token available');
@@ -247,7 +272,7 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
             mimeType: 'text/plain',
         };
         if (parentFolderId) metadata['parents'] = [parentFolderId];
-        if (space.id === 'appDataFolder') metadata['parents'] = ['appDataFolder'];
+        if (spaceId === 'appDataFolder') metadata['parents'] = ['appDataFolder'];
         const form = new FormData();
         form.append('metadata', new Blob([Utils.stringifyJson(metadata)], { type: 'application/json' }));
         form.append('file', file);
@@ -267,11 +292,11 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
         }
 
         const responseData = await response.json() as FileResponse;
-        this.addToFileMap(space.id, parentFolderId || 'root', responseData);
+        this.addToFileMap(spaceId, parentFolderId || 'root', responseData);
         return responseData;
     }
 
-    private async updateFile(space: GoogleDriveSpace, fileId: string, fileName: string, content: string): Promise<FileResponse> {
+    private async updateFile(spaceId: GoogleDriveSpaceId, fileId: string, fileName: string, content: string): Promise<FileResponse> {
         const token = await this.getToken();
         if (!token) throw new Error('No auth token available');
 
@@ -279,7 +304,7 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
             name: fileName,
             mimeType: 'text/plain',
         };
-        if (space.id === 'appDataFolder') metadata['parents'] = ['appDataFolder'];
+        if (spaceId === 'appDataFolder') metadata['parents'] = ['appDataFolder'];
         const fileBlob = new Blob([content], { type: 'text/plain' });
         const formData = new FormData();
         formData.append('metadata', new Blob([Utils.stringifyJson(metadata)], { type: 'application/json' }));
@@ -303,11 +328,11 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
         return await response.json();
     }
 
-    private async deleteFile(space: GoogleDriveSpace, fileId: string): Promise<void> {
+    private async deleteFile(spaceId: GoogleDriveSpaceId, fileId: string): Promise<void> {
         const token = await this.getToken();
         if (!token) throw new Error('No auth token available');
         const params = new URLSearchParams();
-        if (space.id === 'appDataFolder') params.set('spaces', 'appDataFolder');
+        if (spaceId === 'appDataFolder') params.set('spaces', 'appDataFolder');
         const response = await fetch(`${GoogleDriveFileService.API_BASE}/${fileId}?${params.toString()}`, {
             method: 'DELETE',
             headers: {
@@ -334,7 +359,7 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence {
     }
 
     private async ensureConfig(): Promise<void> {
-        if (this.config) return;
-        await this.getConfig();
+        // if (this.config) return;
+        // await this.getConfig();
     }
 }

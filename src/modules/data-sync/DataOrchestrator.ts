@@ -1,6 +1,7 @@
 import { ConsoleLogHandler } from "./ConsoleLogHandler";
 import { DataManager } from "./DataManager";
 import { DataRepository } from "./DataRepository";
+import type { Tenant } from "./entities/Tenant";
 import { EntityEventHandler } from "./EntityEventHandler";
 import { EntityKeyHandler } from "./EntityKeyHandler";
 import type { EntityUtil } from "./EntityUtil";
@@ -10,19 +11,19 @@ import { MetadataManager } from "./MetadataManager";
 import { ObservableManager } from "./ObservableManager";
 import { SyncScheduler } from "./SyncScheduler";
 
-export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
+export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private static instance: DataOrchestrator<any, any> | null = null;
+    private static instance: DataOrchestrator<any, any, any> | null = null;
 
-    public static getInstance<U extends EntityUtil<SchemaMap>, FilterOptions>(): DataOrchestrator<U, FilterOptions> {
+    public static getInstance<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant>(): DataOrchestrator<U, FilterOptions, T> {
         if (!DataOrchestrator.instance) {
             throw new Error("DataOrchestrator is not loaded");
         }
         return DataOrchestrator.instance;
     }
 
-    public static async load<U extends EntityUtil<SchemaMap>, FilterOptions>(args: InputArgs<U, FilterOptions>): Promise<void> {
+    public static async load<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant>(args: InputArgs<U, FilterOptions, T>): Promise<void> {
         await DataOrchestrator.unload();
         const instance = new DataOrchestrator(args);
         await instance.load();
@@ -34,22 +35,22 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
         DataOrchestrator.instance = null;
     }
 
-    ctx: Context<U, FilterOptions>;
+    ctx: Context<U, FilterOptions, T>;
     private intervals: Array<NodeJS.Timeout> = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private repoMap: Record<string, DataRepository<U, any, FilterOptions>> = {};
+    private repoMap: Record<string, DataRepository<U, any, FilterOptions, T>> = {};
 
-    constructor(args: InputArgs<U, FilterOptions>) {
-        const { util, prefix, store, local, cloud, strategy } = args;
+    constructor(args: InputArgs<U, FilterOptions, T>) {
+        const { util, tenant, store, local, cloud, strategy } = args;
         const logger = args.logger ?? new Logger(new ConsoleLogHandler());
         const entityEventHandler = new EntityEventHandler(logger);
-        const entityKeyHandler = new EntityKeyHandler(logger, prefix, strategy);
-        const metadataManager = new MetadataManager(logger, prefix, entityEventHandler, store, local, cloud);
-        const syncScheduler = new SyncScheduler(logger, metadataManager, entityEventHandler);
-        const dataManager = new DataManager<U, FilterOptions>(logger, util, metadataManager, entityKeyHandler, entityEventHandler, store, local, cloud);
-        const observableManager = new ObservableManager<U, FilterOptions>(logger, dataManager, entityKeyHandler, entityEventHandler);
+        const entityKeyHandler = new EntityKeyHandler(logger, strategy);
+        const metadataManager = new MetadataManager(logger, tenant, entityEventHandler, store, local, cloud);
+        const syncScheduler = new SyncScheduler(logger, tenant, metadataManager, entityEventHandler);
+        const dataManager = new DataManager<U, FilterOptions, T>(logger, util, tenant, metadataManager, entityKeyHandler, entityEventHandler, store, local, cloud);
+        const observableManager = new ObservableManager<U, FilterOptions, T>(logger, dataManager, entityKeyHandler, entityEventHandler);
         this.ctx = {
-            util, prefix, store, local, cloud, strategy, syncScheduler,
+            util, tenant, store, local, cloud, strategy, syncScheduler,
             entityKeyHandler, entityEventHandler, metadataManager,
             dataManager, observableManager, logger
         };
@@ -81,11 +82,11 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions> {
         this.intervals = [];
     }
 
-    public repo<N extends EntityNameOf<U>>(entityName: N): DataRepository<U, N, FilterOptions> {
+    public repo<N extends EntityNameOf<U>>(entityName: N): DataRepository<U, N, FilterOptions, T> {
         if (!this.repoMap[entityName]) {
             this.repoMap[entityName] = new DataRepository(entityName, this.ctx.dataManager, this.ctx.observableManager);
         }
-        return this.repoMap[entityName] as DataRepository<U, N, FilterOptions>;
+        return this.repoMap[entityName] as DataRepository<U, N, FilterOptions, T>;
     }
 
     public async syncNow(): Promise<void> {

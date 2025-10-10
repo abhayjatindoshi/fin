@@ -1,4 +1,4 @@
-import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import { EntitySchema } from "@/modules/data-sync/entities/Entity";
 import { zodReference } from "@/modules/data-sync/interfaces/ZodOverrides";
 import z from "zod";
 

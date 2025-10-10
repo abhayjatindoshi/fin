@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { EntitySchema } from "./interfaces/Entity";
+import { EntitySchema } from "./Entity";
 
 const EntityMetadataSchema = z.object({
     count: z.number(),

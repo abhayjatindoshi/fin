@@ -3,7 +3,8 @@ import type { DataManager } from "./DataManager";
 import type { EntityEventHandler } from "./EntityEventHandler";
 import type { EntityKeyHandler } from "./EntityKeyHandler";
 import type { EntityUtil } from "./EntityUtil";
-import type { Entity } from "./interfaces/Entity";
+import type { Entity } from "./entities/Entity";
+import type { Tenant } from "./entities/Tenant";
 import type { ILogger } from "./interfaces/ILogger";
 import { filterEntities, type QueryOptions } from "./interfaces/QueryOptions";
 import type { EntityEvent, EntityId, EntityKey, EntityKeyEvent, EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
@@ -15,15 +16,15 @@ type EntityNameMap<T> = Record<string, T>;
 type EntitySubjectMap = EntityKeyMap<EntityNameMap<EntityIdMap<BehaviorSubject<Entity | null>>>>;
 type EntityKeySubjectMap = EntityKeyMap<EntityNameMap<BehaviorSubject<EntityIdMap<Entity>>>>;
 
-export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions> {
+export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> {
 
     private logger: ILogger;
     private entityMap: EntitySubjectMap = {};
     private entityKeyMap: EntityKeySubjectMap = {};
-    private dataManager: DataManager<U, FilterOptions>;
+    private dataManager: DataManager<U, FilterOptions, T>;
     private keyHandler: EntityKeyHandler<U, FilterOptions>;
 
-    constructor(logger: ILogger, dataManager: DataManager<U, FilterOptions>, keyHandler: EntityKeyHandler<U, FilterOptions>, eventHandler: EntityEventHandler<U>) {
+    constructor(logger: ILogger, dataManager: DataManager<U, FilterOptions, T>, keyHandler: EntityKeyHandler<U, FilterOptions>, eventHandler: EntityEventHandler<U>) {
         this.logger = logger;
         this.dataManager = dataManager;
         this.keyHandler = keyHandler;

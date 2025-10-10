@@ -1,4 +1,4 @@
-import { EntitySchema } from "@/modules/data-sync/interfaces/Entity";
+import { EntitySchema } from "@/modules/data-sync/entities/Entity";
 import * as z from "zod";
 
 const AccountTypeSchema = z.enum(['SavingsAccount', 'CreditCard', 'Cash']);
