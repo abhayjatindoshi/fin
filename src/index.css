@@ -185,18 +185,41 @@
 
 .glass {
   position: relative;
+  border-radius: 5px;
   /* padding: 1.3rem; */
   /* backdrop-filter: blur(10px); */
+  box-shadow: inset 0 0 0.5rem oklch(from var(--foreground) l c h / 0.2);
+
+}
+
+.glass:hover::before {
+  /* background-color: oklch(from var(--foreground) l c h / 0.3); */
+  /* background-position: 100% 100%; */
+  /* background: radial-gradient(ellipse at right bottom, oklch(from var(--accent) l c h / 0.5), rgba(255, 255, 255, 0) 70%) border-box,
+              radial-gradient(ellipse at left top, oklch(from var(--accent) l c h / 0.5), rgba(255, 255, 255, 0) 30%) border-box; */
 }
 
 .glass::before {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 15px;
-  border: 2px solid transparent;
-  background: radial-gradient(ellipse at top, oklch(from var(--foreground) l c h / 0.2), rgba(255, 255, 255, 0) 70%) border-box;
+  border-radius: 5px;
+  border: 0.15rem solid oklch(from var(--foreground) l c h / 0.1);
+  transition: all 0.5s ease;
+  background-position: 0% 0%;
+  background-color: oklch(from var(--foreground) l c h / 0);
+  background: radial-gradient(ellipse at top, oklch(from var(--foreground) l c h / 0.5), rgba(255, 255, 255, 0) 70%) border-box;
   /* background: linear-gradient(140deg, red, orange, yellow, green, indigo, blue) border-box; */
   mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
+}
+
+.glass::after {
+  z-index: -1;
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  /* border: 0.1rem solid oklch(from var(--foreground) l c h / 0.1); */
+  background-color: oklch(from var(--foreground) l c h);
 }

@@ -33,4 +33,4 @@ export class EntityUtil<S extends SchemaMap = Record<string, never>> {
 
 export const EU = new EntityUtil()
     .register("Metadata", MetadataSchema)
-    .register("Tenant", TenantSchema)
+    .register("Tenant", TenantSchema);
