@@ -1,7 +1,7 @@
 import type { Tenant } from "@/modules/data-sync/entities/Tenant";
 import type { IStore } from "@/modules/data-sync/interfaces/IStore";
 import type { DeletedEntityIdRecord, EntityKeyData, EntityNameOf, EntityTypeOf } from "@/modules/data-sync/interfaces/types";
-import type { util } from "../entities/entities";
+import type { util } from "../../entities/entities";
 
 type StoreData = {
     [key: string]: EntityKeyData

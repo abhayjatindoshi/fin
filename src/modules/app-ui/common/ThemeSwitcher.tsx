@@ -33,9 +33,19 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ variant = 'icons',
         </Button>;
     }
 
+    if (variant === 'borderless') {
+        return <div className={className}>
+            {Object.entries(themeMap).map(([key, { icon }]) => (
+                <Button size="icon-sm" key={key} variant={theme === key ? "default" : 'ghost'} onClick={() => setTheme(key as Theme)}>
+                    {createElement(icon)}
+                </Button>
+            ))}
+        </div>;
+    }
+
     return <ButtonGroup className={className}>
         {Object.entries(themeMap).map(([key, { label, icon }]) => (
-            <Button size="icon-sm" key={key} variant={theme === key ? "default" : (variant === 'borderless' ? 'ghost' : 'outline')} onClick={() => setTheme(key as Theme)}>
+            <Button size="icon-sm" key={key} variant={theme === key ? "default" : 'outline'} onClick={() => setTheme(key as Theme)}>
                 {createElement(icon)}
                 {variant === 'active-text' && theme === key && <span>{label}</span>}
             </Button>

@@ -3,13 +3,19 @@ import { Button } from "@/modules/base-ui/components/ui/button";
 import { Checkbox } from "@/modules/base-ui/components/ui/checkbox";
 import type { TenantFormProps } from "@/modules/data-sync/interfaces/IPersistence";
 import { useEffect, useState } from "react";
-import CloudFileExplorer from "../CloudFileExplorer";
+import CloudFileExplorer from "../../../../data-sync/ui/CloudFileExplorer";
 import { GoogleDriveFileService } from "./GoogleDriveFileService";
 
 const GoogleDriveFolderSelectionStep: React.FC<TenantFormProps<Household>> = ({ tenant: household, setTenant: setHousehold, validateRef }: TenantFormProps<Household>) => {
 
-    const [shareable, setShareable] = useState(false);
     const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+
+    useEffect(() => {
+        setHousehold({
+            ...household,
+            spaceId: appDataFolder,
+        });
+    }, []);
 
     useEffect(() => {
         validateRef.current.validate = async () => {
@@ -17,14 +23,30 @@ const GoogleDriveFolderSelectionStep: React.FC<TenantFormProps<Household>> = ({ 
         }
     }, [household, validateRef]);
 
+    const appDataFolder = 'appDataFolder';
+
+    const markShareable = (shareable: boolean) => {
+        if (shareable) {
+            setHousehold({
+                ...household,
+                spaceId: undefined,
+            })
+        } else {
+            setHousehold({
+                ...household,
+                spaceId: appDataFolder,
+            })
+        }
+    }
+
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium">Sharing</label>
                 <label className="text-sm flex items-center gap-2 select-none cursor-pointer">
                     <Checkbox
-                        checked={shareable}
-                        onCheckedChange={(v) => setShareable(!!v)}
+                        checked={household.spaceId !== appDataFolder}
+                        onCheckedChange={markShareable}
                         aria-label="Share household"
                     />
                     <span>Enable sharing with other users</span>
@@ -34,7 +56,7 @@ const GoogleDriveFolderSelectionStep: React.FC<TenantFormProps<Household>> = ({ 
                 </p>
             </div>
 
-            {shareable && (
+            {household.spaceId !== appDataFolder && (
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium">Folder (Drive)</label>
                     <div className="flex items-center gap-3">

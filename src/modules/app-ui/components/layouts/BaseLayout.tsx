@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/navbar/Navbar";
-import { useApp } from "../providers/AppProvider";
+import { useApp } from "../../providers/AppProvider";
+import Navbar from "../navbar/Navbar";
 
 const BaseLayout: React.FC = () => {
 

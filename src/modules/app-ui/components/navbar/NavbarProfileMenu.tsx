@@ -17,7 +17,7 @@ const NavbarProfileMenu: React.FC = () => {
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-secondary/50 backdrop-blur-xs" align="end" sideOffset={10}>
-                <DropdownMenuItem>
+                <DropdownMenuItem variant="none">
                     <ThemeSwitcher variant="borderless" />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -32,7 +32,7 @@ const NavbarProfileMenu: React.FC = () => {
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem variant="destructive" onClick={logout}>
                     <LogOut />
                     Log out
                 </DropdownMenuItem>

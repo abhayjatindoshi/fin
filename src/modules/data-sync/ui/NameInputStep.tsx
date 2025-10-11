@@ -22,7 +22,7 @@ const NameInputStep = <T extends Tenant>({ tenant, setTenant, validateRef }: Ten
             <Input
                 value={tenant.name}
                 onChange={(e) => setTenant({ ...tenant, name: e.target.value })}
-                placeholder="Enter name..."
+                placeholder="Enter name..." autoFocus enterKeyHint="enter"
                 aria-invalid={!!nameError} />
             {nameError && <p className="text-sm text-destructive">{nameError}</p>}
         </div>

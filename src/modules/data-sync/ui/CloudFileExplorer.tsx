@@ -1,4 +1,4 @@
-import EmptyOpenBox from "@/modules/app-ui/svg/EmptyOpenBox";
+import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/modules/base-ui/components/ui/breadcrumb";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/modules/base-ui/components/ui/dialog";
@@ -12,8 +12,7 @@ import { CircleX, File, Folder, FolderPlus, Home, RefreshCw } from "lucide-react
 import moment from 'moment';
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
-import type { ICloudFileService } from "./ICloudFileService";
-import type { CloudFile, CloudSpace, Space } from "./types";
+import type { CloudFile, CloudSpace, ICloudFileService } from "../interfaces/ICloudFileService";
 
 export interface CloudFileExplorerValidator {
     isSpaceEnabled: (space: CloudSpace) => boolean;
@@ -37,8 +36,8 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
     open, onOpenChange, onSelect, service, validator, title, description
 }: CloudFileExplorerProps): React.ReactElement => {
 
-    const [spaces, setSpaces] = useState<Array<Space> | undefined>();
-    const [currentSpace, setCurrentSpace] = useState<Space | undefined>();
+    const [spaces, setSpaces] = useState<Array<CloudSpace> | undefined>();
+    const [currentSpace, setCurrentSpace] = useState<CloudSpace | undefined>();
     const [files, setFiles] = useState<Array<CloudFile> | undefined>();
     const [currentFolder, setCurrentFolder] = useState<CloudFile | undefined>();
     const [selected, setSelected] = useState<CloudFile | undefined>();
@@ -70,7 +69,7 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
 
     // load files
     const loadFiles = useCallback(async (
-        space: Space, parentFolder: CloudFile | undefined, search: string | undefined
+        space: CloudSpace, parentFolder: CloudFile | undefined, search: string | undefined
     ): Promise<void> => {
         setLoading(true);
         try {
@@ -92,7 +91,7 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
         loadFiles(currentSpace, currentFolder, search);
     }, [open, currentSpace, currentFolder, search, loadFiles]);
 
-    const switchSpace = (space: Space) => {
+    const switchSpace = (space: CloudSpace) => {
         if (space.id === currentSpace?.id) return;
         setCurrentFolder(undefined);
         setHistory([]);
@@ -101,12 +100,13 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
         setCurrentSpace(space);
     }
 
-    const handleSingleClick = (file: CloudFile) => {
-        if (validator?.isFileEnabled(file) === false) return;
-        setSelected(file);
-    }
+    // Double click was only supported in desktop, so we use single click to open folders
+    // const selecteFolder = (file: CloudFile) => {
+    //     if (validator?.isFileEnabled(file) === false) return;
+    //     setSelected(file);
+    // }
 
-    const handleDoubleClick = (file: CloudFile) => {
+    const openFolder = (file: CloudFile) => {
         if (!file.isFolder) return;
         setCurrentFolder(file);
         setHistory((h) => [...h, file]);
@@ -160,7 +160,7 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
     }
 
     return <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-3xl w-full">
+        <DialogContent>
             <DialogHeader>
                 <DialogTitle>{title || 'Select Folder'}</DialogTitle>
                 <DialogDescription>
@@ -224,15 +224,17 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
                             const isSelected = selected?.id === file.id;
                             const disabled = validator?.isFileEnabled(file) === false;
                             return <li key={file.id}
-                                onClick={() => handleDoubleClick(file)}
-                                // onDoubleClick={() => handleDoubleClick(file)}
+                                onClick={() => openFolder(file)}
+                                // onClick={() => selectFolder(file)}
+                                // onDoubleClick={() => openFolder(file)}
                                 className={cn(
                                     isSelected && 'bg-accent',
                                     disabled ? 'text-muted-foreground cursor-not-allowed' : 'cursor-pointer hover:bg-muted',
-                                    'flex flex-row items-center gap-2 px-4 py-2 text-sm [&>svg]:size-4'
+                                    'flex flex-row items-center gap-2 px-4 py-2 text-sm [&>svg]:size-4 w-full'
                                 )}>
                                 {file.isFolder ? <Folder /> : <File />}
-                                <span className={`truncate flex-1`} title={file.name}>{file.name}</span>
+                                <span className="truncate max-w-40" title={file.name}>{file.name}</span>
+                                <div className="flex-1" />
                                 {file.modifiedTime && <span>{moment(file.modifiedTime).fromNow()}</span>}
                             </li>
                         })}

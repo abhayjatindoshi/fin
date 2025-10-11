@@ -1,4 +1,15 @@
-import type { CloudFile, CloudSpace } from "./types";
+export type CloudFile = {
+    id: string;
+    name: string;
+    type?: string;
+    isFolder: boolean;
+    modifiedTime?: Date;
+}
+
+export type CloudSpace = {
+    id: string;
+    displayName: string;
+}
 
 export interface ICloudFileService {
     getSpaces(): Promise<Array<CloudSpace>>;

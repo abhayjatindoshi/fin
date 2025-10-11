@@ -28,7 +28,7 @@ const COMPACT_HEIGHT = 140
 const WIDE_WIDTH = 400
 const WIDE_HEIGHT = 220
 
-export const EmptyIllustration: React.FC<EmptyIllustrationProps> = ({
+export const EmptySearch: React.FC<EmptyIllustrationProps> = ({
     variant = 'initial',
     size = 600,
     tone = 'accent',
@@ -279,6 +279,6 @@ export const EmptyIllustration: React.FC<EmptyIllustrationProps> = ({
 }
 
 // Backward compatible export (previous component name)
-export const Empty = EmptyIllustration
+export const Empty = EmptySearch
 
-export default EmptyIllustration
+export default EmptySearch;

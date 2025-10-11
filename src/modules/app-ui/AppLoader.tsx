@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { AuthServiceMap } from "../app/AuthMap";
 import { util } from "../app/entities/entities";
 import { DateStrategy } from "../app/store/DateStrategy";
-import { LocalPersistence } from "../app/store/LocalPersistence";
-import { MemStore } from "../app/store/MemStore";
+import { LocalPersistence } from "../app/store/local/LocalPersistence";
+import { MemStore } from "../app/store/memory/MemStore";
 import { useAuth } from "../auth/AuthProvider";
 import { LoginComponent } from "../auth/LoginComponent";
 import { Spinner } from "../base-ui/components/ui/spinner";
 import { useDataSync } from "../data-sync/providers/DataSyncProvider";
 import { useTenant } from "../data-sync/providers/TenantProvider";
 import TenantSelectionComponent from "../data-sync/ui/TenantSelectionComponent";
-import { AuthServiceMap } from "./AuthMap";
 import Logo from "./common/Logo";
 import { ThemeSwitcher } from "./common/ThemeSwitcher";
 

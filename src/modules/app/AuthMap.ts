@@ -1,8 +1,8 @@
-import { GoogleAuthConfig, GoogleDriveFileService } from "../app/services/cloud/google-drive/GoogleDriveFileService";
 import type { AuthConfig } from "../auth/AuthProvider";
 import type { Token } from "../auth/types";
 import type { Tenant } from "../data-sync/entities/Tenant";
 import type { IPersistence } from "../data-sync/interfaces/IPersistence";
+import { GoogleAuthConfig, GoogleDriveFileService } from "./store/cloud/google-drive/GoogleDriveFileService";
 
 export type AuthType =
     | 'google';

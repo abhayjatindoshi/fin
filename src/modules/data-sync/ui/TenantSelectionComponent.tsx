@@ -1,4 +1,4 @@
-import EmptyOpenBox from "@/modules/app-ui/svg/EmptyOpenBox";
+import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { ChevronRight, FolderOpen, Home, Plus } from "lucide-react";

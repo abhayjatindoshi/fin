@@ -7,7 +7,7 @@ export function zodReference(entityName: string) {
             const ctx = DataOrchestrator.getInstance().ctx;
             const entityKey = ctx.entityKeyHandler.getEntityKeyFromId(id);
             if (!entityKey) return false;
-            const existingEntity = ctx.store.get(entityKey, entityName, id);
+            const existingEntity = ctx.store.get(ctx.tenant, entityKey, entityName, id);
             return existingEntity !== null;
         })
 }  
