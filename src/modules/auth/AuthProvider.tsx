@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { AppLogger } from "../app/logging/AppLogger";
 import { Utils } from "../common/Utils";
 import { GoogleAuthHandler, type GoogleAuthConfig } from "./google/GoogleAuthHandler";
 import type { AuthHandler, AuthType, Token, UserDetails } from "./types";
@@ -29,6 +30,7 @@ type AuthProviderProps = {
 }
 
 export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProviderProps) => {
+    const logger = AppLogger.tagged('AuthProvider');
     const [handler, setHandler] = useState<AuthHandler | null>(null);
     const [currentUser, setCurrentUser] = useState<UserDetails | null>(null);
     const supportedAuthTypes = useMemo(() => config.map(c => c.type), [config]);
@@ -41,7 +43,7 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
     };
 
     const clearSession = (reason?: string) => {
-        if (reason) console.warn('[AuthProvider] Clearing session:', reason);
+        if (reason) logger.w('Clearing session:', reason);
         localStorage.removeItem(storageKey);
         setHandler(null);
         setCurrentUser(null);
@@ -66,7 +68,7 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
             if (!user) return clearSession('Could not obtain user after restore');
 
             setHandler(newHandler);
-            console.log('[AuthProvider] Restored session for user:', user);
+            logger.i('Restored session for user:', user);
             setCurrentUser(user);
 
         } catch (e) {

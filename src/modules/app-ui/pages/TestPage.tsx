@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { EntityName, util } from "@/modules/app/entities/entities";
 import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
+import { AppLogger } from "@/modules/app/logging/AppLogger";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/base-ui/components/ui/table";
@@ -14,17 +15,18 @@ import PageLayout from "../components/layouts/PageLayout";
 
 
 export default function TestPage() {
+    const logger = AppLogger.tagged('TestPage');
     const [entities, setEntities] = useState<Tag[]>([]);
     const [syncing, setSyncing] = useState(false);
     const [newlyCreatedId, setNewlyCreatedId] = useState<string | null>(null);
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
     const { orchestrator, loading } = useDataSync<typeof util, DateStrategyOptions, Tenant>();
 
-    console.log(loading, orchestrator);
+    logger.v(`loading: ${loading}, orchestrator: ${orchestrator}`);
 
     useEffect(() => {
         if (!loading && orchestrator != null) {
-            console.log('Orchestrator is ready, loading entities');
+            logger.v('Orchestrator is ready, loading entities');
             let unsubscribe: (() => void) | undefined;
             (async () => {
                 unsubscribe = await loadEntities();

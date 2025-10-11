@@ -282,8 +282,6 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence<H
             body: form,
         });
         if (!response.ok) {
-            const res = await response.text();
-            console.error('Create file response:', res);
             throw new Error(`Failed to upload file: ${response.statusText}`);
         }
 

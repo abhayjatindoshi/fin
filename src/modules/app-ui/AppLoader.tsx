@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { AuthServiceMap } from "../app/AuthMap";
 import { util } from "../app/entities/entities";
+import { AppLogger } from "../app/logging/AppLogger";
 import { DateStrategy } from "../app/store/DateStrategy";
 import { LocalPersistence } from "../app/store/local/LocalPersistence";
 import { MemStore } from "../app/store/memory/MemStore";
@@ -48,6 +49,7 @@ export const AppLoader: React.FC = () => {
         loadTenant({
             util: util,
             store: MemStore.getInstance(),
+            logger: AppLogger.getInstance(),
             local: new LocalPersistence(),
             cloud: cloudService,
             strategy: new DateStrategy(),
@@ -75,19 +77,11 @@ export const AppLoader: React.FC = () => {
     }, [orchestrator, unload]);
 
     useEffect(() => {
-        if (!cloudService || !currentTenant) return;
-        const newConfig = {
-            util: util,
-            tenant: currentTenant,
-            store: MemStore.getInstance(),
-            local: new LocalPersistence(),
-            cloud: cloudService,
-            strategy: new DateStrategy(),
-        }
-
+        if (!manager || !cloudService || !currentTenant) return;
+        const newConfig = manager.getDataSyncConfig(currentTenant);
         loadDataSync(newConfig);
 
-    }, [cloudService, currentTenant, loadDataSync]);
+    }, [manager, cloudService, currentTenant, loadDataSync]);
 
     if (orchestrator) return <Outlet />;
 

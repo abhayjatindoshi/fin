@@ -112,7 +112,6 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
         if (store) combined = { ...store };
         if (local) combined = { ...combined, ...local };
         if (cloud) combined = { ...combined, ...cloud };
-        console.log("Combined Tenant Settings:", combined);
         return combined;
     }
 
