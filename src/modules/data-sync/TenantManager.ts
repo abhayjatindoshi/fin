@@ -47,8 +47,9 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
     }
 
     async getAll(): Promise<T[]> {
+        await this.localLoad;
         if (this.tenants) return Object.values(this.tenants);
-        await Promise.all([this.localLoad, this.cloudLoad]);
+        await this.cloudLoad;
         return Object.values(this.tenants ?? {});
     }
 

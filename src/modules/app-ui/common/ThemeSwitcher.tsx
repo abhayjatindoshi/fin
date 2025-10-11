@@ -5,7 +5,7 @@ import { Moon, Sun, SunMoon } from "lucide-react";
 import { createElement } from "react";
 
 interface ThemeSwitcherProps {
-    variant?: 'icon' | 'icons' | 'active-text'
+    variant?: 'icon' | 'icons' | 'active-text' | 'borderless'
     className?: string
 }
 
@@ -35,7 +35,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ variant = 'icons',
 
     return <ButtonGroup className={className}>
         {Object.entries(themeMap).map(([key, { label, icon }]) => (
-            <Button key={key} variant={theme === key ? "default" : "outline"} onClick={() => setTheme(key as Theme)}>
+            <Button size="icon-sm" key={key} variant={theme === key ? "default" : (variant === 'borderless' ? 'ghost' : 'outline')} onClick={() => setTheme(key as Theme)}>
                 {createElement(icon)}
                 {variant === 'active-text' && theme === key && <span>{label}</span>}
             </Button>

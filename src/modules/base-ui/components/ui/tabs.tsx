@@ -1,5 +1,5 @@
-import * as TabsPrimitive from "@radix-ui/react-tabs"
 import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/modules/base-ui/lib/utils"
 
@@ -10,7 +10,7 @@ function Tabs({
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
-      className={cn(className)}
+      className={cn("flex flex-col gap-2", className)}
       {...props}
     />
   )
@@ -23,7 +23,10 @@ function TabsList({
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      className={cn("flex border-b border-border/80 gap-4 px-1", className)}
+      className={cn(
+        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
+        className
+      )}
       {...props}
     />
   )
@@ -37,7 +40,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "px-2 pb-2 text-sm -mb-px border-b-2 transition-colors border-transparent text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground font-medium cursor-pointer data-[disabled]:text-muted data-[disabled]:cursor-not-allowed",
+        "data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -58,5 +61,4 @@ function TabsContent({
   )
 }
 
-export { Tabs, TabsContent, TabsList, TabsTrigger }
-
+export { Tabs, TabsList, TabsTrigger, TabsContent }

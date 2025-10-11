@@ -160,7 +160,7 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
     }
 
     return <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-3xl w-full">
             <DialogHeader>
                 <DialogTitle>{title || 'Select Folder'}</DialogTitle>
                 <DialogDescription>
@@ -168,7 +168,7 @@ const CloudFileExplorer: React.FC<CloudFileExplorerProps> = ({
                 </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-col gap-2 max-h-[60vh] max-w-[80vw]">
+            <div className="flex flex-col gap-2 max-h-[60vh]">
                 <Tabs value={currentSpace?.id}>
                     <TabsList>{spaces?.map(space => (
                         <TabsTrigger value={space.id} key={space.id}

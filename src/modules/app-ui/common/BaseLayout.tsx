@@ -1,20 +1,25 @@
-import { SidebarProvider } from "@/modules/base-ui/components/ui/sidebar";
 import { Outlet } from "react-router-dom";
-import { AppSidebar } from "./AppSidebar";
+import Navbar from "../components/navbar/Navbar";
+import { useApp } from "../providers/AppProvider";
 
 const BaseLayout: React.FC = () => {
-    return <SidebarProvider defaultOpen={true}>
-        <div className="w-screen h-screen flex flex-row bg-sidebar">
-            <AppSidebar />
-            {/* <SidebarInset> */}
-            <div className="flex-1 bg-sidebar p-2">
-                <div className="rounded-xl bg-background min-h-full">
-                    <Outlet />
-                </div>
+
+    const { isMobile } = useApp();
+
+    if (isMobile) {
+        return <div className="w-full">
+            <div className="w-full pb-16">
+                <Outlet />
             </div>
-            {/* </SidebarInset> */}
+            <Navbar className="w-full px-2 absolute bottom-4 z-10" isMobile={true} />
         </div>
-    </SidebarProvider>;
+    } else {
+        return <div className="flex flex-col mx-24 my-4">
+            <Navbar className="w-full sticky top-4 z-10" />
+            <Outlet />
+        </div>
+    }
+
 };
 
 export default BaseLayout;

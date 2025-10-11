@@ -29,14 +29,14 @@ const SyncStatus: React.FC = () => {
     const icon = saving ? <RefreshCw className="animate-spin" /> : (hasChanges ? <CircleDashed /> : <CloudCheck />);
 
     return (
-        <div>
+        <div className="p-1 cursor-pointer text-muted-foreground hover:text-foreground">
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon-sm">
+                    <div className="[&_svg]:shrink-0 [&_svg]:size-4">
                         {icon}
-                    </Button>
+                    </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-110 p-0">
+                <PopoverContent className="p-0 mx-4" sideOffset={20}>
                     <Item variant="default">
                         <ItemMedia variant="icon">
                             {icon}
@@ -44,7 +44,7 @@ const SyncStatus: React.FC = () => {
                         <ItemContent>
                             {hasChanges ? <>
                                 <ItemTitle>You have unsaved changes.</ItemTitle>
-                                <ItemDescription>Your changes are saved automatically. You can save the changes immediately by clicking the save button.</ItemDescription>
+                                <ItemDescription className="line-clamp-none">Your changes are saved automatically. You can save the changes immediately by clicking the save button.</ItemDescription>
                             </> : <>
                                 <ItemTitle>All changes are synced.</ItemTitle>
                                 <ItemDescription>Your changes are saved automatically.</ItemDescription>

@@ -31,8 +31,9 @@ export const AppLoader: React.FC = () => {
     useEffect(() => {
         if (!householdId) {
             setCurrentTenant(null);
+            unload();
         }
-    }, [householdId, setCurrentTenant]);
+    }, [householdId]);
 
     useEffect(() => {
         if (!householdId || !manager) return;

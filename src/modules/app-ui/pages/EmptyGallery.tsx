@@ -32,12 +32,12 @@ export default function EmptyGallery() {
     return (
         <div className='p-6 space-y-8'>
             <div className='flex flex-wrap gap-4 items-center'>
-                <div className='flex gap-2'>
+                <div className='flex flex-wrap gap-2'>
                     {items.map(i => (
                         <Button key={i.key} variant={i.key === selected ? 'default' : 'outline'} size='sm' onClick={() => setSelected(i.key)}>{i.label}</Button>
                     ))}
                 </div>
-                <div className='flex gap-2 items-center'>
+                <div className='flex flex-wrap gap-2 items-center'>
                     <Button variant={tone === 'accent' ? 'default' : 'outline'} size='sm' onClick={() => setTone(tone === 'accent' ? 'neutral' : 'accent')}>
                         Tone: {tone}
                     </Button>
