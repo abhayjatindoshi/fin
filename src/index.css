@@ -156,8 +156,8 @@
     scrollbar-color: color-mix(in oklab, var(--border) 40%, var(--foreground) 10%) transparent;
   }
 
-  body, #root {
-    height: 100vh;
+  html, body, #root {
+    height: 100%;
   }
 }
 
