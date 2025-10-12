@@ -30,12 +30,13 @@ export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions, T
         this.keyHandler = keyHandler;
         eventHandler.observeEntityChanges().subscribe(this.handleEntityChange.bind(this));
         eventHandler.observeEntityKeyChanges().subscribe(this.handleEntityKeyChange.bind(this));
+        this.logger.i(this.constructor.name, 'ObservableManager initialized');
     }
 
-    async observe<N extends EntityNameOf<U>>(entityName: N, id: string): Promise<Observable<EntityTypeOf<U, N> | null>> {
+    observe<N extends EntityNameOf<U>>(entityName: N, id: string): Observable<EntityTypeOf<U, N> | null> {
         this.logger.v(this.constructor.name, 'Observing entity', { entityName, entityId: id });
         const entityKey = this.keyHandler.getEntityKeyFromId(id);
-        const entry = await this.ensureEntityEntry(entityKey, entityName, id);
+        const entry = this.ensureEntityEntry(entityKey, entityName, id);
 
         return new Observable<EntityTypeOf<U, N> | null>(subscriber => {
             const subscription = entry.subscribe(subscriber as Observer<Entity | null>);
@@ -44,16 +45,16 @@ export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions, T
                 subscription.unsubscribe();
                 if (!entry.observed) {
                     entry.complete();
-                    delete this.entityMap[id];
+                    delete this.entityMap[entityKey]?.[entityName]?.[id];
                 }
             };
         });
     }
 
-    async observeAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions & FilterOptions): Promise<Observable<Array<EntityTypeOf<U, N>>>> {
+    observeAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions & FilterOptions): Observable<Array<EntityTypeOf<U, N>>> {
         this.logger.v(this.constructor.name, 'Observing all entities', { entityName, options });
         const entityKeys = this.keyHandler.getEntityKeys(entityName, options);
-        const entries = await this.ensureEntityKeyEntries(entityName, entityKeys);
+        const entries = this.ensureEntityKeyEntries(entityName, entityKeys);
 
         return new Observable<Array<EntityTypeOf<U, N>>>(subscriber => {
             const subscription = combineLatest(entries).pipe(
@@ -69,36 +70,52 @@ export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions, T
                 entries.forEach((entry, i) => {
                     if (entry.observed) return;
                     entry.complete();
-                    delete this.entityKeyMap[entityKeys[i]];
+                    delete this.entityKeyMap?.[entityKeys[i]]?.[entityName];
+                    if (Object.keys(this.entityKeyMap[entityKeys[i]]).length === 0) {
+                        delete this.entityKeyMap[entityKeys[i]];
+                    }
                 });
             };
         });
     }
 
-    private async ensureEntityEntry<N extends EntityNameOf<U>>(entityKey: string, entityName: N, id: string): Promise<BehaviorSubject<Entity | null>> {
+    private ensureEntityEntry<N extends EntityNameOf<U>>(entityKey: string, entityName: N, id: string): BehaviorSubject<Entity | null> {
         let entry = this.getEntityEntry(entityKey, entityName, id);
         if (!entry) {
-            const entity = await this.dataManager.get(entityName, id);
-            entry = new BehaviorSubject<Entity | null>(entity);
+            this.logger.v(this.constructor.name, 'Creating new entity entry', { entityName, id });
+            entry = new BehaviorSubject<Entity | null>(null);
             this.entityMap[entityKey] = this.entityMap[entityKey] || {};
             this.entityMap[entityKey][entityName] = this.entityMap[entityKey][entityName] || {};
             this.entityMap[entityKey][entityName][id] = entry;
+
+            void this.dataManager.get(entityName, id).then(entity => {
+                this.logger.v(this.constructor.name, 'Loaded initial entity data', { entityName, id, entity: !!entity });
+                entry?.next(entity);
+            }).catch(err => {
+                this.logger.e(this.constructor.name, 'Error observing entity', { entityName, id, err });
+            });
         }
         return entry;
     }
 
-    private async ensureEntityKeyEntries<N extends EntityNameOf<U>>(entityKey: N, entityKeys: string[]): Promise<BehaviorSubject<EntityIdMap<Entity>>[]> {
-        const promises = entityKeys.map(key => this.ensureEntityKeyEntry(key, entityKey));
-        return await Promise.all(promises);
+    private ensureEntityKeyEntries<N extends EntityNameOf<U>>(entityName: N, entityKeys: string[]): BehaviorSubject<EntityIdMap<Entity>>[] {
+        return entityKeys.map(entityKey => this.ensureEntityKeyEntry(entityKey, entityName));
     }
 
-    private async ensureEntityKeyEntry<N extends EntityNameOf<U>>(entityKey: string, entityName: N): Promise<BehaviorSubject<EntityIdMap<Entity>>> {
+    private ensureEntityKeyEntry<N extends EntityNameOf<U>>(entityKey: string, entityName: N): BehaviorSubject<EntityIdMap<Entity>> {
         let entry = this.entityKeyMap[entityKey]?.[entityName];
         if (!entry) {
-            const entities = await this.dataManager.getEntityKeyData(entityName, entityKey);
-            entry = new BehaviorSubject<EntityIdMap<Entity>>(Object.fromEntries(entities.map(e => [e.id!, e])));
+            this.logger.v(this.constructor.name, 'Creating new entity key entry', { entityName, entityKey });
+            entry = new BehaviorSubject<EntityIdMap<Entity>>({});
             this.entityKeyMap[entityKey] = this.entityKeyMap[entityKey] || {};
             this.entityKeyMap[entityKey][entityName] = entry;
+
+            void this.dataManager.getEntityKeyData(entityName, entityKey).then(entities => {
+                this.logger.v(this.constructor.name, 'Loaded initial entity key data', { entityName, entityKey, count: entities.length });
+                entry?.next(Object.fromEntries(entities.map(e => [e.id!, e])));
+            }).catch(err => {
+                this.logger.e(this.constructor.name, 'Error observing entity key', { entityName, entityKey, err });
+            });
         }
         return entry;
     }

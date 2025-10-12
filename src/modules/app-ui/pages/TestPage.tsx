@@ -1,42 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EntityName, util } from "@/modules/app/entities/entities";
+import { EntityName } from "@/modules/app/entities/entities";
 import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
-import { AppLogger } from "@/modules/app/logging/AppLogger";
+import type { UserAccount } from "@/modules/app/entities/UserAccount";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/base-ui/components/ui/table";
 import { DataOrchestrator } from "@/modules/data-sync/DataOrchestrator";
-import type { Tenant } from "@/modules/data-sync/entities/Tenant";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
-import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
+import { withSync } from "@/modules/data-sync/ui/SyncedComponent";
 import moment from "moment";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import PageLayout from "../components/layouts/PageLayout";
 
 
-export default function TestPage() {
-    const logger = AppLogger.tagged('TestPage');
-    const [entities, setEntities] = useState<Tag[]>([]);
+const TestPage = ({ entities, something }: { entities: Tag[], something: UserAccount[] }) => {
+    // const logger = AppLogger.tagged('TestPage');
+    // const [entities, setEntities] = useState<Tag[]>([]);
     const [syncing, setSyncing] = useState(false);
     const [newlyCreatedId, setNewlyCreatedId] = useState<string | null>(null);
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
-    const { orchestrator, loading } = useDataSync<typeof util, DateStrategyOptions, Tenant>();
+    const { orchestrator, loading } = useDataSync();
+    const { householdId } = useParams();
 
-    logger.v(`loading: ${loading}, orchestrator: ${orchestrator}`);
+    // logger.v(`loading: ${loading}, orchestrator: ${orchestrator}`);
 
-    useEffect(() => {
-        if (!loading && orchestrator != null) {
-            logger.v('Orchestrator is ready, loading entities');
-            let unsubscribe: (() => void) | undefined;
-            (async () => {
-                unsubscribe = await loadEntities();
-            })();
-            return () => {
-                // ensure any subscriptions are cleaned up
-                unsubscribe?.();
-            };
-        }
-    }, [loading, orchestrator]);
+    // useEffect(() => {
+    //     if (!loading && orchestrator != null) {
+    //         logger.v('Orchestrator is ready, loading entities');
+    //         let unsubscribe: (() => void) | undefined;
+    //         (async () => {
+    //             unsubscribe = await loadEntities();
+    //         })();
+    //         return () => {
+    //             // ensure any subscriptions are cleaned up
+    //             unsubscribe?.();
+    //         };
+    //     }
+    // }, [loading, orchestrator]);
 
     // const initialize = async (): Promise<void> => {
     //     while (true) {
@@ -50,13 +51,13 @@ export default function TestPage() {
     //     setPrefix('app');
     // }
 
-    const loadEntities = async (): Promise<() => void> => {
-        // orchestrator is guaranteed by the caller
-        const repo = orchestrator!.repo(EntityName.Tag);
-        const observable = await repo.observeAll();
-        const sub = observable.subscribe(all => setEntities(all as Tag[]));
-        return () => sub.unsubscribe();
-    }
+    // const loadEntities = async (): Promise<() => void> => {
+    //     // orchestrator is guaranteed by the caller
+    //     const repo = orchestrator!.repo(EntityName.Tag);
+    //     const observable = await repo.observeAll();
+    //     const sub = observable.subscribe(all => setEntities(all as Tag[]));
+    //     return () => sub.unsubscribe();
+    // }
 
     const handleDelete = async (id: string) => {
         if (!orchestrator) return;
@@ -147,7 +148,7 @@ export default function TestPage() {
 
     return (
         <PageLayout title="Store Testing">
-            <h2>Store Testing</h2>
+            <h2>Store Testing</h2> User Account count = {something.length}
             {(loading || !orchestrator) && <Spinner />}
             {/* <InitializeDriveComp> */}
             {!loading && <div style={{ marginTop: 24 }}>
@@ -179,7 +180,11 @@ export default function TestPage() {
                                         ].join(' ')}
                                     >
                                         {columns.map(key => (
-                                            <TableCell key={key}>{renderCellValue((entity as any)[key])}</TableCell>
+                                            <TableCell key={key}>
+                                                <Link to={`/${householdId}/test/${id}`}>
+                                                    {renderCellValue((entity as any)[key])}
+                                                </Link>
+                                            </TableCell>
                                         ))}
                                         <TableCell>
                                             <div style={{ display: 'flex', gap: 8 }}>
@@ -202,3 +207,16 @@ export default function TestPage() {
         </PageLayout>
     );
 }
+
+
+const synced = withSync(
+    (orchestrator) => {
+        const repo = orchestrator.repo(EntityName.Tag);
+        const entities = repo.observeAll();
+        const something = orchestrator.repo(EntityName.UserAccount).observeAll();
+        return { entities, something };
+    },
+    TestPage
+);
+
+export default synced;

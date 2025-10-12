@@ -1,3 +1,4 @@
+import NavbarHouseholdPicker from "./NavbarHouseholdPicker";
 import NavbarLogo from "./NavbarLogo";
 import NavbarMenu from "./NavbarMenu";
 import NavbarProfileMenu from "./NavbarProfileMenu";
@@ -8,12 +9,13 @@ type NavbarProps = {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ className, isMobile = false }: NavbarProps) => {
-    const themeClasses = 'border px-3 py-1 rounded-3xl bg-secondary/50 backdrop-blur-sm';
+    const themeClasses = 'border px-3 py-1 rounded-3xl bg-secondary/50 backdrop-blur';
 
     return (
         <div className={`flex flex-row items-center gap-2 ${className}`}>
             <NavbarLogo className={themeClasses} />
             <div className="flex-grow" />
+            {!isMobile && <NavbarHouseholdPicker className={themeClasses} />}
             <NavbarMenu className={themeClasses} variant={isMobile ? 'compact' : 'default'} />
             <NavbarProfileMenu />
         </div>

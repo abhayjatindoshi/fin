@@ -25,9 +25,8 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions,
     const chain = useRef(Promise.resolve());
 
     const load = useCallback(async (config: InputArgs<U, FilterOptions, T>) => {
+        setLoading(true);
         chain.current = chain.current.then(async () => {
-            setLoading(true);
-
             if (orchestrator) {
                 await DataOrchestrator.unload();
                 setOrchestrator(null);
@@ -35,20 +34,18 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions,
 
             await DataOrchestrator.load<U, FilterOptions, T>(config);
             setOrchestrator(DataOrchestrator.getInstance<U, FilterOptions, T>());
-            setLoading(false);
-        });
+        }).finally(() => setLoading(false));
 
         return chain.current;
     }, []);
 
     const unload = useCallback(async () => {
+        setLoading(true);
         chain.current = chain.current.then(async () => {
             if (!orchestrator) return;
-            setLoading(true);
             await DataOrchestrator.unload();
             setOrchestrator(null);
-            setLoading(false);
-        });
+        }).finally(() => setLoading(false));
         return chain.current;
     }, [orchestrator]);
 

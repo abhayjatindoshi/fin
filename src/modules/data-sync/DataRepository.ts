@@ -29,9 +29,9 @@ export class DataRepository<U extends EntityUtil<SchemaMap>, N extends EntityNam
     public delete = (id: string): void =>
         this.dataManager.delete(this.entityName, id);
 
-    public observe = async (id: string): Promise<Observable<EntityTypeOf<U, N> | null>> =>
+    public observe = (id: string): Observable<EntityTypeOf<U, N> | null> =>
         this.observableManager.observe(this.entityName, id);
 
-    public observeAll = async (options?: FilterOptions & QueryOptions): Promise<Observable<Array<EntityTypeOf<U, N>>>> =>
+    public observeAll = (options?: FilterOptions & QueryOptions): Observable<Array<EntityTypeOf<U, N>>> =>
         this.observableManager.observeAll(this.entityName, options);
 }

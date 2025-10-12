@@ -13,14 +13,6 @@ type PersistenceType = "store" | "local" | "cloud";
 
 export class MetadataManager<U extends EntityUtil<SchemaMap>, T extends Tenant> {
 
-    private static defaultMetadata: Metadata = {
-        id: 'id',
-        createdAt: new Date(0),
-        updatedAt: new Date(0),
-        version: 0,
-        entityKeys: {},
-    }
-
     private static metadataKey = 'metadata';
 
     private logger: ILogger;
@@ -40,7 +32,7 @@ export class MetadataManager<U extends EntityUtil<SchemaMap>, T extends Tenant> 
         this.store = store;
         this.local = local;
         this.cloud = cloud;
-        this.storeMetadata = { ...MetadataManager.defaultMetadata };
+        this.storeMetadata = MetadataManager.defaultMetadata();
 
         eventHandler.observeEntityChanges().pipe(map(event => event?.entityKey)).subscribe(this.handleEntityKeyChange.bind(this));
         eventHandler.observeEntityKeyChanges().pipe(map(event => event?.entityKey)).subscribe(this.handleEntityKeyChange.bind(this));
@@ -137,7 +129,7 @@ export class MetadataManager<U extends EntityUtil<SchemaMap>, T extends Tenant> 
         let metadata: Metadata;
         if (!data) {
             this.logger.v(this.constructor.name, `No ${type} metadata found, using default`, MetadataManager.defaultMetadata);
-            metadata = { ...MetadataManager.defaultMetadata };
+            metadata = MetadataManager.defaultMetadata();
             await this.saveMetadata(persistence, metadata);
         } else {
             metadata = this.fromEntityKeyData(data);
@@ -186,7 +178,7 @@ export class MetadataManager<U extends EntityUtil<SchemaMap>, T extends Tenant> 
     }
 
     private fromEntityKeyData(data: EntityKeyData): Metadata {
-        if (!data || !data.Metadata) return { ...MetadataManager.defaultMetadata };
+        if (!data || !data.Metadata) return MetadataManager.defaultMetadata();
         return Object.values(data.Metadata)[0] as Metadata;
     }
 
@@ -217,5 +209,15 @@ export class MetadataManager<U extends EntityUtil<SchemaMap>, T extends Tenant> 
             this.storeMetadata.entityKeys[entityKey] = entityKeyMetadata;
         }
         return entityKeyMetadata;
+    }
+
+    private static defaultMetadata(): Metadata {
+        return {
+            id: 'id',
+            createdAt: new Date(0),
+            updatedAt: new Date(0),
+            version: 0,
+            entityKeys: {},
+        };
     }
 }

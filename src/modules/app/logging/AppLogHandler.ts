@@ -36,13 +36,22 @@ export class AppLogHandler implements ILogHandler {
     }
 
     private enableConsoleLogs() {
+        if (this.consoleLogsSubscription) return;
         this.consoleLogsSubscription = this.stream.subscribe(log => {
             const logFun = this.getLogFunction(log.level);
             let message = `[${log.level}] [${log.timestamp.toISOString()}] ${log.tag}`;
             if (log.message) {
                 message += `: ${log.message}`;
             }
-            logFun(message);
+            if (log.args) {
+                if (Array.isArray(log.args)) {
+                    logFun(message, ...log.args);
+                } else {
+                    logFun(message, log.args);
+                }
+            } else {
+                logFun(message);
+            }
         });
     }
 

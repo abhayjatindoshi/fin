@@ -16,13 +16,13 @@ import Logo from "./common/Logo";
 import { ThemeSwitcher } from "./common/ThemeSwitcher";
 
 export const AppLoader: React.FC = () => {
-    const { currentUser, token } = useAuth();
+    const { currentUser, loading: authLoading, token } = useAuth();
     const { load: loadDataSync, orchestrator, unload, loading: dataSyncLoading } = useDataSync();
     const { load: loadTenant, manager, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
     const { householdId } = useParams();
     const navigate = useNavigate();
 
-    const loading = dataSyncLoading || tenantLoading;
+    const loading = dataSyncLoading || tenantLoading || authLoading;
 
     const cloudService = useMemo(() => {
         if (!currentUser || !token) return null;
@@ -30,11 +30,11 @@ export const AppLoader: React.FC = () => {
     }, [currentUser, token]);
 
     useEffect(() => {
-        if (!householdId) {
+        if (!householdId || householdId != currentTenant?.id) {
             setCurrentTenant(null);
             unload();
         }
-    }, [householdId]);
+    }, [householdId, currentTenant]);
 
     useEffect(() => {
         if (!householdId || !manager) return;
@@ -83,7 +83,7 @@ export const AppLoader: React.FC = () => {
 
     }, [manager, cloudService, currentTenant, loadDataSync]);
 
-    if (orchestrator) return <Outlet />;
+    if (householdId && orchestrator && householdId == currentTenant?.id && orchestrator.ctx.tenant.id == householdId) return <Outlet />;
 
     return <div className="flex flex-col items-center h-full w-full">
         <div className="absolute top-8 right-8">
@@ -92,8 +92,10 @@ export const AppLoader: React.FC = () => {
         <div className="mt-32 mb-8">
             <Logo size="large" />
         </div>
-        {loading && <Spinner />}
-        {!loading && !currentUser && <LoginComponent />}
-        {!loading && currentUser && !householdId && <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => navigate('/' + tenant.id)} />}
+        {loading ? <Spinner /> :
+            !currentUser ? <LoginComponent /> :
+                !householdId ? <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => navigate('/' + tenant.id)} /> :
+                    <Spinner />
+        }
     </div>
 }

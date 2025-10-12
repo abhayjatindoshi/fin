@@ -11,10 +11,12 @@ const NavbarProfileMenu: React.FC = () => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger>
-                <Avatar className="rounded-full size-10 border cursor-pointer opacity-70 hover:opacity-100 transition">
-                    <AvatarImage src={currentUser?.picture} alt={currentUser?.name} />
-                    <AvatarFallback>{currentUser?.name?.charAt(0)}</AvatarFallback>
-                </Avatar>
+                <div className="rounded-full border backdrop-blur">
+                    <Avatar className="size-10 cursor-pointer opacity-60 hover:opacity-100 transition">
+                        <AvatarImage src={currentUser?.picture} alt={currentUser?.name} />
+                        <AvatarFallback>{currentUser?.name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-secondary/50 backdrop-blur-xs" align="end" sideOffset={10}>
                 <DropdownMenuItem variant="none">

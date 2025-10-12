@@ -16,6 +16,7 @@ export type AuthConfig = BaseAuthConfig & (
 type AuthProviderState = {
     currentUser: UserDetails | null;
     supportedAuthTypes: AuthType[];
+    loading: boolean;
     login: (type: AuthType) => Promise<void>;
     token: () => Promise<Token | null>;
     logout: () => Promise<void>;
@@ -33,6 +34,7 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
     const logger = AppLogger.tagged('AuthProvider');
     const [handler, setHandler] = useState<AuthHandler | null>(null);
     const [currentUser, setCurrentUser] = useState<UserDetails | null>(null);
+    const [loading, setLoading] = useState(false);
     const supportedAuthTypes = useMemo(() => config.map(c => c.type), [config]);
 
     const createHandler = (conf: AuthConfig): AuthHandler => {
@@ -50,17 +52,19 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
     }
 
     const restore = useCallback(async () => {
-        const storedTokenString = localStorage.getItem(storageKey);
-        if (!storedTokenString) return;
-
-        const storedToken = Utils.parseJson<Token>(storedTokenString);
-        if (!storedToken || !storedToken.type) return clearSession('Invalid stored token format');
-
-        const conf = config.find(c => c.type === storedToken.type);
-        if (!conf) return clearSession('No config for stored token type');
-
-        const newHandler = createHandler(conf);
+        setLoading(true);
         try {
+            const storedTokenString = localStorage.getItem(storageKey);
+            if (!storedTokenString) return;
+
+            const storedToken = Utils.parseJson<Token>(storedTokenString);
+            if (!storedToken || !storedToken.type) return clearSession('Invalid stored token format');
+
+            const conf = config.find(c => c.type === storedToken.type);
+            if (!conf) return clearSession('No config for stored token type');
+
+            const newHandler = createHandler(conf);
+
             const restored = await newHandler.restore(storedToken);
             if (!restored) return clearSession();
 
@@ -73,6 +77,8 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
 
         } catch (e) {
             return clearSession('Error during restore: ' + (e as Error).message);
+        } finally {
+            setLoading(false);
         }
     }, [config]);
 
@@ -109,7 +115,7 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
         window.location.href = '/';
     }, [handler]);
 
-    return <AuthProviderContext.Provider value={{ currentUser, supportedAuthTypes, login, token, logout, }}>
+    return <AuthProviderContext.Provider value={{ currentUser, supportedAuthTypes, loading, login, token, logout, }}>
         {children}
     </AuthProviderContext.Provider>
 }

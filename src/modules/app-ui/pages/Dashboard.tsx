@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
     //     className=" glass h-40 w-120 rounded-lg flex items-center justify-center "> // 
     const Block = () => {
         return <div
-            className="glass h-10 w-40 bg-secondary/30 rounded-lg flex items-center justify-center ">
+            className="glass h-10 w-40 bg-secondary rounded-lg flex items-center justify-center ">
             Block
         </div>
     }
