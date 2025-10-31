@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useInRouterContext } from "react-router-dom";
 
 interface LogoProps {
     size?: 'small' | 'medium' | 'large';
@@ -19,11 +19,23 @@ const Logo: React.FC<LogoProps> = ({ size = "small", className = '' }: LogoProps
         'large': "text-7xl",
     };
 
+    const inRouter = useInRouterContext();
+
+    if (inRouter) {
+        return (
+            <Link to="/" className={`m-1 -mt-1 font-bold cursor-pointer ${sizeClasses[size]} ${className}`}>
+                <span>Fin</span>
+                <span className={`text-accent ${dotSizeClasses[size]}`}>.</span>
+            </Link>
+        );
+    }
+
+    // Fallback when not inside a Router (e.g., portals rendered before Router mounts)
     return (
-        <Link to="/" className={`m-1 -mt-1 font-bold cursor-pointer ${sizeClasses[size]} ${className}`}>
+        <div className={`m-1 -mt-1 font-bold ${sizeClasses[size]} ${className}`}>
             <span>Fin</span>
             <span className={`text-accent ${dotSizeClasses[size]}`}>.</span>
-        </Link>
+        </div>
     );
 };
 

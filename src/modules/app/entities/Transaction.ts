@@ -4,7 +4,7 @@ import z from "zod";
 
 export const TransactionSchema = EntitySchema.extend({
     accountId: zodReference("MoneyAccount"),
-    tagId: zodReference("Tag"),
+    tagId: zodReference("Tag").optional(),
     subTagId: zodReference("SubTag").optional(),
     transferAccountId: zodReference("MoneyAccount").optional(),
     merchantId: zodReference("Merchant").optional(),

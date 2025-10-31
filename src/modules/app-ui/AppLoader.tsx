@@ -12,7 +12,6 @@ import { Spinner } from "../base-ui/components/ui/spinner";
 import { useDataSync } from "../data-sync/providers/DataSyncProvider";
 import { useTenant } from "../data-sync/providers/TenantProvider";
 import TenantSelectionComponent from "../data-sync/ui/TenantSelectionComponent";
-import Dropzone from "./common/Dropzone";
 import Logo from "./common/Logo";
 import { ThemeSwitcher } from "./common/ThemeSwitcher";
 
@@ -86,10 +85,6 @@ export const AppLoader: React.FC = () => {
 
     if (householdId && orchestrator && householdId == currentTenant?.id && orchestrator.ctx.tenant.id == householdId) return <>
         <Outlet />
-        <Dropzone
-            acceptedFileTypes={['.json', '.csv', 'image/*']}
-            onFileDrop={(files) => console.log('Files dropped:', files.length)}
-        />
     </>;
 
     return <div className="flex flex-col items-center h-full w-full">

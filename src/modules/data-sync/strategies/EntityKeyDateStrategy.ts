@@ -3,7 +3,7 @@ import type { IEntityKeyStrategy } from "../interfaces/IEntityKeyStrategy";
 import type { EntityNameOf, EntityTypeOf, SchemaMap } from "../interfaces/types";
 
 export type DateStrategyOptions = {
-    years: number[];
+    years?: number[];
 }
 
 export abstract class EntityKeyDateStrategy<U extends EntityUtil<SchemaMap>> implements IEntityKeyStrategy<U, DateStrategyOptions> {
@@ -14,7 +14,8 @@ export abstract class EntityKeyDateStrategy<U extends EntityUtil<SchemaMap>> imp
     abstract generateAllKeysForYear<N extends EntityNameOf<U>>(entityName: N, year: number): string[];
 
     generateAllKeysFor<N extends EntityNameOf<U>>(entityName: N, options?: DateStrategyOptions | undefined): string[] {
-        if (!options) options = { years: [new Date().getFullYear()] };
+        if (!options) options = {};
+        if (!options.years) options.years = [new Date().getFullYear()];
         return options.years.map(year => this.generateAllKeysForYear(entityName, year)).flat();
     }
 

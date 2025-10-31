@@ -20,7 +20,7 @@ export class DataRepository<U extends EntityUtil<SchemaMap>, N extends EntityNam
     public get = (id: string): Promise<EntityTypeOf<U, N> | null> =>
         this.dataManager.get(this.entityName, id);
 
-    public getAll = (options?: FilterOptions & QueryOptions): Promise<Array<EntityTypeOf<U, N>>> =>
+    public getAll = (options?: FilterOptions & QueryOptions<U, N>): Promise<Array<EntityTypeOf<U, N>>> =>
         this.dataManager.getAll(this.entityName, options);
 
     public save = (entity: EntityTypeOf<U, N>): string =>
@@ -32,6 +32,6 @@ export class DataRepository<U extends EntityUtil<SchemaMap>, N extends EntityNam
     public observe = (id: string): Observable<EntityTypeOf<U, N> | null> =>
         this.observableManager.observe(this.entityName, id);
 
-    public observeAll = (options?: FilterOptions & QueryOptions): Observable<Array<EntityTypeOf<U, N>>> =>
+    public observeAll = (options?: FilterOptions & QueryOptions<U, N>): Observable<Array<EntityTypeOf<U, N>>> =>
         this.observableManager.observeAll(this.entityName, options);
 }

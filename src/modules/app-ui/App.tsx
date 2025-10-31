@@ -4,6 +4,7 @@ import { AuthProvider } from "../auth/AuthProvider";
 import { ThemeProvider } from "../base-ui/components/theme-provider";
 import { DataSyncProvider } from "../data-sync/providers/DataSyncProvider";
 import { TenantProvider } from "../data-sync/providers/TenantProvider";
+import { ImportProvider } from "./components/import/ImportProvider";
 import { AppProvider } from "./providers/AppProvider";
 import AppRouter from "./router";
 
@@ -17,7 +18,9 @@ export const App: React.FC = () => {
                         <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
                             <TenantProvider>
                                 <DataSyncProvider>
-                                    <AppRouter />
+                                    <ImportProvider>
+                                        <AppRouter />
+                                    </ImportProvider>
                                 </DataSyncProvider>
                             </TenantProvider>
                         </AuthProvider>

@@ -1,4 +1,5 @@
 import { EU } from "@/modules/data-sync/EntityUtil";
+import { AdapterDataSchema } from "./AdapterData";
 import { HouseholdSchema } from "./Household";
 import { MoneyAccountSchema } from "./MoneyAccount";
 import { SubTagSchema } from "./SubTag";
@@ -14,6 +15,7 @@ export const util = EU
     .register("Tag", TagSchema)
     .register("Transaction", TransactionSchema)
     .register("UserAccount", UserAccountSchema)
+    .register("AdapterData", AdapterDataSchema)
     ;
 
 export const EntityName = util.entityNames();
@@ -27,4 +29,5 @@ export const EntityConfig: EntityConfigMap<typeof util> = {
         getKeyDate: (entity: Transaction) => entity.transactionAt
     },
     UserAccount: { scope: 'global' },
+    AdapterData: { scope: 'global' },
 };

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50">
-    <path d="M1.07 1.08h47.853v47.853H1.07V1.08z" fill="#ed232a" />
-    <path d="M9.445 9.455h31.108v31.108H9.445V9.455z" fill="currentColor" />
-    <path d="M22.604 1.08h4.784v47.853h-4.784V1.08z" fill="currentColor" />
-    <path d="M1.07 22.62h47.853v4.784H1.07V22.62z" fill="currentColor" />
-    <path d="M17.821 17.83h14.356v14.357H17.821V17.831z" fill="#004c8f" />
-</svg>

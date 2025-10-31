@@ -1,0 +1,11 @@
+import type { SVGProps } from "react";
+const HdfcBank = (props: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width={50} height={50} {...props}>
+    <path d="m17.82 17.83h14.36v14.36h-14.36c0 0 0-14.36 0-14.36z" fill="#004c8f" />
+    <path fillRule="evenodd" d="m9.43 22.6v-13.14l13.16-0.01 0.01-8.36-21.53-0.01v21.52" fill="#ed232a" />
+    <path fillRule="evenodd" d="m27.46 9.41l13.14 0.04-0.03 13.15 8.36 0.03 0.06-21.52-21.52-0.06" fill="#ed232a" />
+    <path fillRule="evenodd" d="m40.56 27.03v13.14l-13.16 0.01v8.36l21.52 0.01v-21.52" fill="#ed232a" />
+    <path fillRule="evenodd" d="m22.54 40.22l-13.14-0.04 0.02-13.15-8.36-0.03-0.06 21.52 21.52 0.06" fill="#ed232a" />
+  </svg>
+);
+export default HdfcBank;
