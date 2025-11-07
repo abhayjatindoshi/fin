@@ -21,6 +21,9 @@ export const util = EU
 export const EntityName = util.entityNames();
 
 export const EntityConfig: EntityConfigMap<typeof util> = {
+    // Core system entities
+    Tenant: { scope: 'global' },
+    Metadata: { scope: 'global' },
     MoneyAccount: { scope: 'global' },
     SubTag: { scope: 'global' },
     Tag: { scope: 'global' },
