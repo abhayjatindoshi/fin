@@ -8,7 +8,7 @@ import { useDevEntityList } from "@/modules/dev/hooks/useDevEntityList";
 import { useDevEntityNames } from "@/modules/dev/hooks/useDevEntityNames";
 import { useMemo, useState } from "react";
 
-const DevStorePage: React.FC = () => {
+const DevStorePageOld: React.FC = () => {
     const { orchestrator } = useDataSync();
     const entityNames = useDevEntityNames();
     const [entityQuery, setEntityQuery] = useState("");
@@ -97,7 +97,7 @@ const DevStorePage: React.FC = () => {
                                         rows={filteredRows}
                                         selectedId={selectedRowId}
                                         onSelect={(r) => setSelectedRowId(r.id)}
-                                        height={selectedRow ? 300 : undefined}
+                                        height={selectedRow ? 1000 : undefined}
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Select an entity type...</div>
@@ -137,4 +137,4 @@ const DevStorePage: React.FC = () => {
     );
 };
 
-export default DevStorePage;
+export default DevStorePageOld;

@@ -1,6 +1,6 @@
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/modules/base-ui/components/ui/table';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DevEntityRow } from '../hooks/useDevEntityList';
-import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/modules/base-ui/components/ui/table';
 
 interface Props {
   rows: DevEntityRow[];
@@ -19,8 +19,8 @@ export const EntityTable: React.FC<Props> = ({ rows, onSelect, selectedId, heigh
     const el = containerRef.current;
     if (!el) return;
     const handler = () => setScrollTop(el.scrollTop);
-    el.addEventListener('scroll', handler);
-    return () => el.removeEventListener('scroll', handler);
+    // el.addEventListener('scroll', handler);
+    // return () => el.removeEventListener('scroll', handler);
   }, []);
 
   const total = rows.length;
@@ -51,7 +51,7 @@ export const EntityTable: React.FC<Props> = ({ rows, onSelect, selectedId, heigh
             <tr style={{ height: containerHeight }}>
               <td colSpan={4} className="p-0">
                 <div style={{ transform: `translateY(${offsetY}px)` }}>
-                  {slice.map(r => (
+                  {rows.map(r => (
                     <TableRow
                       key={r.id}
                       data-state={selectedId === r.id ? 'selected' : undefined}

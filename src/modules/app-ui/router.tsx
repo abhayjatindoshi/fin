@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import DevStorePage from '../dev/pages/DevStorePage';
+import DevStorePageOld from '../dev/pages/DevStorePageOld';
+import DevStorePage from '../dev/pages/store/DevStorePage';
 import { AppLoader } from './AppLoader';
 import BaseLayout from './components/layouts/BaseLayout';
 import Dashboard from './pages/Dashboard';
@@ -20,7 +21,8 @@ export default function AppRouter() {
                         <Route path="test/:tagId" element={<SubTestPage />} />
                         <Route path="dev">
                             <Route index element={<RedirectTo to="store" />} />
-                            <Route path="store" element={<DevStorePage />} />
+                            <Route path="store/:entityName?/:entityId?" element={<DevStorePage />} />
+                            <Route path="old-store/:entityName?/:entityId?" element={<DevStorePageOld />} />
                         </Route>
                         <Route path="*" element={<NotFoundPage />} />
                     </Route>
