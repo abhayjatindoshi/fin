@@ -1,28 +1,46 @@
+import { useApp } from "@/modules/app-ui/providers/AppProvider";
+import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import type { Entity } from "@/modules/data-sync/entities/Entity";
-import { Search } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { ArrowLeft, Search } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 type DetailsViewProps = {
     rows: Entity[];
+    setSearchTerm: (term: string) => void;
 };
-const DetailsView: React.FC<DetailsViewProps> = ({ rows }) => {
+const DetailsView: React.FC<DetailsViewProps> = ({ rows, setSearchTerm }: DetailsViewProps) => {
 
-    const { entityName } = useParams();
+    const { isMobile } = useApp();
+    const { householdId, entityName } = useParams();
+    const navigate = useNavigate();
+    const [showSearch, setShowSearch] = useState<boolean>(isMobile ? false : true);
 
-    return <div className="px-4 py-1 sticky top-0 z-10 bg-background backdrop-blur-lg">
-        <div className="flex flex-row justify-between items-center">
+    return <div className="sticky w-full top-0 z-10 bg-background">
+        <div className={`${isMobile ? 'px-1' : 'px-4'} py-1 gap-1 flex flex-row justify-between items-center`}>
+            {isMobile && <div>
+                <Button variant="ghost" size="icon-sm" onClick={() => navigate(`/${householdId}/dev/store`)}>
+                    <ArrowLeft />
+                </Button>
+            </div>}
             <div>
                 <h1 className="text-xl">{entityName}</h1>
                 <span className="text-xs text-muted-foreground">{rows.length} items</span>
             </div>
-            <div>
-                <InputGroup>
-                    <InputGroupInput placeholder="Search..." />
+            <div className="grow"></div>
+            <div className="mr-2">
+                {isMobile && !showSearch && <Button variant="ghost" size="icon-sm" onClick={() => setShowSearch(true)}>
+                    <Search />
+                </Button>}
+                {showSearch && <InputGroup className="mr-2">
+                    <InputGroupInput autoFocus className="pr-2" size={10} placeholder="Search..."
+                        onBlur={() => setShowSearch(isMobile ? false : true)}
+                        onChange={e => setSearchTerm(e.target.value)} />
                     <InputGroupAddon>
                         <Search />
                     </InputGroupAddon>
-                </InputGroup>
+                </InputGroup>}
             </div>
         </div>
     </div>

@@ -21,9 +21,7 @@ const menu: MenuItem[] = [
     { key: 'transactions', label: 'Transactions', url: '/transactions', icon: ArrowRightLeft },
     { key: 'budget', label: 'Budget', url: '/budget', icon: PieChart },
     { key: 'settings', label: 'Settings', url: '/settings', icon: Cog },
-    { key: 'test', label: 'Test', url: '/test', icon: FlaskConical },
-    { key: 'dev-store', label: 'Dev Store', url: '/dev/store', icon: FlaskConical },
-    { key: 'dev-store-old', label: 'Dev Store (Old)', url: '/dev/old-store', icon: FlaskConical },
+    { key: 'dev', label: 'Dev', url: '/dev', icon: FlaskConical },
 ];
 
 const NavbarMenu: React.FC<NavbarMenuProps> = ({ className, variant = 'default' }: NavbarMenuProps) => {

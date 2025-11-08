@@ -1,6 +1,8 @@
+import { useApp } from "@/modules/app-ui/providers/AppProvider";
+import { Sheet, SheetContent } from "@/modules/base-ui/components/ui/sheet";
 import type { Entity } from "@/modules/data-sync/entities/Entity";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import DetailsView from "./DetailsView";
 import EntityList from "./EntityList";
@@ -10,9 +12,16 @@ import TableView from "./TableView";
 const DevStorePage: React.FC = () => {
     const { orchestrator } = useDataSync();
     const { entityName, entityId } = useParams();
+    const { isMobile } = useApp();
     const [rows, setRows] = useState<Entity[]>([]);
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
-    const [entity, setEntity] = useState<any>(null);
+    const [entity, setEntity] = useState<Entity | null>(null);
+    const filteredRows = useMemo(() => {
+        if (!searchTerm.trim()) return rows;
+        const q = searchTerm.toLowerCase();
+        return rows.filter(r => Object.values(r).some(v => (v + '').toLowerCase().includes(q)));
+    }, [rows, searchTerm]);
 
     useEffect(() => {
         if (!orchestrator || !entityName) { setRows([]); return; }
@@ -42,6 +51,26 @@ const DevStorePage: React.FC = () => {
         );
     }
 
+    if (isMobile) {
+        if (entityName) {
+            return <div className="flex flex-col h-full flex-1 overflow-clip">
+                <DetailsView rows={rows} setSearchTerm={setSearchTerm} />
+                <div className="w-full h-full overflow-auto">
+                    <TableView rows={filteredRows} loading={loading} />
+                </div>
+                {entity && <Sheet open={true}>
+                    <SheetContent side="bottom">
+                        <JsonView entity={entity} />
+                    </SheetContent>
+                </Sheet>}
+            </div>;
+        }
+
+        return <div className="">
+            <EntityList />
+        </div>;
+    }
+
     return (
         <div className="grow flex flex-row gap-2 mt-4 p-2 w-full h-[calc(100%-3rem)] overflow-clip">
             <div className="border p-2 rounded-lg">
@@ -49,9 +78,9 @@ const DevStorePage: React.FC = () => {
             </div>
             {entityName &&
                 <div className="flex flex-col border rounded-lg h-full flex-1 overflow-hidden">
-                    <DetailsView rows={rows} />
+                    <DetailsView rows={rows} setSearchTerm={setSearchTerm} />
                     <div className="w-full h-full overflow-auto">
-                        <TableView rows={rows} loading={loading} />
+                        <TableView rows={filteredRows} loading={loading} />
                     </div>
                 </div>}
             {entity &&
