@@ -54,7 +54,7 @@ const DevStorePage: React.FC = () => {
     if (isMobile) {
         if (entityName) {
             return <div className="flex flex-col h-full flex-1 overflow-clip">
-                <DetailsView rows={rows} setSearchTerm={setSearchTerm} />
+                <DetailsView totalCount={rows.length} filteredCount={filteredRows.length} setSearchTerm={setSearchTerm} />
                 <div className="w-full h-full overflow-auto">
                     <TableView rows={filteredRows} loading={loading} />
                 </div>
@@ -78,7 +78,7 @@ const DevStorePage: React.FC = () => {
             </div>
             {entityName &&
                 <div className="flex flex-col border rounded-lg h-full flex-1 overflow-hidden">
-                    <DetailsView rows={rows} setSearchTerm={setSearchTerm} />
+                    <DetailsView totalCount={rows.length} filteredCount={filteredRows.length} setSearchTerm={setSearchTerm} />
                     <div className="w-full h-full overflow-auto">
                         <TableView rows={filteredRows} loading={loading} />
                     </div>

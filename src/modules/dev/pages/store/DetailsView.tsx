@@ -1,16 +1,16 @@
 import { useApp } from "@/modules/app-ui/providers/AppProvider";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
-import type { Entity } from "@/modules/data-sync/entities/Entity";
 import { ArrowLeft, Search } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 type DetailsViewProps = {
-    rows: Entity[];
+    totalCount: number;
+    filteredCount: number | undefined;
     setSearchTerm: (term: string) => void;
 };
-const DetailsView: React.FC<DetailsViewProps> = ({ rows, setSearchTerm }: DetailsViewProps) => {
+const DetailsView: React.FC<DetailsViewProps> = ({ totalCount, filteredCount, setSearchTerm }: DetailsViewProps) => {
 
     const { isMobile } = useApp();
     const { householdId, entityName } = useParams();
@@ -26,7 +26,7 @@ const DetailsView: React.FC<DetailsViewProps> = ({ rows, setSearchTerm }: Detail
             </div>}
             <div>
                 <h1 className="text-xl">{entityName}</h1>
-                <span className="text-xs text-muted-foreground">{rows.length} items</span>
+                <span className="text-xs text-muted-foreground">{filteredCount !== undefined && filteredCount !== totalCount && `${filteredCount} / `}{totalCount} items</span>
             </div>
             <div className="grow"></div>
             <div className="mr-2">

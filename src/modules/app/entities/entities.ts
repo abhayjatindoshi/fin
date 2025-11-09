@@ -2,7 +2,7 @@ import { EU } from "@/modules/data-sync/EntityUtil";
 import { AdapterDataSchema } from "./AdapterData";
 import { HouseholdSchema } from "./Household";
 import { MoneyAccountSchema } from "./MoneyAccount";
-import { SubTagSchema } from "./SubTag";
+import { SubtagSchema } from "./Subtag";
 import { TagSchema } from "./Tag";
 import { TransactionSchema, type Transaction } from "./Transaction";
 import { type EntityConfigMap } from "./types";
@@ -11,7 +11,7 @@ import { UserAccountSchema } from "./UserAccount";
 export const util = EU
     .register("Tenant", HouseholdSchema)
     .register("MoneyAccount", MoneyAccountSchema)
-    .register("SubTag", SubTagSchema)
+    .register("Subtag", SubtagSchema)
     .register("Tag", TagSchema)
     .register("Transaction", TransactionSchema)
     .register("UserAccount", UserAccountSchema)
@@ -25,7 +25,7 @@ export const EntityConfig: EntityConfigMap<typeof util> = {
     Tenant: { scope: 'global' },
     Metadata: { scope: 'global' },
     MoneyAccount: { scope: 'global' },
-    SubTag: { scope: 'global' },
+    Subtag: { scope: 'global' },
     Tag: { scope: 'global' },
     Transaction: {
         scope: 'monthly',

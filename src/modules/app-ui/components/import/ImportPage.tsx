@@ -1,6 +1,5 @@
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import type { IFileImportAdapter } from "@/modules/app/import/interfaces/IFileImportAdapter";
-import { BankLogos } from "@/modules/app/import/logos/BankLogos";
 import { ImportError, ImportService, type ImportResult } from "@/modules/app/services/ImportService";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Input } from "@/modules/base-ui/components/ui/input";
@@ -8,6 +7,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import { Clock, File, FileText, Hourglass, SquareCheck, SquareX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import FileSize from "../../common/FileSize";
+import ImportIcon from "../../icons/import/ImportIcon";
 
 type ImportPageProps = {
     files: File[];
@@ -37,7 +37,7 @@ const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps
     }
 
     const bankLogo = (name: string, props?: React.SVGProps<SVGSVGElement>): JSX.Element | null => {
-        const LogoComponent = BankLogos[name as keyof typeof BankLogos];
+        const LogoComponent = ImportIcon[name as keyof typeof ImportIcon];
         return LogoComponent ? <LogoComponent {...props} /> : null;
     }
 

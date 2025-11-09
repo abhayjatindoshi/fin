@@ -1,10 +1,14 @@
+import { SystemSubtags, SystemTags } from "@/modules/app/services/TaggingService";
 import EmptyGraph from "@/modules/base-ui/components/illustrations/EmptyGraph";
 import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import EmptySearch from "@/modules/base-ui/components/illustrations/EmptySearch";
 import { Button } from "@/modules/base-ui/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/base-ui/components/ui/tooltip";
+import { CircleX } from "lucide-react";
 import React, { useState } from "react";
+import sprite from '../../../../sprite.svg';
 import PageLayout from "../components/layouts/PageLayout";
-
+import TagIcons from "../icons/tags/TagIcons";
 
 interface Item { key: string; label: string; Component: React.ComponentType<Record<string, unknown>>; note?: string }
 
@@ -67,6 +71,7 @@ const EmptyGallery: React.FC = () => {
 const Dashboard: React.FC = () => {
 
     const [searchText, setSearchText] = useState<string | null>(null);
+    const icons = ["home", "laptop", "cash-stack", "others-dashed-circle", "briefcase", "pocket", "self-transfer", "gift", "round-rupee", "half-return-left", "wallet", "sparkles", "piggy-bank", "round-divide", "google", "paytm", "phone-pe", "tip", "penny-verification", "globe", "knife-fork", "take-away", "tea-glass", "burger", "cookie", "swiggy", "zomato", "ice-cream", "beer", "beverages", "restaurant", "pizza-slice", "tiffin-2", "uber", "rapido", "autorickshaw", "taxi", "train", "metro", "bus", "bike-helmet", "petrol", "airplane", "parking-sign", "fastag", "toll-gate", "lounge-chair", "whistle", "t-shirt", "shoes", "video-game", "book", "plant", "jewellery", "chair", "applicances", "car", "cosmetics", "toys", "stationery", "goggles", "devotional", "staples", "broccoli", "banana", "meat", "bread-loaf", "cow", "zepto", "movie-reel", "mic", "bowling", "tickets", "party", "rafting", "tent", "bed", "backpack", "airbnb", "meds", "medical-plus", "band-aid", "tooth", "syringe", "heart", "scissors", "paint-palette", "cigarette", "therapy", "dumbbell", "shuttlecock", "football", "cricket", "calendar-filled", "sports-equipment", "fitness-nutrition", "cloth-hanger", "parcel", "plumbing", "mechanic", "camera", "steering-wheel", "clean-car", "zap", "painting", "xerox", "legal", "glasses", "tools", "truck", "phone", "water-drop", "gas", "wi-fi", "broom", "college-hat-v2", "antenna-v2", "chef-hat", "society", "compact-disc", "netflix", "amazon", "youtube", "spotify", "apple", "bumble", "newspaper", "socket", "card", "simpl", "company-slice", "company-lazypay", "stocks", "ppf", "nps", "locker", "recurring-deposit", "bitcoin", "gold-bars", "walking-stick", "heart-jigsaw", "mother", "father", "shield", "face-sad", "face-tear", "key", "upi", "pet-food", "comb", "gullak", "lend", "donation", "eye-mask", "half-return-right"]
 
     const search = (text: string) => {
         setSearchText(text);
@@ -80,6 +85,16 @@ const Dashboard: React.FC = () => {
         </div>
     }
 
+    const TagIcon = (icon: string, parent: boolean) => {
+        const IconComponent = TagIcons[icon];
+        const classes = icon === 'binary' ? 'text-red-500' : 'text-foreground';
+        if (IconComponent) {
+            if (parent) return <IconComponent className={`w-10 h-10 p-2 rounded-lg hover:bg-gradient-to-br bg-gradient-to-tl from-accent/30 to-muted/30 ${classes}`} />;
+            return <IconComponent className={`w-6 h-6 ${classes}`} />;
+        }
+        return <CircleX className={`w-6 h-6 ${classes}`} />;
+    }
+
     return <PageLayout onSearch={search} className="flex flex-col">
         <div className="p-4">Dashboard Page {searchText}</div>
         <div className="flex flex-row justify-center gap-4 flex-wrap">
@@ -88,11 +103,37 @@ const Dashboard: React.FC = () => {
             <Block />
             <Block />
         </div>
+        <div className="flex flex-row flex-wrap gap-2">
+            {icons.map(icon => (
+                <Tooltip key={icon}>
+                    <TooltipTrigger>
+                        <svg className="w-8 h-8 m-4"><use href={sprite + `#${icon}`} /></svg>
+                    </TooltipTrigger>
+                    <TooltipContent>{icon}</TooltipContent>
+                </Tooltip>
+            ))}
+        </div>
         <EmptyGallery />
-        <EmptyGallery />
-        <EmptyGallery />
-        <EmptyGallery />
-        <EmptyGallery />
+        <div className="flex flex-col flex-wrap gap-4">
+            {Object.values(SystemTags).map(tag => (
+                <div key={tag.id} className="flex flex-col gap-2">
+                    <div className="flex flex-row items-center gap-2">
+                        {TagIcon(tag.icon, true)}
+                        <span>{tag.name}</span>
+                    </div>
+                    {tag.id && <div className="ml-8 flex flex-row items-center gap-4">
+                        {Object.values(SystemSubtags)
+                            .filter(subtag => subtag.tagIds.includes(tag.id!))
+                            .map(subtag => (
+                                <div key={subtag.id} className="flex flex-row items-center gap-2">
+                                    {TagIcon(subtag.icon, false)}
+                                    <span>{subtag.name}</span>
+                                </div>
+                            ))}
+                    </div>}
+                </div>
+            ))}
+        </div>
     </PageLayout>
 };
 
