@@ -9,12 +9,15 @@ import Fastag from './icons/fastag.svg?react';
 import Gas from './icons/gas.svg?react';
 import Goldbar from './icons/goldbar.svg?react';
 import Lazypay from './icons/lazypay.svg?react';
+import Makeup from './icons/makeup.svg?react';
 import Nps from './icons/nps.svg?react';
 import Ppf from './icons/ppf.svg?react';
 import Rapido from './icons/rapido.svg?react';
+import Shuttlecock from './icons/shuttlecock.svg?react';
 import Simpl from './icons/simpl.svg?react';
 import Slice from './icons/slice.svg?react';
 import Tiffin from './icons/tiffin.svg?react';
+import Tooth from './icons/tooth.svg?react';
 import Upi from './icons/upi.svg?react';
 import Whistle from './icons/whistle.svg?react';
 import Zepto from './icons/zepto.svg?react';
@@ -76,8 +79,11 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "bowling": Bowling,
     "gas": Gas,
     "goldbar": Goldbar,
+    "makeup": Makeup,
     "tiffin": Tiffin,
+    "tooth": Tooth,
     "whistle": Whistle,
+    "shuttlecock": Shuttlecock,
 
     "app-window": AppWindowIcon,
     "armchair": ArmchairIcon,
