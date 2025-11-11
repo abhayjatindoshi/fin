@@ -193,7 +193,7 @@ const subtags: SystemSubtag[] = [
     { name: "Stationery", icon: "pencil-ruler", parent: "Shopping" },
     { name: "Stocks", icon: "chart-candlestick", parent: "Investment" },
     { name: "Swiggy", icon: "swiggy", parent: "Food & Drinks" },
-    { name: "Take Away", icon: "food-drinks-take-away", parent: "Food & Drinks" },
+    { name: "Take Away", icon: "brownbag", parent: "Food & Drinks" },
     { name: "Tea & Coffee", icon: "coffee", parent: "Food & Drinks" },
     { name: "Therapy", icon: "book-heart", parent: "Personal" },
     { name: "Tiffin", icon: "tiffin", parent: "Food & Drinks" },

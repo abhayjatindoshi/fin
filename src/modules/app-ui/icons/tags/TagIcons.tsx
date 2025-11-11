@@ -2,24 +2,25 @@ import { AppWindowIcon, ArmchairIcon, ArrowLeftRightIcon, BackpackIcon, BadgeInd
 import { memo } from 'react';
 import { siAirbnb, siApple, siGoogle, siGooglepay, siNetflix, siPaytm, siPhonepe, siSpotify, siSwiggy, siUber, siYoutube, siZomato, type SimpleIcon } from 'simple-icons';
 import Amazon from './icons/amazon.svg?react';
-import Auto from './icons/auto.svg?react';
-import Bowling from './icons/bowling.svg?react';
+import { AutoIcon } from './icons/auto';
+import { BowlingIcon } from './icons/bowling';
+import { BrownBagIcon } from './icons/brownbag';
 import Bumble from './icons/bumble.svg?react';
 import Fastag from './icons/fastag.svg?react';
-import Gas from './icons/gas.svg?react';
-import Goldbar from './icons/goldbar.svg?react';
+import { GasIcon } from './icons/gas';
+import { GoldbarIcon } from './icons/goldbar';
 import Lazypay from './icons/lazypay.svg?react';
-import Makeup from './icons/makeup.svg?react';
+import { MakeupIcon } from './icons/makeup';
 import Nps from './icons/nps.svg?react';
 import Ppf from './icons/ppf.svg?react';
 import Rapido from './icons/rapido.svg?react';
-import Shuttlecock from './icons/shuttlecock.svg?react';
+import { ShuttlecockIcon } from './icons/shuttlecock';
 import Simpl from './icons/simpl.svg?react';
 import Slice from './icons/slice.svg?react';
-import Tiffin from './icons/tiffin.svg?react';
-import Tooth from './icons/tooth.svg?react';
+import { TiffinIcon } from './icons/tiffin';
+import { ToothIcon } from './icons/tooth';
 import Upi from './icons/upi.svg?react';
-import Whistle from './icons/whistle.svg?react';
+import { WhistleIcon } from './icons/whistle';
 import Zepto from './icons/zepto.svg?react';
 
 const createSimpleIcon = (icon: SimpleIcon) => {
@@ -75,15 +76,16 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "zepto": Zepto,
 
     // Custom lucide style icons
-    "auto": Auto,
-    "bowling": Bowling,
-    "gas": Gas,
-    "goldbar": Goldbar,
-    "makeup": Makeup,
-    "tiffin": Tiffin,
-    "tooth": Tooth,
-    "whistle": Whistle,
-    "shuttlecock": Shuttlecock,
+    "auto": AutoIcon,
+    "bowling": BowlingIcon,
+    "brownbag": BrownBagIcon,
+    "gas": GasIcon,
+    "goldbar": GoldbarIcon,
+    "makeup": MakeupIcon,
+    "tiffin": TiffinIcon,
+    "tooth": ToothIcon,
+    "whistle": WhistleIcon,
+    "shuttlecock": ShuttlecockIcon,
 
     "app-window": AppWindowIcon,
     "armchair": ArmchairIcon,
