@@ -1,8 +1,9 @@
-import { SystemSubtags, SystemTags } from "@/modules/app/services/TaggingService";
+import { SystemSubtags, SystemTags } from "@/modules/app/common/SystemTags";
 import EmptyGraph from "@/modules/base-ui/components/illustrations/EmptyGraph";
 import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import EmptySearch from "@/modules/base-ui/components/illustrations/EmptySearch";
 import { Button } from "@/modules/base-ui/components/ui/button";
+import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/base-ui/components/ui/tooltip";
 import { CircleX } from "lucide-react";
 import React, { useState } from "react";
@@ -89,7 +90,7 @@ const Dashboard: React.FC = () => {
         const IconComponent = TagIcons[icon];
         const classes = icon === 'binary' ? 'text-red-500' : 'text-foreground';
         if (IconComponent) {
-            if (parent) return <IconComponent className={`w-10 h-10 p-2 rounded-lg hover:bg-gradient-to-br bg-gradient-to-tl from-accent/30 to-muted/30 ${classes}`} />;
+            if (parent) return <IconComponent className={`w-12 h-12 p-3 rounded-lg hover:bg-gradient-to-br bg-gradient-to-tl from-accent/30 to-muted/30 ${classes}`} />;
             return <IconComponent className={`w-6 h-6 ${classes}`} />;
         }
         return <CircleX className={`w-6 h-6 ${classes}`} />;
@@ -119,7 +120,10 @@ const Dashboard: React.FC = () => {
                 <div key={tag.id} className="flex flex-col gap-2">
                     <div className="flex flex-row items-center gap-2">
                         {TagIcon(tag.icon, true)}
-                        <span>{tag.name}</span>
+                        <div className="flex flex-col">
+                            <span>{tag.name}</span>
+                            <span className="text-muted-foreground">{tag.description}</span>
+                        </div>
                     </div>
                     {tag.id && <div className="ml-8 flex flex-row items-center gap-4">
                         {Object.values(SystemSubtags)
@@ -131,6 +135,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                             ))}
                     </div>}
+                    <Separator />
                 </div>
             ))}
         </div>
