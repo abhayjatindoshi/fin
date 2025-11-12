@@ -1,4 +1,4 @@
-import { SystemSubtags, SystemTags } from "@/modules/app/common/SystemTags";
+import { SystemTags } from "@/modules/app/common/SystemTags";
 import EmptyGraph from "@/modules/base-ui/components/illustrations/EmptyGraph";
 import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import EmptySearch from "@/modules/base-ui/components/illustrations/EmptySearch";
@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
         </div>
         <EmptyGallery />
         <div className="flex flex-col flex-wrap gap-4">
-            {Object.values(SystemTags).map(tag => (
+            {Object.values(SystemTags).filter(t => !t.parent).map(tag => (
                 <div key={tag.id} className="flex flex-col gap-2">
                     <div className="flex flex-row items-center gap-2">
                         {TagIcon(tag.icon, true)}
@@ -113,8 +113,8 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                     {tag.id && <div className="ml-8 flex flex-row flex-wrap items-center gap-4">
-                        {Object.values(SystemSubtags)
-                            .filter(subtag => subtag.tagIds.includes(tag.id!))
+                        {Object.values(SystemTags)
+                            .filter(subtag => subtag.parent === tag.id)
                             .map(subtag => (
                                 <div key={subtag.id} className="flex flex-row items-center gap-2">
                                     {TagIcon(subtag.icon, false)}

@@ -1,268 +1,329 @@
 import TagIcons from "@/modules/app-ui/icons/tags/TagIcons";
-import type { Subtag } from "../entities/Subtag";
 import type { Tag } from "../entities/Tag";
-import { AppLogger } from "../logging/AppLogger";
 
-type SystemTag = {
-    name: string;
+type SystemTags = Record<string, {
     icon: keyof typeof TagIcons;
-    description: string;
+    description?: string;
+    children?: SystemTags;
+}>;
+
+const tags: SystemTags = {
+    "Bill": {
+        icon: "receipt-text", description: "Rent, Wi-fi, electricity and other bills", children: {
+            "Cook": { icon: "chef-hat" },
+            "DTH": { icon: "satellite-dish" },
+            "Education": { icon: "graduation-cap" },
+            "Electricity": { icon: "zap" },
+            "Gas": { icon: "gas" },
+            "House help": { icon: "brush-cleaning" },
+            "Internet": { icon: "wifi" },
+            "Maintenance": { icon: "building" },
+            "Phone": { icon: "tablet-smartphone" },
+            "Rent": { icon: "house" },
+            "Water": { icon: "droplet" },
+        }
+    },
+    "Borrowed": { icon: "hand-helping", description: "Money borrowed, to be returned" },
+    "Cash Deposit": { icon: "banknote-arrow-up", description: "Cash deposited at a physical branch" },
+    "Cash Withdrawal": { icon: "banknote-arrow-down", description: "Cash taken out from ATM or Bank" },
+    "Cashback": {
+        icon: "coins", description: "Rewards from GPay, PhonePe etc.", children: {
+            "Google Pay": { icon: "googlepay" },
+            "Paytm": { icon: "paytm" },
+            "PhonePe": { icon: "phonepe" },
+        }
+    },
+    "Credit Bill": {
+        icon: "credit-card", description: "Credit Card & BNPL services settlement", children: {
+            "Amazon Pay": { icon: "amazon" },
+            "Credit card": { icon: "credit-card" },
+            "Lazypay": { icon: "lazypay" },
+            "Simpl": { icon: "simpl" },
+            "Slice": { icon: "slice" },
+        }
+    },
+    "Dividends": { icon: "diamond-percent", description: "Returns on stock investment" },
+    "Donation": { icon: "heart-plus", description: "Contributions to charities and NGOs" },
+    "Earnings": {
+        icon: "hand-coins", description: "Income from sources other than salary", children: {
+            "Freelance": { icon: "laptop" },
+            "Rent": { icon: "house" },
+            "Various": { icon: "wand-sparkles" },
+        }
+    },
+    "EMI": {
+        icon: "landmark", description: "Repayment of Loan", children: {
+            "Education": { icon: "graduation-cap" },
+            "Electronics": { icon: "laptop" },
+            "House": { icon: "house" },
+            "Vehicle": { icon: "car" },
+        }
+    },
+    "Entertainment": {
+        icon: "monitor-play", description: "Movies, Concerts and other recreations", children: {
+            "Bowling": { icon: "bowling" },
+            "Movies": { icon: "clapperboard" },
+            "Others": { icon: "tickets" },
+            "Shows": { icon: "mic" },
+        }
+    },
+    "Events": {
+        icon: "calendar", description: "Being social while putting a dent in your bank account", children: {
+            "Party": { icon: "party-popper" },
+            "Spiritual": { icon: "flame" },
+            "Wedding": { icon: "gem" },
+        }
+    },
+    "Fitness": {
+        icon: "dumbbell", description: "Things to keep your biological machinery in tune", children: {
+            "Badminton": { icon: "shuttlecock" },
+            "Classes": { icon: "calendar-days" },
+            "Cricket": { icon: "fitness-cricket" },
+            "Equipment": { icon: "dumbbell" },
+            "Football": { icon: "fitness-football" },
+            "Gym": { icon: "biceps-flexed" },
+            "Nutrition": { icon: "pill-bottle" },
+        }
+    },
+    "Food & Drinks": {
+        icon: "salad", description: "Eating out, Swiggy, Zomato etc.", children: {
+            "Beverages": { icon: "glass-water" },
+            "Date": { icon: "rose" },
+            "Dessert": { icon: "ice-cream-bowl" },
+            "Eating out": { icon: "utensils" },
+            "Fast Food": { icon: "hamburger" },
+            "Liquor": { icon: "beer" },
+            "Pizza": { icon: "pizza" },
+            "Snacks": { icon: "cookie" },
+            "Swiggy": { icon: "swiggy" },
+            "Take Away": { icon: "brownbag" },
+            "Tea & Coffee": { icon: "coffee" },
+            "Tiffin": { icon: "tiffin" },
+            "Zomato": { icon: "zomato" },
+        }
+    },
+    "Gift": { icon: "gift", description: "Money received as gift, not to return" },
+    "Groceries": {
+        icon: "grape", description: "Kitchen and other household supplies", children: {
+            "Bakery": { icon: "croissant" },
+            "Dairy": { icon: "milk" },
+            "Fruits": { icon: "banana" },
+            "Meat": { icon: "drumstick" },
+            "Staples": { icon: "wheat" },
+            "Vegetables": { icon: "carrot" },
+            "Zepto": { icon: "zepto" },
+        }
+    },
+    "Hidden Charges": { icon: "eye-closed", description: "Banks’ hidden subscription charges" },
+    "Insurance": {
+        icon: "shield-user", description: "Payment towards insurance premiums", children: {
+            "Electronics": { icon: "laptop" },
+            "Health": { icon: "cross" },
+            "Life": { icon: "house-heart" },
+            "Vehicle": { icon: "car" },
+        }
+    },
+    "Interest": {
+        icon: "sparkles", description: "Interest earned on savings account"
+    },
+    "Investment": {
+        icon: "chart-candlestick", description: "Money put towards investment", children: {
+            "Assets": { icon: "piggy-bank" },
+            "Crypto": { icon: "bitcoin" },
+            "Fixed Deposit": { icon: "vault" },
+            "Gold": { icon: "goldbar" },
+            "Mutual Funds": { icon: "sprout" },
+            "NPS": { icon: "nps" },
+            "PPF": { icon: "ppf" },
+            "Recurring Deposit": { icon: "vault" },
+            "Stocks": { icon: "chart-candlestick" },
+        }
+    },
+    "Lent": { icon: "handshake", description: "Money lent with expectation of return" },
+    "Medical": {
+        icon: "pill", description: "Medicines, Doctor consulation etc.", children: {
+            "Clinic": { icon: "stethoscope" },
+            "Dentist": { icon: "tooth" },
+            "Hospital": { icon: "hospital" },
+            "Hygiene": { icon: "sparkles" },
+            "Lab test": { icon: "syringe" },
+            "Medicines": { icon: "pill" },
+        }
+    },
+    "Misc.": {
+        icon: "circle-dot-dashed", description: "Everything else", children: {
+            "Forex": { icon: "circle-dollar-sign" },
+            "Tip": { icon: "receipt-indian-rupee" },
+            "Verification": { icon: "brick-wall-shield" },
+        }
+    },
+    "Personal": {
+        icon: "user", description: "Money spent on & for yourself", children: {
+            "Grooming": { icon: "scissors" },
+            "Hobbies": { icon: "palette" },
+            "Self-care": { icon: "heart" },
+            "Therapy": { icon: "book-heart" },
+            "Vices": { icon: "cigarette" },
+        }
+    },
+    "Pet Care": {
+        icon: "paw-print", description: "Money spent taking care of your snugglebug", children: {
+            "Food": { icon: "soup" },
+            "Grooming": { icon: "scissors" },
+            "Toys": { icon: "toy-brick" },
+            "Vet": { icon: "stethoscope" },
+        }
+    },
+    "Pocket Money": { icon: "wallet", description: "Support from loved ones" },
+    "Redemption": { icon: "trending-up-down", description: "Money redeemed from investments" },
+    "Refund": { icon: "rotate-ccw", description: "Refunds & Reimbursements" },
+    "Return": { icon: "corner-down-left", description: "Borrowed money is returned" },
+    "Salary": { icon: "banknote-arrow-down", description: "Monthly, regular income" },
+    "Savings": { icon: "piggy-bank", description: "For goals and dreams" },
+    "Self Transfer": { icon: "arrow-left-right", description: "Transfer between personal Bank accounts" },
+    "Services": {
+        icon: "hand-platter", description: "Professional tasks provided for a fee", children: {
+            "Advisor": { icon: "glasses" },
+            "Courier": { icon: "package" },
+            "Driver": { icon: "car" },
+            "Electrician": { icon: "cable" },
+            "Laundry": { icon: "washing-machine" },
+            "Legal": { icon: "scale" },
+            "Logistics": { icon: "truck" },
+            "Mechanic": { icon: "car" },
+            "Painting": { icon: "paint-roller" },
+            "Photographer": { icon: "camera" },
+            "Plumber": { icon: "wrench" },
+            "Repair": { icon: "hammer" },
+            "Vehicle Wash": { icon: "car" },
+            "Xerox": { icon: "printer" },
+        }
+    },
+    "Shopping": {
+        icon: "shopping-bag", description: "Clothes, shoes, furniture etc.", children: {
+            "Appliances": { icon: "shopping-appliance" },
+            "Books": { icon: "library-big" },
+            "Clothes": { icon: "shirt" },
+            "Cosmetics": { icon: "makeup" },
+            "Devotional": { icon: "shopping-devotional" },
+            "Electronics": { icon: "laptop" },
+            "Furniture": { icon: "sofa" },
+            "Glasses": { icon: "glasses" },
+            "Jewellery": { icon: "gem" },
+            "Plants": { icon: "sprout" },
+            "Shoes": { icon: "footprints" },
+            "Stationery": { icon: "pencil-ruler" },
+            "Toys": { icon: "toy-brick" },
+            "Vehicle": { icon: "car" },
+            "Video games": { icon: "gamepad-2" },
+        }
+    },
+    "Subscription": {
+        icon: "calendar-sync", description: "Recurring payment to online services", children: {
+            "Apple": { icon: "apple" },
+            "Bumble": { icon: "bumble" },
+            "Google": { icon: "google" },
+            "Learning": { icon: "graduation-cap" },
+            "Netflix": { icon: "netflix" },
+            "News": { icon: "newspaper" },
+            "Prime": { icon: "amazon" },
+            "Software": { icon: "app-window" },
+            "Spotify": { icon: "spotify" },
+            "YouTube": { icon: "youtube" },
+        }
+    },
+    "Support": {
+        icon: "heart-plus", description: "Financial support for loved ones", children: {
+            "Dad": { icon: "aid-father" },
+            "Mom": { icon: "aid-mother" },
+            "Parents": { icon: "aid-walking-stick" },
+            "Pocket Money": { icon: "wallet" },
+            "Spouse": { icon: "heart-handshake" },
+        }
+    },
+    "Tax": {
+        icon: "badge-indian-rupee", description: "Income tax, property tax, e.t.c", children: {
+            "GST": { icon: "badge-indian-rupee" },
+            "Income Tax": { icon: "badge-indian-rupee" },
+            "Property Tax": { icon: "badge-indian-rupee" },
+        }
+    },
+    "Top-up": {
+        icon: "arrow-left-right", description: "Money added to online wallets", children: {
+            "Amazon": { icon: "amazon" },
+            "Others": { icon: "wallet" },
+            "Paytm": { icon: "paytm" },
+            "PhonePe": { icon: "phonepe" },
+            "UPI Lite": { icon: "upi" },
+        }
+    },
+    "Transport": {
+        icon: "car-front", description: "Uber, Ola and other modes of transport", children: {
+            "Auto": { icon: "auto" },
+            "Bike": { icon: "motorbike" },
+            "Bus": { icon: "bus" },
+            "Cab": { icon: "car-taxi-front" },
+            "FASTag": { icon: "fastag" },
+            "Fine": { icon: "whistle" },
+            "Flights": { icon: "plane" },
+            "Lounge": { icon: "armchair" },
+            "Metro": { icon: "train-front" },
+            "Parking": { icon: "circle-parking" },
+            "Petrol": { icon: "fuel" },
+            "Rapido": { icon: "rapido" },
+            "Tolls": { icon: "construction" },
+            "Train": { icon: "train-track" },
+            "Uber": { icon: "uber" },
+        }
+    },
+    "Travel": {
+        icon: "plane", description: "Exploration, fun and vacations!", children: {
+            "Activities": { icon: "tent-tree" },
+            "Airbnb": { icon: "airbnb" },
+            "Camping": { icon: "tent" },
+            "Hostel": { icon: "backpack" },
+            "Hotel": { icon: "bed" },
+        }
+    },
 };
-type SystemSubtag = {
-    name: string;
-    icon: keyof typeof TagIcons;
-    parent: string;
+
+const cleanForId = (name: string): string => {
+    return name.replaceAll(/[^\w]/g, '')
+        .toLowerCase();
 }
-
-const tags: SystemTag[] = [
-    { name: "Earnings", icon: "hand-coins", description: "Income from sources other than salary" },
-    { name: "Bill", icon: "receipt-text", description: "Rent, Wi-fi, electricity and other bills" },
-    { name: "Borrowed", icon: "hand-helping", description: "Money borrowed, to be returned" },
-    { name: "Cash Deposit", icon: "banknote-arrow-up", description: "Cash deposited at a physical branch" },
-    { name: "Cash Withdrawal", icon: "banknote-arrow-down", description: "Cash taken out from ATM or Bank" },
-    { name: "Cashback", icon: "coins", description: "Rewards from GPay, PhonePe etc." },
-    { name: "Credit Bill", icon: "credit-card", description: "Credit Card & BNPL services settlement" },
-    { name: "Dividends", icon: "diamond-percent", description: "Returns on stock investment" },
-    { name: "Donation", icon: "heart-plus", description: "Contributions to charities and NGOs" },
-    { name: "EMI", icon: "landmark", description: "Repayment of Loan" },
-    { name: "Entertainment", icon: "monitor-play", description: "Movies, Concerts and other recreations" },
-    { name: "Events", icon: "calendar", description: "Being social while putting a dent in your bank account" },
-    { name: "Fitness", icon: "dumbbell", description: "Things to keep your biological machinery in tune" },
-    { name: "Food & Drinks", icon: "salad", description: "Eating out, Swiggy, Zomato etc." },
-    { name: "Gift", icon: "gift", description: "Money received as gift, not to return" },
-    { name: "Groceries", icon: "grape", description: "Kitchen and other household supplies" },
-    { name: "Hidden Charges", icon: "eye-closed", description: "Banks’ hidden subscription charges" },
-    { name: "Insurance", icon: "shield-user", description: "Payment towards insurance premiums" },
-    { name: "Interest", icon: "sparkles", description: "Interest earned on savings account" },
-    { name: "Investment", icon: "chart-candlestick", description: "Money put towards investment" },
-    { name: "Lent", icon: "handshake", description: "Money lent with expectation of return" },
-    { name: "Medical", icon: "pill", description: "Medicines, Doctor consulation etc." },
-    { name: "Misc.", icon: "circle-dot-dashed", description: "Everything else" },
-    { name: "Personal", icon: "user", description: "Money spent on & for yourself" },
-    { name: "Pet Care", icon: "paw-print", description: "Money spent taking care of your snugglebug" },
-    { name: "Pocket Money", icon: "wallet", description: "Support from loved ones" },
-    { name: "Redemption", icon: "trending-up-down", description: "Money redeemed from investments" },
-    { name: "Refund", icon: "rotate-ccw", description: "Refunds & Reimbursements" },
-    { name: "Return", icon: "corner-down-left", description: "Borrowed money is returned" },
-    { name: "Salary", icon: "banknote-arrow-down", description: "Monthly, regular income" },
-    { name: "Savings", icon: "piggy-bank", description: "For goals and dreams" },
-    { name: "Self Transfer", icon: "arrow-left-right", description: "Transfer between personal Bank accounts" },
-    { name: "Services", icon: "hand-platter", description: "Professional tasks provided for a fee" },
-    { name: "Shopping", icon: "shopping-bag", description: "Clothes, shoes, furniture etc." },
-    { name: "Subscription", icon: "calendar-sync", description: "Recurring payment to online services" },
-    { name: "Support", icon: "heart-plus", description: "Financial support for loved ones" },
-    { name: "Tax", icon: "badge-indian-rupee", description: "Income tax, property tax, e.t.c" },
-    { name: "Top-up", icon: "arrow-left-right", description: "Money added to online wallets" },
-    { name: "Transport", icon: "car-front", description: "Uber, Ola and other modes of transport" },
-    { name: "Travel", icon: "plane", description: "Exploration, fun and vacations!" },
-];
-const subtags: SystemSubtag[] = [
-    { name: "Activities", icon: "tent-tree", parent: "Travel" },
-    { name: "Advisor", icon: "glasses", parent: "Services" },
-    { name: "Airbnb", icon: "airbnb", parent: "Travel" },
-    { name: "Amazon Pay", icon: "amazon", parent: "Credit Bill" },
-    { name: "Amazon", icon: "amazon", parent: "Top-up" },
-    { name: "Apple", icon: "apple", parent: "Subscription" },
-    { name: "Appliances", icon: "shopping-appliance", parent: "Shopping" },
-    { name: "Assets", icon: "piggy-bank", parent: "Investment" },
-    { name: "Auto", icon: "auto", parent: "Transport" },
-    { name: "Badminton", icon: "shuttlecock", parent: "Fitness" },
-    { name: "Bakery", icon: "croissant", parent: "Groceries" },
-    { name: "Beverages", icon: "glass-water", parent: "Food & Drinks" },
-    { name: "Bike", icon: "motorbike", parent: "Transport" },
-    { name: "Books", icon: "library-big", parent: "Shopping" },
-    { name: "Bowling", icon: "bowling", parent: "Entertainment" },
-    { name: "Bumble", icon: "bumble", parent: "Subscription" },
-    { name: "Bus", icon: "bus", parent: "Transport" },
-    { name: "Cab", icon: "car-taxi-front", parent: "Transport" },
-    { name: "Camping", icon: "tent", parent: "Travel" },
-    { name: "Classes", icon: "calendar-days", parent: "Fitness" },
-    { name: "Clinic", icon: "stethoscope", parent: "Medical" },
-    { name: "Clothes", icon: "shirt", parent: "Shopping" },
-    { name: "Cook", icon: "chef-hat", parent: "Bill" },
-    { name: "Cosmetics", icon: "makeup", parent: "Shopping" },
-    { name: "Courier", icon: "package", parent: "Services" },
-    { name: "Credit card", icon: "credit-card", parent: "Credit Bill" },
-    { name: "Cricket", icon: "fitness-cricket", parent: "Fitness" },
-    { name: "Crypto", icon: "bitcoin", parent: "Investment" },
-    { name: "Dad", icon: "aid-father", parent: "Support" },
-    { name: "Dairy", icon: "milk", parent: "Groceries" },
-    { name: "Date", icon: "rose", parent: "Food & Drinks" },
-    { name: "Dentist", icon: "tooth", parent: "Medical" },
-    { name: "Dessert", icon: "ice-cream-bowl", parent: "Food & Drinks" },
-    { name: "Devotional", icon: "shopping-devotional", parent: "Shopping" },
-    { name: "Driver", icon: "car", parent: "Services" },
-    { name: "DTH", icon: "satellite-dish", parent: "Bill" },
-    { name: "Eating out", icon: "utensils", parent: "Food & Drinks" },
-    { name: "Education", icon: "graduation-cap", parent: "EMI" },
-    { name: "Education", icon: "graduation-cap", parent: "Bill" },
-    { name: "Electrician", icon: "cable", parent: "Services" },
-    { name: "Electricity", icon: "zap", parent: "Bill" },
-    { name: "Electronics", icon: "laptop", parent: "Shopping" },
-    { name: "Electronics", icon: "socket-emi", parent: "EMI" },
-    { name: "Electronics", icon: "socket-insurance", parent: "Insurance" },
-    { name: "Equipment", icon: "dumbbell", parent: "Fitness" },
-    { name: "Fast Food", icon: "hamburger", parent: "Food & Drinks" },
-    { name: "FASTag", icon: "fastag", parent: "Transport" },
-    { name: "Fine", icon: "whistle", parent: "Transport" },
-    { name: "Fixed Deposit", icon: "vault", parent: "Investment" },
-    { name: "Flights", icon: "plane", parent: "Transport" },
-    { name: "Food", icon: "soup", parent: "Pet Care" },
-    { name: "Football", icon: "fitness-football", parent: "Fitness" },
-    { name: "Forex", icon: "circle-dollar-sign", parent: "Misc." },
-    { name: "Forex", icon: "misc-globe", parent: "Misc." },
-    { name: "Freelance", icon: "laptop", parent: "Earnings" },
-    { name: "Fruits", icon: "banana", parent: "Groceries" },
-    { name: "Furniture", icon: "sofa", parent: "Shopping" },
-    { name: "Gas", icon: "gas", parent: "Bill" },
-    { name: "Glasses", icon: "glasses", parent: "Shopping" },
-    { name: "Gold", icon: "goldbar", parent: "Investment" },
-    { name: "Google Pay", icon: "googlepay", parent: "Cashback" },
-    { name: "Google", icon: "google", parent: "Subscription" },
-    { name: "Grooming", icon: "scissors", parent: "Pet Care" },
-    { name: "Grooming", icon: "scissors", parent: "Personal" },
-    { name: "GST", icon: "badge-indian-rupee", parent: "Tax" },
-    { name: "Gym", icon: "biceps-flexed", parent: "Fitness" },
-    { name: "Health", icon: "cross", parent: "Insurance" },
-    { name: "Hobbies", icon: "palette", parent: "Personal" },
-    { name: "Hospital", icon: "hospital", parent: "Medical" },
-    { name: "Hostel", icon: "backpack", parent: "Travel" },
-    { name: "Hotel", icon: "bed", parent: "Travel" },
-    { name: "House help", icon: "brush-cleaning", parent: "Bill" },
-    { name: "House", icon: "house", parent: "EMI" },
-    { name: "Hygiene", icon: "sparkles", parent: "Medical" },
-    { name: "Income Tax", icon: "badge-indian-rupee", parent: "Tax" },
-    { name: "Internet", icon: "wifi", parent: "Bill" },
-    { name: "Jewellery", icon: "gem", parent: "Shopping" },
-    { name: "Lab test", icon: "syringe", parent: "Medical" },
-    { name: "Laundry", icon: "washing-machine", parent: "Services" },
-    { name: "Lazypay", icon: "lazypay", parent: "Credit Bill" },
-    { name: "Learning", icon: "graduation-cap", parent: "Subscription" },
-    { name: "Legal", icon: "scale", parent: "Services" },
-    { name: "Life", icon: "house-heart", parent: "Insurance" },
-    { name: "Liquor", icon: "beer", parent: "Food & Drinks" },
-    { name: "Logistics", icon: "truck", parent: "Services" },
-    { name: "Lounge", icon: "armchair", parent: "Transport" },
-    { name: "Maintenance", icon: "building", parent: "Bill" },
-    { name: "Meat", icon: "drumstick", parent: "Groceries" },
-    { name: "Mechanic", icon: "car", parent: "Services" },
-    { name: "Medicines", icon: "pill", parent: "Medical" },
-    { name: "Metro", icon: "train-front", parent: "Transport" },
-    { name: "Mom", icon: "aid-mother", parent: "Support" },
-    { name: "Movies", icon: "clapperboard", parent: "Entertainment" },
-    { name: "Mutual Funds", icon: "sprout", parent: "Investment" },
-    { name: "Netflix", icon: "netflix", parent: "Subscription" },
-    { name: "News", icon: "newspaper", parent: "Subscription" },
-    { name: "NPS", icon: "nps", parent: "Investment" },
-    { name: "Nutrition", icon: "pill-bottle", parent: "Fitness" },
-    { name: "Others", icon: "tickets", parent: "Entertainment" },
-    { name: "Others", icon: "wallet", parent: "Top-up" },
-    { name: "Painting", icon: "paint-roller", parent: "Services" },
-    { name: "Parents", icon: "aid-walking-stick", parent: "Support" },
-    { name: "Parking", icon: "circle-parking", parent: "Transport" },
-    { name: "Party", icon: "party-popper", parent: "Events" },
-    { name: "Paytm", icon: "paytm", parent: "Cashback" },
-    { name: "Paytm", icon: "paytm", parent: "Top-up" },
-    { name: "Petrol", icon: "fuel", parent: "Transport" },
-    { name: "Phone", icon: "tablet-smartphone", parent: "Bill" },
-    { name: "PhonePe", icon: "phonepe", parent: "Cashback" },
-    { name: "PhonePe", icon: "phonepe", parent: "Top-up" },
-    { name: "Photographer", icon: "camera", parent: "Services" },
-    { name: "Pizza", icon: "pizza", parent: "Food & Drinks" },
-    { name: "Plants", icon: "sprout", parent: "Shopping" },
-    { name: "Plumber", icon: "wrench", parent: "Services" },
-    { name: "Pocket Money", icon: "wallet", parent: "Support" },
-    { name: "PPF", icon: "ppf", parent: "Investment" },
-    { name: "Prime", icon: "amazon", parent: "Subscription" },
-    { name: "Property Tax", icon: "badge-indian-rupee", parent: "Tax" },
-    { name: "Rapido", icon: "rapido", parent: "Transport" },
-    { name: "Recurring Deposit", icon: "vault", parent: "Investment" },
-    { name: "Rent", icon: "house", parent: "Bill" },
-    { name: "Rent", icon: "house", parent: "Earnings" },
-    { name: "Repair", icon: "hammer", parent: "Services" },
-    { name: "Self-care", icon: "heart", parent: "Personal" },
-    { name: "Shoes", icon: "footprints", parent: "Shopping" },
-    { name: "Shows", icon: "mic", parent: "Entertainment" },
-    { name: "Simpl", icon: "simpl", parent: "Credit Bill" },
-    { name: "Slice", icon: "slice", parent: "Credit Bill" },
-    { name: "Snacks", icon: "cookie", parent: "Food & Drinks" },
-    { name: "Software", icon: "app-window", parent: "Subscription" },
-    { name: "Spiritual", icon: "flame", parent: "Events" },
-    { name: "Spotify", icon: "spotify", parent: "Subscription" },
-    { name: "Spouse", icon: "heart-handshake", parent: "Support" },
-    { name: "Staples", icon: "wheat", parent: "Groceries" },
-    { name: "Stationery", icon: "pencil-ruler", parent: "Shopping" },
-    { name: "Stocks", icon: "chart-candlestick", parent: "Investment" },
-    { name: "Swiggy", icon: "swiggy", parent: "Food & Drinks" },
-    { name: "Take Away", icon: "brownbag", parent: "Food & Drinks" },
-    { name: "Tea & Coffee", icon: "coffee", parent: "Food & Drinks" },
-    { name: "Therapy", icon: "book-heart", parent: "Personal" },
-    { name: "Tiffin", icon: "tiffin", parent: "Food & Drinks" },
-    { name: "Tip", icon: "receipt-indian-rupee", parent: "Misc." },
-    { name: "Tip", icon: "receipt-indian-rupee", parent: "Misc." },
-    { name: "Tolls", icon: "construction", parent: "Transport" },
-    { name: "Toys", icon: "toy-brick", parent: "Pet Care" },
-    { name: "Toys", icon: "toy-brick", parent: "Shopping" },
-    { name: "Train", icon: "train-track", parent: "Transport" },
-    { name: "Uber", icon: "uber", parent: "Transport" },
-    { name: "UPI Lite", icon: "upi", parent: "Top-up" },
-    { name: "Various", icon: "wand-sparkles", parent: "Earnings" },
-    { name: "Vegetables", icon: "carrot", parent: "Groceries" },
-    { name: "Vehicle Wash", icon: "car", parent: "Services" },
-    { name: "Vehicle", icon: "car", parent: "EMI" },
-    { name: "Vehicle", icon: "car", parent: "Insurance" },
-    { name: "Vehicle", icon: "car", parent: "Shopping" },
-    { name: "Verification", icon: "brick-wall-shield", parent: "Misc." },
-    { name: "Verification", icon: "misc-penny-verification", parent: "Misc." },
-    { name: "Vet", icon: "stethoscope", parent: "Pet Care" },
-    { name: "Vices", icon: "cigarette", parent: "Personal" },
-    { name: "Video games", icon: "gamepad-2", parent: "Shopping" },
-    { name: "Water", icon: "droplet", parent: "Bill" },
-    { name: "Wedding", icon: "gem", parent: "Events" },
-    { name: "Xerox", icon: "printer", parent: "Services" },
-    { name: "YouTube", icon: "youtube", parent: "Subscription" },
-    { name: "Zepto", icon: "zepto", parent: "Groceries" },
-    { name: "Zomato", icon: "zomato", parent: "Food & Drinks" },
-]
-
 const icons = Object.keys(TagIcons);
 
-export const SystemTags: Record<string, Tag> = tags.reduce((obj, tag) => {
-    const id = `system-tag-${tag.name}`;
+export const SystemTags: Record<string, Tag> = {};
+
+Object.entries(tags).forEach(([name, tag]) => {
+    const cleanName = cleanForId(name);
+    const id = 'system-tag-' + cleanName;
+
     if (!icons.includes(tag.icon)) {
         tag.icon = "binary";
     }
 
-    obj[id] = {
+    SystemTags[id] = {
         id,
-        name: tag.name,
+        name: name,
         icon: tag.icon,
         description: tag.description,
     } as Tag;
-    return obj;
-}, {} as Record<string, Tag>);
 
-export const SystemSubtags: Record<string, Subtag> = subtags.reduce((obj, subtag) => {
-    const logger = AppLogger.getInstance();
+    for (const childName in tag.children) {
+        const child = tag.children[childName];
+        const childId = `system-tag-${cleanName}-${cleanForId(childName)}`;
 
-    const id = `system-subtag-${subtag.name}`;
-    if (!icons.includes(subtag.icon)) {
-        subtag.icon = "binary";
-    }
-
-    if (obj[id]) {
-        obj[id].tagIds.push(`system-tag-${subtag.parent}`);
-        if (obj[id].icon !== subtag.icon) {
-            logger.w('system-sub-tags', `Multiple icons found for ${subtag.name}`)
+        if (!icons.includes(child.icon)) {
+            child.icon = "binary";
         }
-    } else {
-        obj[id] = {
-            id: id,
-            name: subtag.name,
-            icon: subtag.icon,
-            tagIds: [`system-tag-${subtag.parent}`],
-        } as Subtag;
-    }
 
-    return obj;
-}, {} as Record<string, Subtag>);
+        SystemTags[childId] = {
+            id: childId,
+            name: childName,
+            icon: child.icon,
+            description: child.description,
+            parent: id,
+        } as Tag;
+    }
+});
