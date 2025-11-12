@@ -1,6 +1,7 @@
 import TagIcons from "@/modules/app-ui/icons/tags/TagIcons";
 import type { Subtag } from "../entities/Subtag";
 import type { Tag } from "../entities/Tag";
+import { AppLogger } from "../logging/AppLogger";
 
 type SystemTag = {
     name: string;
@@ -242,6 +243,8 @@ export const SystemTags: Record<string, Tag> = tags.reduce((obj, tag) => {
 }, {} as Record<string, Tag>);
 
 export const SystemSubtags: Record<string, Subtag> = subtags.reduce((obj, subtag) => {
+    const logger = AppLogger.getInstance();
+
     const id = `system-subtag-${subtag.name}`;
     if (!icons.includes(subtag.icon)) {
         subtag.icon = "binary";
@@ -249,7 +252,9 @@ export const SystemSubtags: Record<string, Subtag> = subtags.reduce((obj, subtag
 
     if (obj[id]) {
         obj[id].tagIds.push(`system-tag-${subtag.parent}`);
-
+        if (obj[id].icon !== subtag.icon) {
+            logger.w('system-sub-tags', `Multiple icons found for ${subtag.name}`)
+        }
     } else {
         obj[id] = {
             id: id,

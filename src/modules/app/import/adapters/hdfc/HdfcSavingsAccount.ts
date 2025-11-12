@@ -34,7 +34,6 @@ export class HdfcSavingsAccount implements IFileImportAdapter {
             identifiers: this.extractIdentifiers(pages),
             transactions: this.extractTransactions(pages),
         };
-        console.log(importData);
         return importData;
     };
 

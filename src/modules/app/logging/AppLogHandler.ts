@@ -12,8 +12,8 @@ export class AppLogHandler implements ILogHandler {
     public static getInstance(): AppLogHandler {
         if (!AppLogHandler.instance) {
             AppLogHandler.instance = new AppLogHandler();
-            (window as WindowWithLogs)['enableLogs'] = AppLogHandler.instance.enableConsoleLogs.bind(AppLogHandler.instance);
-            (window as WindowWithLogs)['disableLogs'] = AppLogHandler.instance.disableConsoleLogs.bind(AppLogHandler.instance);
+            (window as WindowWithLogs).enableLogs = AppLogHandler.instance.enableConsoleLogs.bind(AppLogHandler.instance);
+            (window as WindowWithLogs).disableLogs = AppLogHandler.instance.disableConsoleLogs.bind(AppLogHandler.instance);
         }
         return AppLogHandler.instance;
     }
