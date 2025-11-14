@@ -6,6 +6,7 @@ import BaseLayout from './components/layouts/BaseLayout';
 import Dashboard from './pages/Dashboard';
 import NotFoundPage from './pages/NotFoundPage';
 import { RedirectTo } from './pages/RedirectTo';
+import TransactionsPage from './pages/TransactionsPage';
 
 export default function AppRouter() {
     return (
@@ -15,6 +16,7 @@ export default function AppRouter() {
                     <Route path="/:householdId" element={<BaseLayout />}>
                         <Route index element={<RedirectTo to="dashboard" />} />
                         <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="transactions" element={<TransactionsPage />} />
                         <Route path="dev">
                             <Route index element={<DevPage />} />
                             <Route path="store/:entityName?/:entityId?" element={<DevStorePage />} />

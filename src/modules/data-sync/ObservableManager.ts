@@ -6,7 +6,7 @@ import type { EntityUtil } from "./EntityUtil";
 import type { Entity } from "./entities/Entity";
 import type { Tenant } from "./entities/Tenant";
 import type { ILogger } from "./interfaces/ILogger";
-import { filterEntities, type QueryOptions } from "./interfaces/QueryOptions";
+import { filterEntities, sortEntities, type QueryOptions } from "./interfaces/QueryOptions";
 import type { EntityEvent, EntityId, EntityKey, EntityKeyEvent, EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
 
 type EntityKeyMap<T> = Record<EntityKey, T>;
@@ -51,7 +51,7 @@ export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions, T
         });
     }
 
-    observeAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions & FilterOptions): Observable<Array<EntityTypeOf<U, N>>> {
+    observeAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions<U, N> & FilterOptions): Observable<Array<EntityTypeOf<U, N>>> {
         this.logger.v(this.constructor.name, 'Observing all entities', { entityName, options });
         const entityKeys = this.keyHandler.getEntityKeys(entityName, options);
         const entries = this.ensureEntityKeyEntries(entityName, entityKeys);
@@ -61,7 +61,7 @@ export class ObservableManager<U extends EntityUtil<SchemaMap>, FilterOptions, T
                 map(collections => Object.assign({}, ...collections) as EntityIdMap<EntityTypeOf<U, N>>),
                 map(collection => {
                     const results = Object.values(collection) as Array<EntityTypeOf<U, N>>;
-                    return options ? filterEntities(results, options) : results;
+                    return options ? sortEntities(filterEntities(results, options), options) : results;
                 })
             ).subscribe(subscriber);
 

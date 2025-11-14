@@ -4,10 +4,8 @@ import z from "zod";
 
 export const TransactionSchema = EntitySchema.extend({
     accountId: zodReference("MoneyAccount"),
-    tagId: zodReference("Tag").optional(),
-    subtagId: zodReference("Subtag").optional(),
+    tagId: z.string().optional(),
     transferAccountId: zodReference("MoneyAccount").optional(),
-    merchantId: zodReference("Merchant").optional(),
     title: z.string(),
     narration: z.string(),
     transactionAt: z.date(),

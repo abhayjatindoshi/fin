@@ -7,7 +7,7 @@ import type { EntityUtil } from "./EntityUtil";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPersistence } from "./interfaces/IPersistence";
 import type { IStore } from "./interfaces/IStore";
-import { filterEntities, type QueryOptions } from "./interfaces/QueryOptions";
+import { filterEntities, sortEntities, type QueryOptions } from "./interfaces/QueryOptions";
 import type { EntityNameOf, EntityTypeOf, SchemaMap } from "./interfaces/types";
 import type { MetadataManager } from "./MetadataManager";
 
@@ -47,12 +47,12 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
         return this.store.get<N>(this.tenant, entityKey, entityName, id);
     }
 
-    public async getAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions & FilterOptions): Promise<Array<EntityTypeOf<U, N>>> {
+    public async getAll<N extends EntityNameOf<U>>(entityName: N, options?: QueryOptions<U, N> & FilterOptions): Promise<Array<EntityTypeOf<U, N>>> {
         const entityKeys = this.keyHandler.getEntityKeys(entityName, options);
         const results = await Promise.all(
             entityKeys.map(entityKey => this.getFiltered(entityName, entityKey, options) as Promise<Array<EntityTypeOf<U, N>>>)
         );
-        return results.flat();
+        return sortEntities(results.flat(), options);
     }
 
     public save<N extends EntityNameOf<U>>(entityName: N, entity: EntityTypeOf<U, N>): string {
@@ -83,7 +83,7 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
         return this.store.getAll(this.tenant, entityKey, entityName);
     }
 
-    private async getFiltered<N extends EntityNameOf<U>>(entityName: N, entityKey: string, options?: QueryOptions): Promise<Array<EntityTypeOf<U, N>>> {
+    private async getFiltered<N extends EntityNameOf<U>>(entityName: N, entityKey: string, options?: QueryOptions<U, N>): Promise<Array<EntityTypeOf<U, N>>> {
         await this.ensureEntityKey(entityKey);
         const results = this.store.getAll<N>(this.tenant, entityKey, entityName);
         return filterEntities(results, options);

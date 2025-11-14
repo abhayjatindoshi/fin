@@ -1,4 +1,4 @@
-import { Link, useInRouterContext } from "react-router-dom";
+import { Link, useInRouterContext, useParams } from "react-router-dom";
 
 interface LogoProps {
     size?: 'small' | 'medium' | 'large';
@@ -20,10 +20,11 @@ const Logo: React.FC<LogoProps> = ({ size = "small", className = '' }: LogoProps
     };
 
     const inRouter = useInRouterContext();
+    const { householdId } = useParams();
 
     if (inRouter) {
         return (
-            <Link to="/" className={`m-1 -mt-1 font-bold cursor-pointer ${sizeClasses[size]} ${className}`}>
+            <Link to={`/${householdId ?? ''}`} className={`m-1 -mt-1 font-bold cursor-pointer ${sizeClasses[size]} ${className}`}>
                 <span>Fin</span>
                 <span className={`text-accent ${dotSizeClasses[size]}`}>.</span>
             </Link>

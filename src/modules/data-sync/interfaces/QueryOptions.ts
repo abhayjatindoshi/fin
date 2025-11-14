@@ -17,18 +17,22 @@ export function filterEntities<U extends EntityUtil<SchemaMap>, N extends Entity
         .filter(item => Object.entries(options.where!)
             .every(([key, value]) => item[key as keyof EntityTypeOf<U, N>] === value));
 
-    if (options.sort) {
-        options.sort.forEach(({ field, direction }) => {
-            data = data.sort((a, b) => {
-                const aVal = a[field as keyof EntityTypeOf<U, N>];
-                const bVal = b[field as keyof EntityTypeOf<U, N>];
-                if (aVal === bVal) return 0;
-                if (aVal === undefined || aVal === null) return direction === 'asc' ? 1 : -1;
-                if (bVal === undefined || bVal === null) return direction === 'asc' ? -1 : 1;
-                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-                return direction === 'asc' ? 1 : -1;
-            });
-        });
-    }
     return data.map(item => ({ ...item }));
+}
+
+export function sortEntities<U extends EntityUtil<SchemaMap>, N extends EntityNameOf<U>>(data: Array<EntityTypeOf<U, N>>, options?: QueryOptions<U, N>): Array<EntityTypeOf<U, N>> {
+    if (!options || !options.sort) return data;
+
+    options.sort.forEach(({ field, direction }) => {
+        data = data.sort((a, b) => {
+            const aVal = a[field as keyof EntityTypeOf<U, N>];
+            const bVal = b[field as keyof EntityTypeOf<U, N>];
+            if (aVal === bVal) return 0;
+            if (aVal === undefined || aVal === null) return direction === 'asc' ? 1 : -1;
+            if (bVal === undefined || bVal === null) return direction === 'asc' ? -1 : 1;
+            if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+            return direction === 'asc' ? 1 : -1;
+        });
+    });
+    return data;
 }
