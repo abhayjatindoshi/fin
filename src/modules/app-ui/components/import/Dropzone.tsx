@@ -117,7 +117,7 @@ const Dropzone: React.FC<DropzoneProps> = ({
                         <CardContent className="flex flex-row items-center">
                             <Upload className="scale-150 animate-bounce mr-7" />
                             <div className="flex flex-col">
-                                <Logo size="small" />
+                                <Logo />
                                 Drop files to process them
                             </div>
                         </CardContent>

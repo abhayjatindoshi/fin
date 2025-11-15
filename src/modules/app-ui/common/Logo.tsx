@@ -1,43 +1,33 @@
 import { Link, useInRouterContext, useParams } from "react-router-dom";
+import LogoSvg from "../icons/logo.svg?react";
 
 interface LogoProps {
-    size?: 'small' | 'medium' | 'large';
+    size?: "sm" | "md" | "lg" | "xl";
     className?: string;
 }
 
-const Logo: React.FC<LogoProps> = ({ size = "small", className = '' }: LogoProps) => {
-
-    const sizeClasses = {
-        'small': "text-xl",
-        'medium': "text-3xl",
-        'large': "text-5xl",
-    };
-
-    const dotSizeClasses = {
-        'small': "text-3xl",
-        'medium': "text-5xl",
-        'large': "text-7xl",
-    };
+const Logo: React.FC<LogoProps> = ({ className = '', size = "md" }: LogoProps) => {
 
     const inRouter = useInRouterContext();
     const { householdId } = useParams();
 
+    const sizeMap = {
+        sm: 'w-8 h-4',
+        md: 'w-12 h-6',
+        lg: 'w-20 h-10',
+        xl: 'w-32 h-16',
+    }
+
     if (inRouter) {
         return (
-            <Link to={`/${householdId ?? ''}`} className={`m-1 -mt-1 font-bold cursor-pointer ${sizeClasses[size]} ${className}`}>
-                <span>Fin</span>
-                <span className={`text-accent ${dotSizeClasses[size]}`}>.</span>
+            <Link to={`/${householdId ?? ''}`}>
+                <LogoSvg className={`m-1 font-bold cursor-pointer ${sizeMap[size]} ${className}`} />
             </Link>
         );
     }
 
     // Fallback when not inside a Router (e.g., portals rendered before Router mounts)
-    return (
-        <div className={`m-1 -mt-1 font-bold ${sizeClasses[size]} ${className}`}>
-            <span>Fin</span>
-            <span className={`text-accent ${dotSizeClasses[size]}`}>.</span>
-        </div>
-    );
+    return <LogoSvg className={`m-1 font-bold cursor-pointer ${sizeMap[size]} ${className}`} />;
 };
 
 export default Logo;

@@ -12,7 +12,7 @@ const NavbarProfileMenu: React.FC = () => {
         <DropdownMenu>
             <DropdownMenuTrigger>
                 <div className="rounded-full border backdrop-blur">
-                    <Avatar className="size-10 cursor-pointer opacity-60 hover:opacity-100 transition">
+                    <Avatar className="size-11 cursor-pointer opacity-60 hover:opacity-100 transition">
                         <AvatarImage src={currentUser?.picture} alt={currentUser?.name} />
                         <AvatarFallback>{currentUser?.name?.charAt(0)}</AvatarFallback>
                     </Avatar>

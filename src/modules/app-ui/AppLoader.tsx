@@ -92,7 +92,7 @@ export const AppLoader: React.FC = () => {
             <ThemeSwitcher />
         </div>
         <div className="mt-32 mb-8">
-            <Logo size="large" />
+            <Logo size="xl" />
         </div>
         {loading ? <Spinner /> :
             !currentUser ? <LoginComponent /> :

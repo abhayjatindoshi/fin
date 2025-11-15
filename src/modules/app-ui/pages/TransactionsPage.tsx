@@ -7,7 +7,7 @@ const TransactionsPage: React.FC = () => {
     const [filterProps, setFilterProps] = useState<TransactionFilterProps>({ sort: 'desc', });
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col">
             <TransactionsFilter filterProps={filterProps} setFilterProps={setFilterProps} />
             <TransactionsTable filterProps={filterProps} />
         </div>

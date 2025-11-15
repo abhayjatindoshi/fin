@@ -6,6 +6,7 @@ import { Button } from "@/modules/base-ui/components/ui/button";
 import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { CircleX } from "lucide-react";
 import React, { useState } from "react";
+import Logo from "../common/Logo";
 import PageLayout from "../components/layouts/PageLayout";
 import TagIcons from "../icons/tags/TagIcons";
 
@@ -95,6 +96,12 @@ const Dashboard: React.FC = () => {
 
     return <PageLayout onSearch={search} className="flex flex-col">
         <div className="p-4">Dashboard Page {searchText}</div>
+        <div className="flex flex-row gap-2 items-baseline">
+            <Logo size="xl" />
+            <Logo size="lg" />
+            <Logo size="md" />
+            <Logo size="sm" />
+        </div>
         <div className="flex flex-row justify-center gap-4 flex-wrap">
             <Block />
             <Block />

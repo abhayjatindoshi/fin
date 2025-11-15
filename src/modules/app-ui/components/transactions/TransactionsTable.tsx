@@ -100,7 +100,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, acco
         const AccountIcon = BankIcon(tx.accountId);
 
         if (isMobile) {
-            return <li key={tx.id} className="flex flex-col rounded-xl border m-2">
+            return <li key={tx.id} className="flex flex-col rounded-xl border">
                 <div className="flex flex-row justify-between gap-3 px-3 py-1">
                     <div className="truncate">{DescriptionCell}</div>
                     <div className="shrink-0">{DateCell}</div>
@@ -129,7 +129,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, acco
     return <>
         {loading ?
             <Spinner /> :
-            <ul className={`flex flex-col ${isMobile ? '' : 'border rounded-xl h-[calc(100vh-10rem)] overflow-auto'}`}>
+            <ul className={`flex flex-col ${isMobile ? 'gap-2 m-2' : 'my-4 border rounded-xl'}`}>
                 {transactions && transactions.map(TransactionRow)}
             </ul>}
     </>;

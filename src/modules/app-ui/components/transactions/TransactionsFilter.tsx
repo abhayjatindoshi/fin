@@ -36,6 +36,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
     const [timestampLabel, setTimestampLabel] = useState<string>('This year');
     const [showSearch, setShowSearch] = useState<boolean>(true);
     const { isMobile } = useApp();
+    const blurClasses = 'bg-secondary/50 backdrop-blur border';
 
     const setSort = (sort: 'asc' | 'desc') => {
         setFilterProps({ ...filterProps, sort });
@@ -76,7 +77,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
     const SortDropdown = () => {
         return <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="font-light">
+                <Button variant="outline" className={`font-light ${blurClasses}`}>
                     {filterProps.sort === 'desc' ? (<> <ArrowDownWideNarrow /> Newest first</>) : (<> <ArrowUpNarrowWide /> Oldest first</>)}
                 </Button>
             </DropdownMenuTrigger>
@@ -111,7 +112,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
 
         return <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="font-light">
+                <Button variant="outline" className={`font-light ${blurClasses}`}>
                     {selectedAccounts.length > 0 ?
                         <>{AdapterIcon(selectedAccounts[0].bankIcon)} <AccountNumber accountNumber={selectedAccounts[0].accountNumber} />   </> :
                         <><Landmark /> All accounts</>
@@ -182,7 +183,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
 
         return <Popover onOpenChange={() => setMode('date-tag')}>
             <PopoverTrigger asChild>
-                <Button variant="outline" className="font-light">
+                <Button variant="outline" className={`font-light ${blurClasses}`}>
                     <CalendarIcon />{timestampLabel}
                 </Button>
             </PopoverTrigger>
@@ -216,11 +217,11 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
 
     const SearchBar = () => {
         return <>
-            {isMobile && !showSearch && <Button variant="outline" size="icon-sm" className="relative" onClick={() => setShowSearch(true)}>
+            {isMobile && !showSearch && <Button variant="outline" size="icon-sm" className={`relative ${blurClasses}`} onClick={() => setShowSearch(true)}>
                 <Search />
                 {filterProps.searchQuery && filterProps.searchQuery.length > 0 && <span className="size-2 rounded-full bg-accent absolute top-2 right-2"></span>}
             </Button>}
-            {showSearch && <InputGroup className={isMobile ? 'w-full' : 'w-48'}>
+            {showSearch && <InputGroup className={`${isMobile ? 'w-full' : 'w-48'} ${blurClasses}`}>
                 <InputGroupInput autoFocus className="pr-2" placeholder="Search..."
                     value={filterProps.searchQuery}
                     onBlur={() => setShowSearch(isMobile ? false : true)}
@@ -232,7 +233,8 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
         </>
     }
 
-    return <div className={`flex flex-row flex-wrap items-center gap-2 ${isMobile && 'px-4 pt-4 h-16'}`}>
+    return <div className={`flex flex-row flex-wrap items-center gap-2 sticky z-10
+    ${isMobile ? 'px-4 py-0 h-16 top-0' : 'top-20'}`}>
         {(!isMobile || !showSearch) && <>
             <SortDropdown />
             <AccountsDropdown />
