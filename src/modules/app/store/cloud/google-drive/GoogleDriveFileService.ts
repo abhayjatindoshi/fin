@@ -30,6 +30,7 @@ export const GoogleAuthConfig: AuthConfig = {
     type: 'google',
     clientId: '8125620125-tkfb5448rfhk389h550ghpljk73ompe6.apps.googleusercontent.com',
     scopes: [
+        'openid', 'profile', 'email',
         'https://www.googleapis.com/auth/drive.file',
         'https://www.googleapis.com/auth/drive.readonly',
         'https://www.googleapis.com/auth/drive.appdata',
@@ -73,30 +74,6 @@ export class GoogleDriveFileService implements ICloudFileService, IPersistence<H
     private constructor(getToken: () => Promise<Token | null>) {
         this.getToken = getToken;
     }
-
-    // async getConfig(): Promise<Config | null> {
-    //     if (this.config) return this.config;
-    //     await this.ensureFileMapEntry('appDataFolder', 'root', 'config.json');
-    //     const fileId = this.fileMap['appDataFolder']?.['root']?.['config.json'];
-    //     if (!fileId) {
-    //         this.config = { households: [] };
-    //         return this.config;
-    //     }
-    //     const content = await this.readFile({ id: 'appDataFolder', displayName: 'App Folder' }, fileId);
-    //     this.config = Utils.parseJson<Config>(content);
-    //     return this.config;
-    // }
-
-    // async saveConfig(config: Config): Promise<void> {
-    //     const content = Utils.stringifyJson(config);
-    //     await this.ensureFileMapEntry('appDataFolder', 'root', 'config.json');
-    //     const fileId = this.fileMap['appDataFolder']?.['root']?.['config.json'];
-    //     if (fileId) {
-    //         await this.updateFile({ id: 'appDataFolder', displayName: 'App Folder' }, fileId, 'config.json', content);
-    //     } else {
-    //         await this.createFile({ id: 'appDataFolder', displayName: 'App Folder' }, 'config.json', content);
-    //     }
-    // }
 
     getSpaces = (): Promise<GoogleDriveSpace[]> => Promise.resolve([
         { id: 'drive', displayName: 'My Drive' },

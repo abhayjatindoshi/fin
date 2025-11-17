@@ -1,15 +1,17 @@
 import { useState } from "react";
-import TransactionsFilter, { type TransactionFilterProps } from "../components/transactions/TransactionsFilter";
+import TransactionsFilter, { getDefaultOptions, type TransactionFilterOptions } from "../components/transactions/TransactionsFilter";
 import TransactionsTable from "../components/transactions/TransactionsTable";
+import { useApp } from "../providers/AppProvider";
 
 const TransactionsPage: React.FC = () => {
 
-    const [filterProps, setFilterProps] = useState<TransactionFilterProps>({ sort: 'desc', });
+    const { settings } = useApp();
+    const [filter, setFilter] = useState<TransactionFilterOptions>(getDefaultOptions(settings));
 
     return (
         <div className="flex flex-col">
-            <TransactionsFilter filterProps={filterProps} setFilterProps={setFilterProps} />
-            <TransactionsTable filterProps={filterProps} />
+            <TransactionsFilter filter={filter} setFilter={setFilter} />
+            <TransactionsTable filter={filter} />
         </div>
     );
 };

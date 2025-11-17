@@ -14,9 +14,9 @@ const BaseLayout: React.FC = () => {
             <Navbar className="w-full px-2 absolute bottom-4 z-10" isMobile={true} />
         </div>
     } else {
-        return <div className="flex flex-col mx-24 my-4 h-[calc(100%-2rem)]">
-            <Navbar className="w-[calc(100%-12rem)] absolute top-4 z-10" />
-            <div className="h-[calc(100%-4rem)] mt-16">
+        return <div className="flex flex-col my-4 h-[calc(100%-2rem)]">
+            <Navbar className="absolute left-0 right-0 top-4 mx-20 z-10" />
+            <div className="h-[calc(100%-4rem)] mt-16 mx-24">
                 <Outlet />
             </div>
         </div>

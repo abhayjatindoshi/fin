@@ -2,6 +2,20 @@ import { EntitySchema } from "@/modules/data-sync/entities/Entity";
 import { zodReference } from "@/modules/data-sync/interfaces/ZodOverrides";
 import z from "zod";
 
+export const TransactionSourceTypeSchema = z.enum(['file', 'email']);
+export const TransactionFileSourceSchema = z.object({
+    type: z.literal('file'),
+    fileName: z.string(),
+});
+
+export const TransactionEmailSourceSchema = z.object({
+    type: z.literal('email'),
+    email: z.email(),
+    emailId: z.string(),
+});
+
+export const TransactionSourceSchema = TransactionFileSourceSchema.or(TransactionEmailSourceSchema);
+
 export const TransactionSchema = EntitySchema.extend({
     accountId: zodReference("MoneyAccount"),
     tagId: z.string().optional(),
@@ -11,6 +25,11 @@ export const TransactionSchema = EntitySchema.extend({
     transactionAt: z.date(),
     amount: z.number(),
     hash: z.number(),
+    source: TransactionSourceSchema.optional(),
 });
 
+export type TransactionSourceType = z.infer<typeof TransactionSourceTypeSchema>;
+export type TransactionFileSource = z.infer<typeof TransactionFileSourceSchema>;
+export type TransactionEmailSource = z.infer<typeof TransactionEmailSourceSchema>;
+export type TransactionSource = z.infer<typeof TransactionSourceSchema>;
 export type Transaction = z.infer<typeof TransactionSchema>;

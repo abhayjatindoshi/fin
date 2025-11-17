@@ -1,6 +1,8 @@
+import { EntityUtils, TransactionDateFilterOptions } from "@/modules/app/common/EntityUtils";
 import { EntityName } from "@/modules/app/entities/entities";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import { ImportHandler } from "@/modules/app/import/ImportHandler";
+import type { SettingKeys } from "@/modules/app/services/SettingService";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Calendar as CalendarComponent } from "@/modules/base-ui/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
@@ -15,7 +17,7 @@ import AccountNumber from "../../common/AccountNumber";
 import ImportIcon from "../../icons/import/ImportIcon";
 import { useApp } from "../../providers/AppProvider";
 
-export type TransactionFilterProps = {
+export type TransactionFilterOptions = {
     years?: number[];
     startDate?: Date;
     endDate?: Date;
@@ -24,48 +26,65 @@ export type TransactionFilterProps = {
     searchQuery?: string;
 }
 
-type TransactionsFilterProps = {
-    accounts?: Array<MoneyAccount>;
-    filterProps: TransactionFilterProps;
-    setFilterProps: (props: TransactionFilterProps) => void;
+export const getDefaultOptions = (settings: Record<SettingKeys, string> | null): TransactionFilterOptions => {
+    if (!settings) {
+        return { sort: 'desc' };
+    }
+
+    const result = EntityUtils.parseTransactionDateFilter('this_year', settings);
+
+    return {
+        startDate: result.startDate,
+        endDate: result.endDate,
+        sort: 'desc',
+    };
 }
 
-const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filterProps, setFilterProps }: TransactionsFilterProps) => {
+type TransactionsFilterProps = {
+    accounts?: Array<MoneyAccount>;
+    filter: TransactionFilterOptions;
+    setFilter: (props: TransactionFilterOptions) => void;
+}
+
+const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filter, setFilter }: TransactionsFilterProps) => {
 
     const adaptersMap = useRef(ImportHandler.getAllAdapterMeta());
     const [timestampLabel, setTimestampLabel] = useState<string>('This year');
-    const [showSearch, setShowSearch] = useState<boolean>(true);
-    const { isMobile } = useApp();
+    const { isMobile, settings } = useApp();
+    const [showSearch, setShowSearch] = useState<boolean>(!isMobile);
     const blurClasses = 'bg-secondary/50 backdrop-blur border';
 
     const setSort = (sort: 'asc' | 'desc') => {
-        setFilterProps({ ...filterProps, sort });
+        setFilter({ ...filter, sort });
     }
 
     const setAccountId = (accountId: string) => {
-        setFilterProps({ ...filterProps, accountIds: [accountId] });
+        setFilter({ ...filter, accountIds: [accountId] });
     }
 
-    const setDate = (obj: { label?: string, startDate: Date, endDate?: Date }) => {
-        if (obj.label) {
-            setTimestampLabel(obj.label);
-        } else {
-            let label = moment(obj.startDate).format('MMM D, YYYY');
-            if (obj.endDate) {
-                label += ` to ${moment(obj.endDate).format('MMM D, YYYY')}`;
-            }
-            setTimestampLabel(label);
+    const setDate = (obj: { startDate: Date, endDate?: Date }) => {
+        let label = moment(obj.startDate).format('MMM D, YYYY');
+        if (obj.endDate) {
+            label += ` to ${moment(obj.endDate).format('MMM D, YYYY')}`;
         }
+        setTimestampLabel(label);
 
         const currentYear = moment(obj.startDate).year();
         const endYear = obj.endDate ? moment(obj.endDate).year() : currentYear;
         const years = Array.from({ length: endYear - currentYear + 1 }, (_, i) => currentYear + i);
 
-        setFilterProps({ ...filterProps, startDate: obj.startDate, endDate: obj.endDate, years });
+        setFilter({ ...filter, startDate: obj.startDate, endDate: obj.endDate, years });
+    }
+
+    const setDateFilter = (key: string) => {
+        if (!settings) return;
+        const result = EntityUtils.parseTransactionDateFilter(key as keyof typeof TransactionDateFilterOptions, settings);
+        setDate(result);
+        setTimestampLabel(result.label);
     }
 
     const setSearch = (term: string) => {
-        setFilterProps({ ...filterProps, searchQuery: term });
+        setFilter({ ...filter, searchQuery: term });
     }
 
     const AdapterIcon = (icon: string, props?: React.SVGProps<SVGSVGElement>) => {
@@ -75,19 +94,14 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
     }
 
     const SortDropdown = () => {
-        return <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline" className={`font-light ${blurClasses}`}>
-                    {filterProps.sort === 'desc' ? (<> <ArrowDownWideNarrow /> Newest first</>) : (<> <ArrowUpNarrowWide /> Oldest first</>)}
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSort('desc')}>
-                    <ArrowDownWideNarrow /> Newest first</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSort('asc')}>
-                    <ArrowUpNarrowWide /> Oldest first</DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        return <Button variant="outline"
+            className={`font-light ${blurClasses}`}
+            onClick={() => setSort(filter.sort === 'desc' ? 'asc' : 'desc')}>
+            {filter.sort === 'desc' ?
+                (<> <ArrowDownWideNarrow /> Newest first</>) :
+                (<> <ArrowUpNarrowWide /> Oldest first</>)
+            }
+        </Button>
     };
 
     const AccountsDropdown = () => {
@@ -105,7 +119,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
                 }));
         }
 
-        const selectedAccounts = transformAccountsForDisplay(filterProps.accountIds
+        const selectedAccounts = transformAccountsForDisplay(filter.accountIds
             ?.map(id => accounts.find(a => a.id === id))
             .filter(a => a !== undefined) ?? []);
         const displayAccounts = transformAccountsForDisplay(accounts);
@@ -120,7 +134,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64">
-                <DropdownMenuItem key={'all-accounts'} onClick={() => setFilterProps({ ...filterProps, accountIds: [] })}>
+                <DropdownMenuItem key={'all-accounts'} onClick={() => setFilter({ ...filter, accountIds: [] })}>
                     <div className="flex flex-row gap-4 items-center">
                         <Landmark className="size-4 mx-1" /> All accounts
                     </div>
@@ -141,43 +155,6 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
     }
 
     const TimelineDropdown = () => {
-
-        const firstMonth = 3; // April
-
-        // Helper to get the fiscal year start based on firstMonth (0-based, e.g. 3 = April)
-        const getFiscalYearStart = (date: moment.Moment) => {
-            const month = date.month();
-            if (month < firstMonth) {
-                return date.clone().subtract(1, 'year').month(firstMonth).startOf('month');
-            }
-            return date.clone().month(firstMonth).startOf('month');
-        };
-
-        const menuItems = [
-            {
-                label: 'This week',
-                startDate: moment().startOf('week').toDate(),
-            },
-            {
-                label: 'This month',
-                startDate: moment().startOf('month').toDate(),
-            },
-            {
-                label: 'Last month',
-                startDate: moment().subtract(1, 'month').startOf('month').toDate(),
-                endDate: moment().subtract(1, 'month').endOf('month').toDate(),
-            },
-            {
-                label: 'This year',
-                startDate: getFiscalYearStart(moment()).toDate(),
-            },
-            {
-                label: 'Last year',
-                startDate: getFiscalYearStart(moment().subtract(1, 'year')).toDate(),
-                endDate: getFiscalYearStart(moment()).subtract(1, 'day').endOf('day').toDate(),
-            }
-        ];
-
         const [mode, setMode] = useState<'date-tag' | 'custom-range'>('date-tag');
         const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>(undefined);
 
@@ -189,9 +166,9 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
             </PopoverTrigger>
             <PopoverContent className={`p-0 flex flex-col ${mode == 'date-tag' ? 'w-42' : 'w-64'}`}>
                 {mode === 'date-tag' ? <>
-                    {menuItems.map(item => (
-                        <Button key={item.label} variant="ghost" className="flex flex-row justify-start uppercase" onClick={() => setDate(item)}>
-                            {item.label}
+                    {Object.entries(TransactionDateFilterOptions).map(([key, label]) => (
+                        <Button key={key} variant="ghost" className="flex flex-row justify-start uppercase" onClick={() => setDateFilter(key)}>
+                            {label}
                         </Button>
                     ))}
                     <Button variant="ghost" className="flex flex-row justify-start uppercase" onClick={() => setMode('custom-range')}>
@@ -219,11 +196,12 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ accounts, filte
         return <>
             {isMobile && !showSearch && <Button variant="outline" size="icon-sm" className={`relative ${blurClasses}`} onClick={() => setShowSearch(true)}>
                 <Search />
-                {filterProps.searchQuery && filterProps.searchQuery.length > 0 && <span className="size-2 rounded-full bg-accent absolute top-2 right-2"></span>}
+                {filter.searchQuery && filter.searchQuery.length > 0 && <span className="size-2 rounded-full bg-accent absolute top-2 right-2"></span>}
             </Button>}
             {showSearch && <InputGroup className={`${isMobile ? 'w-full' : 'w-48'} ${blurClasses}`}>
-                <InputGroupInput autoFocus className="pr-2" placeholder="Search..."
-                    value={filterProps.searchQuery}
+                <InputGroupInput autoFocus={isMobile}
+                    className="pr-2" placeholder="Search..."
+                    value={filter.searchQuery}
                     onBlur={() => setShowSearch(isMobile ? false : true)}
                     onChange={e => setSearch(e.target.value)} />
                 <InputGroupAddon>

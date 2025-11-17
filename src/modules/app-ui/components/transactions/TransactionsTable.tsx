@@ -3,6 +3,7 @@ import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import type { Tag } from "@/modules/app/entities/Tag";
 import type { Transaction } from "@/modules/app/entities/Transaction";
 import { ImportHandler } from "@/modules/app/import/ImportHandler";
+import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Checkbox } from "@/modules/base-ui/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/modules/base-ui/components/ui/popover";
@@ -18,15 +19,15 @@ import AccountNumber from "../../common/AccountNumber";
 import Money from "../../common/Money";
 import ImportIcon from "../../icons/import/ImportIcon";
 import { useApp } from "../../providers/AppProvider";
-import type { TransactionFilterProps } from "./TransactionsFilter";
+import type { TransactionFilterOptions } from "./TransactionsFilter";
 
 type TransactionsTableProps = {
-    filterProps: TransactionFilterProps
+    filter: TransactionFilterOptions
     accounts: Array<MoneyAccount>;
     tags: Array<Tag>;
 }
 
-const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, accounts }: TransactionsTableProps) => {
+const TransactionsTable: React.FC<TransactionsTableProps> = ({ filter, accounts }: TransactionsTableProps) => {
 
     const { orchestrator } = useDataSync();
     const { isMobile } = useApp();
@@ -35,11 +36,11 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, acco
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        if (!filterProps || !orchestrator) return;
+        if (!filter || !orchestrator) return;
 
         // Using RxJS for debouncing
         setLoading(true);
-        const filterSubject = new Subject<TransactionFilterProps>();
+        const filterSubject = new Subject<TransactionFilterOptions>();
         const repo = orchestrator.repo(EntityName.Transaction);
         const subscription = filterSubject
             .pipe(debounceTime(300))
@@ -51,23 +52,25 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, acco
                     }],
                     years: filter.years,
                 }
-                const data = await repo.getAll(query) as Array<Transaction>;
-                setTransactions(data
-                    .filter(t => !filter.accountIds || filter.accountIds.length == 0 || filter.accountIds.includes(t.accountId))
-                    .filter(t => !filter.startDate || t.transactionAt >= filter.startDate!)
-                    .filter(t => !filter.endDate || t.transactionAt <= filter.endDate!)
-                    .filter(t => !filter.searchQuery || t.narration.toLowerCase().includes(filter.searchQuery.toLowerCase()))
-                );
-                setLoading(false);
+                return repo.observeAll(query).subscribe((data) => {
+                    const transactions = data as Array<Transaction>;
+                    setLoading(false);
+                    setTransactions(transactions
+                        .filter(t => !filter.accountIds || filter.accountIds.length == 0 || filter.accountIds.includes(t.accountId))
+                        .filter(t => !filter.startDate || t.transactionAt >= filter.startDate!)
+                        .filter(t => !filter.endDate || t.transactionAt <= filter.endDate!)
+                        .filter(t => !filter.searchQuery || t.narration.toLowerCase().includes(filter.searchQuery.toLowerCase()))
+                    );
+                });
             });
 
-        filterSubject.next(filterProps);
+        filterSubject.next(filter);
 
         return () => {
             subscription.unsubscribe();
             filterSubject.complete();
         };
-    }, [filterProps]);
+    }, [filter]);
 
     const BankIcon = (accountId: string) => {
         const account = accounts.find(a => a.id === accountId);
@@ -91,7 +94,10 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, acco
     }
 
     const TransactionRow = (tx: Transaction, i: number) => {
-        const DateCell = <span className="text-sm">{moment(tx.transactionAt).format('MMM DD')}</span>
+        const DateCell = <div className="flex flex-col">
+            <span className="text-sm">{moment(tx.transactionAt).format('MMM DD')}</span>
+            <span className="text-xs text-muted-foreground">{moment(tx.transactionAt).format("'YY")}</span>
+        </div>;
         const MoneyCell = <Money amount={tx.amount} />;
         const TagCell = <Button variant="secondary" size="sm" className="m-0" >
             {i % 2 == 0 ? <><Hash /> Tag</> : <><BanknoteArrowDown className="size-5" /> <span className="font-semibold text-xs">CASH WITHDRAWAL</span></>}
@@ -126,12 +132,31 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filterProps, acco
         </li>
     }
 
+    if (loading) {
+        return <Spinner className="m-auto justify-center" />;
+    }
+
+    if (!transactions || transactions.length === 0) {
+        return <div className="flex flex-col items-center mt-12">
+            <EmptyOpenBox className="mx-auto opacity-50 [&>svg]:size-12" animated={false} />
+            <span className="text-muted-foreground mt-4">No transactions found</span>
+        </div>;
+    }
+
+    const deleteAll = async () => {
+        if (!orchestrator) return;
+        const repo = orchestrator.repo(EntityName.Transaction);
+        transactions
+            .map(tx => tx.id)
+            .filter(id => id != null)
+            .forEach(repo.delete.bind(repo));
+    }
+
     return <>
-        {loading ?
-            <Spinner /> :
-            <ul className={`flex flex-col ${isMobile ? 'gap-2 m-2' : 'my-4 border rounded-xl'}`}>
-                {transactions && transactions.map(TransactionRow)}
-            </ul>}
+        <Button variant="destructive" size="sm" className="w-24" onClick={deleteAll}>Delete All</Button>
+        <ul className={`flex flex-col ${isMobile ? 'gap-2 m-2' : 'my-4 border rounded-xl'}`}>
+            {transactions && transactions.map(TransactionRow)}
+        </ul>
     </>;
 }
 

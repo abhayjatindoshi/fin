@@ -34,6 +34,11 @@ const TableView: React.FC<TableViewProps> = ({ rows, loading }: TableViewProps) 
                 <TooltipTrigger>{moment(value).fromNow()}</TooltipTrigger>
                 <TooltipContent>{moment(value).format('MMMM Do YYYY, h:mm:ss a')}</TooltipContent>
             </Tooltip>
+        } else if (value instanceof Object) {
+            return <Tooltip>
+                <TooltipTrigger className="truncate w-24">{JSON.stringify(value)}</TooltipTrigger>
+                <TooltipContent><pre>{JSON.stringify(value, null, 2)}</pre></TooltipContent>
+            </Tooltip>
         }
         return <>{String(value)}</>;
     }

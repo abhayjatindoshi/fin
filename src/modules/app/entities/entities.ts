@@ -2,35 +2,35 @@ import { EU } from "@/modules/data-sync/EntityUtil";
 import { AdapterDataSchema } from "./AdapterData";
 import { HouseholdSchema } from "./Household";
 import { MoneyAccountSchema } from "./MoneyAccount";
-import { SubtagSchema } from "./Subtag";
+import { SettingSchema } from "./Setting";
 import { TagSchema } from "./Tag";
 import { TransactionSchema, type Transaction } from "./Transaction";
 import { type EntityConfigMap } from "./types";
 import { UserAccountSchema } from "./UserAccount";
 
 export const util = EU
-    .register("Tenant", HouseholdSchema)
+    .register("AdapterData", AdapterDataSchema)
     .register("MoneyAccount", MoneyAccountSchema)
-    .register("Subtag", SubtagSchema)
+    .register("Setting", SettingSchema)
     .register("Tag", TagSchema)
+    .register("Tenant", HouseholdSchema)
     .register("Transaction", TransactionSchema)
     .register("UserAccount", UserAccountSchema)
-    .register("AdapterData", AdapterDataSchema)
     ;
 
 export const EntityName = util.entityNames();
 
 export const EntityConfig: EntityConfigMap<typeof util> = {
     // Core system entities
-    Tenant: { scope: 'global' },
+    AdapterData: { scope: 'global' },
     Metadata: { scope: 'global' },
     MoneyAccount: { scope: 'global' },
-    Subtag: { scope: 'global' },
+    Setting: { scope: 'global' },
     Tag: { scope: 'global' },
+    Tenant: { scope: 'global' },
     Transaction: {
         scope: 'monthly',
         getKeyDate: (entity: Transaction) => entity.transactionAt
     },
     UserAccount: { scope: 'global' },
-    AdapterData: { scope: 'global' },
 };

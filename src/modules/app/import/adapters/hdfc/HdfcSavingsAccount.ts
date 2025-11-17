@@ -93,7 +93,23 @@ export class HdfcSavingsAccount implements IFileImportAdapter {
         //  - Heuristics for sign (used only if previous closing balance absent): keywords like 'NEFT CR', 'ACH C', 'INTEREST',
         //    'REV-', 'IMPS CR' indicate credit; 'NEFT DR', 'ACH D', 'IMPS-', 'UPI-' (generally) indicate debit.
 
-        const flatLines = pages.flat().map(l => l.trim()).filter(l => l.length > 0);
+        const dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
+
+        const flatLines = pages
+            .map(page => {
+                const pageFooterIndex = page.findIndex(l => l.startsWith('Page'));
+                return pageFooterIndex >= 0 ? page.slice(0, pageFooterIndex) : page;
+            })
+            .map(page => {
+                const summaryIndex = page.findIndex(l => l.startsWith('STATEMENT SUMMARY'));
+                return summaryIndex >= 0 ? page.slice(0, summaryIndex) : page;
+            })
+            .map(page => {
+                const headerIndex = page.findIndex(l => dateStartRegex.test(l));
+                return headerIndex >= 0 ? page.slice(headerIndex) : [];
+            })
+            .flat().map(l => l.trim())
+            .filter(l => l.length > 0);
 
         // Filter out obvious page footer/header noise lines to reduce false positives.
         const noisePatterns = [
@@ -128,11 +144,12 @@ export class HdfcSavingsAccount implements IFileImportAdapter {
             /\*\* Total Withdrawable/i,
             /^STATEMENT SUMMARY/,
             /^STATEMENT AS ON/i,
+            /require signature/i,
+            /^This is a computer/i,
+            /^Generated On/i,
         ];
 
         const isNoise = (line: string) => noisePatterns.some(p => p.test(line));
-
-        const dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
 
         // Group lines into raw transaction record blocks starting at date lines.
         const records: string[][] = [];
@@ -154,7 +171,8 @@ export class HdfcSavingsAccount implements IFileImportAdapter {
         const transactions: ImportedTransaction[] = [];
         let prevClosing: number | undefined;
 
-        for (const recLines of records) {
+        for (let i = 0; i < records.length; i++) {
+            const recLines = records[i];
             if (recLines.length === 0) continue;
             const firstLine = recLines[0];
             const dateMatch = dateStartRegex.exec(firstLine);
@@ -165,12 +183,27 @@ export class HdfcSavingsAccount implements IFileImportAdapter {
             const yNum = parseInt(yRaw, 10);
             const fullYear = yRaw.length === 2 ? (yNum >= 70 ? 1900 + yNum : 2000 + yNum) : yNum;
             const dateObj = new Date(fullYear, parseInt(m, 10) - 1, parseInt(d, 10));
+            dateObj.setMilliseconds(dateObj.getMilliseconds() + i); // ensure unique timestamp for sorting
 
             // Combine record text.
-            const recordText = recLines.join(' ');
+            let recordText = recLines.join(' ');
 
             // Extract all numeric tokens to find amount & closing balance.
-            const numericTokens = [...recordText.matchAll(amountTokenRegex)].map(m => m[1]);
+            recordText = '';
+            let numericTokensCount;
+            let numericTokens: string[];
+            const startingPoint = i--;
+            do {
+                recordText += records[++i].join(' ') + ' ';
+                numericTokens = [...recordText.matchAll(amountTokenRegex)].map(m => m[1]);
+                numericTokensCount = numericTokens.length;
+            } while (i - startingPoint < 5 && numericTokensCount < 2); // at least date + one amount
+            // const numericTokens = [...recordText.matchAll(amountTokenRegex)].map(m => m[1]);
+            numericTokens = numericTokens.filter(t => {
+                const index = recordText.indexOf(t);
+                recordText = recordText.slice(0, index) + recordText.slice(index + t.length);
+                return parseNumber(t) !== 0;
+            });
             if (numericTokens.length < 2) continue; // need at least amount + closing
             const closingBalStr = numericTokens[numericTokens.length - 1];
             const closingBalance = parseNumber(closingBalStr);

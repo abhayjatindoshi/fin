@@ -100,6 +100,10 @@ const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps
         } else if (importError && importError.adapters && importError.adapters.length === 1) {
             serviceRef.current.addPassword(importError.adapters[0], password);
         }
+        setImportError(null);
+        setTimeout(() => {
+            runImport();
+        }, 0);
     }
 
     const applyImport = () => {
@@ -151,7 +155,7 @@ const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps
             <div className="text-lg">Password Required</div>
             <div className="text-sm text-muted-foreground">The file appears to be password protected. Enter password to retry.</div>
             <div className="flex flex-col gap-2 mt-2">
-                <Input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} />
+                <Input type="password" placeholder="Enter file password..." value={password} onChange={e => setPassword(e.target.value)} />
                 <Button disabled={!password} onClick={() => addPassword()}>Import</Button>
             </div>
         </div>;

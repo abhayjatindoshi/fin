@@ -2,7 +2,7 @@ import { EntityUtils } from "../common/EntityUtils";
 import { AdapterDataSchema, type AdapterData } from "../entities/AdapterData";
 import { EntityName } from "../entities/entities";
 import type { MoneyAccount } from "../entities/MoneyAccount";
-import { TransactionSchema, type Transaction } from "../entities/Transaction";
+import { TransactionSchema, type Transaction, type TransactionSource } from "../entities/Transaction";
 import { ImportHandler } from "../import/ImportHandler";
 import type { IFileImportAdapter } from "../import/interfaces/IFileImportAdapter";
 import type { ImportedTransaction } from "../import/interfaces/ImportData";
@@ -33,6 +33,7 @@ export class ImportError extends Error {
 }
 
 export type ImportResult = {
+    importSource: TransactionSource;
     importedTransactions: ImportedTransaction[];
     importedAccounts: MoneyAccount[];
 }
@@ -95,12 +96,19 @@ export class ImportService extends BaseService {
             }));
 
             return {
+                importSource: {
+                    type: 'file',
+                    fileName: file.name,
+                },
                 importedAccounts: matchingAccounts,
                 importedTransactions: importData.transactions,
             }
         } catch (error) {
             // Preserve existing ImportError types (e.g. PASSWORD_REQUIRED) for UI to handle
-            if (error instanceof ImportError) throw error;
+            if (error instanceof ImportError) {
+                error.adapters = adapters;
+                throw error;
+            }
             throw new ImportError('IMPORT_FAILED', (error as Error).message, adapters);
         }
     }
@@ -121,11 +129,12 @@ export class ImportService extends BaseService {
             if (!tx.isNew) continue;
             const transaction = TransactionSchema.parse({
                 accountId: account.id as Transaction["accountId"],
-                title: tx.description,
+                title: '',
                 narration: tx.description,
                 transactionAt: tx.date,
                 amount: tx.amount,
                 hash: tx.hash!,
+                source: importResult.importSource,
             });
             transactionRepo.save(transaction);
         }

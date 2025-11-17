@@ -11,22 +11,22 @@ import AppRouter from "./router";
 export const App: React.FC = () => {
 
     return (
-        <AppProvider>
-            <ThemeProvider defaultTheme='dark' storageKey='fin-ui-theme'>
-                <div className="h-full grainy bg-gradient-to-br from-background to-muted/10">
-                    <div className="overflow-auto h-full">
-                        <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
-                            <TenantProvider>
-                                <DataSyncProvider>
+        <ThemeProvider defaultTheme='dark' storageKey='fin-ui-theme'>
+            <div className="h-full grainy bg-gradient-to-br from-background to-muted/10">
+                <div className="overflow-auto h-full">
+                    <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
+                        <TenantProvider>
+                            <DataSyncProvider>
+                                <AppProvider>
                                     <ImportProvider>
                                         <AppRouter />
                                     </ImportProvider>
-                                </DataSyncProvider>
-                            </TenantProvider>
-                        </AuthProvider>
-                    </div>
+                                </AppProvider>
+                            </DataSyncProvider>
+                        </TenantProvider>
+                    </AuthProvider>
                 </div>
-            </ThemeProvider>
-        </AppProvider>
+            </div>
+        </ThemeProvider>
     )
 }

@@ -1,17 +1,20 @@
 import { Dialog, DialogContent, DialogTitle } from "@/modules/base-ui/components/ui/dialog";
-import { createContext, useState, type PropsWithChildren } from "react";
+import { createContext, useContext, useState, type PropsWithChildren } from "react";
 import Dropzone from "./Dropzone";
 import ImportPage from "./ImportPage";
 
 interface ImportContextProps {
     import: (file: File[]) => Promise<void>;
     status: 'idle' | 'importing';
+    enabled: boolean;
+    setEnabled: (enabled: boolean) => void;
 }
 
 const ImportContext = createContext<ImportContextProps | undefined>(undefined);
 
 export const ImportProvider: React.FC<PropsWithChildren> = ({ children }: PropsWithChildren) => {
     const [showImportModal, setShowImportModal] = useState<boolean>(false);
+    const [enabled, setEnabled] = useState<boolean>(true);
     const [files, setFiles] = useState<File[]>([]);
 
     const importFiles = async (files: File[]) => {
@@ -20,9 +23,13 @@ export const ImportProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
     };
 
     return (
-        <ImportContext.Provider value={{ import: importFiles, status: showImportModal ? 'importing' : 'idle' }}>
+        <ImportContext.Provider value={{
+            import: importFiles,
+            status: showImportModal ? 'importing' : 'idle',
+            enabled, setEnabled
+        }}>
             {children}
-            {!showImportModal && <Dropzone onFileDrop={importFiles} maxFileCount={1} />}
+            {enabled && !showImportModal && <Dropzone onFileDrop={importFiles} maxFileCount={1} />}
             <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
                 <DialogContent>
                     <DialogTitle>Import Files</DialogTitle>
@@ -31,4 +38,12 @@ export const ImportProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
             </Dialog>
         </ImportContext.Provider >
     );
+};
+
+export const useImport = (): ImportContextProps => {
+    const context = useContext(ImportContext);
+    if (!context) {
+        throw new Error("useImport must be used within an ImportProvider");
+    }
+    return context;
 };
