@@ -11,11 +11,12 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/base-ui/components/ui/table";
 import { Asterisk, Check, FileText, Trash, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const DevImportPage: React.FC = () => {
 
     const { enabled, setEnabled } = useImport();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
     const [supportedAdapters, setSupportedAdapters] = useState<IFileImportAdapter[]>([]);
@@ -70,15 +71,17 @@ const DevImportPage: React.FC = () => {
         return <IconComponent className="size-8" />;
     }
 
-    return <div className="flex flex-col items-center gap-2">
+    return <div className="flex flex-col items-center gap-2 m-4 min-w-0">
         <div className="self-end">Global import handler: {enabled ? "Enabled" : "Disabled"}</div>
 
         {!file && <div
+            onClick={() => fileInputRef.current?.click()}
             onDrop={handleFileDrop}
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
-            className={`p-12 max-w-96 border-2 border-dashed border-muted-foreground bg-muted/50 rounded-md`}>
+            className="p-12 max-w-96 border-2 border-dashed border-muted-foreground bg-muted/50 rounded-md">
             <label className="cursor-pointer">
+                <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} />
                 <div className="text-center text-muted-foreground">
                     {isDragOver ? `Release to drop the file` : `Click to select a file to import`}
                 </div>
@@ -86,10 +89,10 @@ const DevImportPage: React.FC = () => {
         </div>}
 
         {file && <>
-            <div className="flex flex-row gap-4 items-center border p-4 rounded-md">
+            <div className="flex flex-row gap-4 items-center max-w-[calc(100%-2rem)] border p-4 rounded-md">
                 <FileText className="size-12" />
-                <div className="flex flex-col">
-                    <span className="font-semibold">{file.name}</span>
+                <div className="flex flex-col flex-1 min-w-0">
+                    <span className="font-semibold truncate">{file.name}</span>
                     <span className="text-sm text-muted-foreground">{file.type || 'N/A'}</span>
                     <span className="text-sm text-muted-foreground"><FileSize file={file} /></span>
                 </div>
@@ -125,24 +128,26 @@ const DevImportPage: React.FC = () => {
                 <div className="mt-4 self-start">Import Data:</div>
                 <div className="flex flex-col gap-2 items-start w-full">
                     <span className="text-xl">Account no: {importData.identifiers.join(', ')}</span>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Amount</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {importData.transactions.map((tx, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{tx.date.toDateString()}</TableCell>
-                                    <TableCell>{tx.description}</TableCell>
-                                    <TableCell>{tx.amount.toFixed(2)}</TableCell>
+                    <div className="w-full overflow-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead>Amount</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {importData.transactions.map((tx, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{tx.date.toDateString()}</TableCell>
+                                        <TableCell className="whitespace-normal">{tx.description}</TableCell>
+                                        <TableCell>{tx.amount.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
             </>}
 

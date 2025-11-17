@@ -1,6 +1,5 @@
 import { FileUtils } from "../common/FileUtils";
 import { HdfcBankAccount } from "./adapters/hdfc/HdfcBankAccount";
-import { HdfcSavingsAccount } from "./adapters/hdfc/HdfcSavingsAccount";
 import type { IEmailImportAdapter } from "./interfaces/IEmailImportAdapter";
 import type { IFileImportAdapter } from "./interfaces/IFileImportAdapter";
 import type { IImportAdapter } from "./interfaces/IImportAdapter";
@@ -40,5 +39,4 @@ export class ImportHandler {
     }
 }
 
-ImportHandler.registerFileAdapter(new HdfcSavingsAccount());
 ImportHandler.registerFileAdapter(new HdfcBankAccount());

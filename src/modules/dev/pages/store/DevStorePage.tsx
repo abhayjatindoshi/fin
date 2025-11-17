@@ -1,7 +1,10 @@
 import { useApp } from "@/modules/app-ui/providers/AppProvider";
+import type { util } from "@/modules/app/entities/entities";
+import type { Household } from "@/modules/app/entities/Household";
 import { Sheet, SheetContent } from "@/modules/base-ui/components/ui/sheet";
 import type { Entity } from "@/modules/data-sync/entities/Entity";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
+import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import DetailsView from "./DetailsView";
@@ -10,11 +13,12 @@ import JsonView from "./JsonView";
 import TableView from "./TableView";
 
 const DevStorePage: React.FC = () => {
-    const { orchestrator } = useDataSync();
+    const { orchestrator } = useDataSync<typeof util, DateStrategyOptions, Household>();
     const { entityName, entityId } = useParams();
     const { isMobile } = useApp();
     const [rows, setRows] = useState<Entity[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
+    const [year, setYear] = useState<number>(new Date().getFullYear());
     const [loading, setLoading] = useState<boolean>(false);
     const [entity, setEntity] = useState<Entity | null>(null);
     const filteredRows = useMemo(() => {
@@ -26,11 +30,11 @@ const DevStorePage: React.FC = () => {
     useEffect(() => {
         if (!orchestrator || !entityName) { setRows([]); return; }
         setLoading(true);
-        const repo = orchestrator.repo(entityName as never);
-        repo.getAll().then(list => setRows(list as Entity[])).catch(() => undefined).finally(() => setLoading(false));
+        const repo = orchestrator.repo(entityName);
+        repo.getAll({ years: [year] }).then(list => setRows(list as Entity[])).catch(() => undefined).finally(() => setLoading(false));
         const sub = repo.observeAll().subscribe(list => setRows(list as Entity[]));
         return () => sub.unsubscribe();
-    }, [orchestrator, entityName]);
+    }, [orchestrator, entityName, year]);
 
     useEffect(() => {
         if (!orchestrator || !entityName || !entityId) { setEntity(null); return; }
@@ -54,15 +58,20 @@ const DevStorePage: React.FC = () => {
     if (isMobile) {
         if (entityName) {
             return <div className="flex flex-col h-full flex-1 overflow-clip">
-                <DetailsView totalCount={rows.length} filteredCount={filteredRows.length} setSearchTerm={setSearchTerm} />
+                <DetailsView
+                    year={year}
+                    setYear={setYear}
+                    totalCount={rows.length}
+                    filteredCount={filteredRows.length}
+                    setSearchTerm={setSearchTerm} />
                 <div className="w-full h-full overflow-auto">
                     <TableView rows={filteredRows} loading={loading} />
                 </div>
-                {entity && <Sheet open={true}>
+                <Sheet open={entity !== null} onOpenChange={() => setEntity(null)}>
                     <SheetContent side="bottom">
-                        <JsonView entity={entity} />
+                        {entity && <JsonView entity={entity} />}
                     </SheetContent>
-                </Sheet>}
+                </Sheet>
             </div>;
         }
 
@@ -78,7 +87,12 @@ const DevStorePage: React.FC = () => {
             </div>
             {entityName &&
                 <div className="flex flex-col border rounded-lg h-full flex-1 overflow-hidden">
-                    <DetailsView totalCount={rows.length} filteredCount={filteredRows.length} setSearchTerm={setSearchTerm} />
+                    <DetailsView
+                        year={year}
+                        setYear={setYear}
+                        totalCount={rows.length}
+                        filteredCount={filteredRows.length}
+                        setSearchTerm={setSearchTerm} />
                     <div className="w-full h-full overflow-auto">
                         <TableView rows={filteredRows} loading={loading} />
                     </div>

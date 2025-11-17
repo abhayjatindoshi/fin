@@ -1,5 +1,6 @@
 import { useApp } from "@/modules/app-ui/providers/AppProvider";
 import { Button } from "@/modules/base-ui/components/ui/button";
+import { Input } from "@/modules/base-ui/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import { ArrowLeft, Search } from "lucide-react";
 import { useState } from "react";
@@ -8,9 +9,11 @@ import { useNavigate, useParams } from "react-router-dom";
 type DetailsViewProps = {
     totalCount: number;
     filteredCount: number | undefined;
+    year: number;
+    setYear: (year: number) => void;
     setSearchTerm: (term: string) => void;
 };
-const DetailsView: React.FC<DetailsViewProps> = ({ totalCount, filteredCount, setSearchTerm }: DetailsViewProps) => {
+const DetailsView: React.FC<DetailsViewProps> = ({ totalCount, filteredCount, year, setYear, setSearchTerm }: DetailsViewProps) => {
 
     const { isMobile } = useApp();
     const { householdId, entityName } = useParams();
@@ -29,6 +32,9 @@ const DetailsView: React.FC<DetailsViewProps> = ({ totalCount, filteredCount, se
                 <span className="text-xs text-muted-foreground">{filteredCount !== undefined && filteredCount !== totalCount && `${filteredCount} / `}{totalCount} items</span>
             </div>
             <div className="grow"></div>
+            <div>
+                <Input type="number" className="w-24" value={year} onChange={e => setYear(parseInt(e.target.value))} />
+            </div>
             <div className="mr-2">
                 {isMobile && !showSearch && <Button variant="ghost" size="icon-sm" onClick={() => setShowSearch(true)}>
                     <Search />
