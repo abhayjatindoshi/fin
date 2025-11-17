@@ -1,3 +1,4 @@
+import { ImportError } from "@/modules/app/services/ImportService";
 import type { ImportedTransaction } from "../../interfaces/ImportData";
 
 export class HdfcPdfFileParser {
@@ -21,11 +22,203 @@ export class HdfcPdfFileParser {
         return null;
     }
 
+    private static openingBalanceLabelRegex = /Opening[\s]+Balance/i;
+    private static amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
+
+    private static extractOpeningBalance(pages: string[][]): number | null {
+        for (const page of pages) {
+            for (let i = 0; i < page.length; i++) {
+                if (!this.openingBalanceLabelRegex.test(page[i])) continue;
+                while (i < page.length - 1) {
+                    const matches = [...page[i].matchAll(this.amountRegex)].map(m => m[1]);
+                    if (matches && matches.length > 0) {
+                        return parseFloat(matches[0].replace(/,/g, ''));
+                    }
+                    i++;
+                }
+            }
+        }
+        return null;
+    }
+
     private static dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
 
     public static extractTransactions(pages: string[][]): ImportedTransaction[] {
-        const filteredPages = pages.filter(page => page.some(line => this.dateStartRegex.test(line)));
+        const openingBalance = this.extractOpeningBalance(pages);
+        if (openingBalance === null) throw new ImportError('IMPORT_FAILED', "Could not find opening balance in HDFC statement PDF.");
+        const filteredPages = pages
+            .filter(page => page.some(line => this.dateStartRegex.test(line)));
+        const cleanedLines: string[] = this.removeHeaderAndFooterLines(filteredPages);
+        const transactions = this.parseTransactions(cleanedLines, openingBalance);
+        return transactions;
+    }
 
-        return [];
+    private static skipLinesAfter = [
+        /^Page/i,
+        /^STATEMENT[\s]+SUMMARY/i,
+        /^Cr[\s]+Count/i,
+        /^\*{2,}/i,
+    ]
+
+    private static referenceNumberRegex = /^[\w]{12,25}$/i
+
+    private static parseTransactions(lines: string[], openingBalance: number): ImportedTransaction[] {
+        const transactions: ImportedTransaction[] = [];
+        let currentBalance = openingBalance;
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+
+            // Find the date at the start of the line
+            const dateMatch = line.match(this.dateStartRegex);
+            if (!dateMatch) continue;
+
+            // merge continuation lines
+            let mergedLines = '';
+            let found = false;
+            const scanLimit = Math.min(10, lines.length - i);
+            for (let j = 0; j < scanLimit; j++) {
+                mergedLines += lines[i + j] + ' ';
+                if ([...mergedLines.matchAll(this.amountRegex)].length >= 2) {
+                    if (i + j == lines.length - 1 || this.dateStartRegex.test(lines[i + j + 1])) {
+                        i += j;
+                        line = mergedLines;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) continue;
+
+            // extract and parse date
+            const dateStr = dateMatch[1];
+            line = line.slice(dateStr.length)
+            const date = this.parseDate(dateStr);
+            date.setMilliseconds(date.getMilliseconds() + transactions.length); // ensure transaction order
+
+            // extract amounts
+            const amountMatches = [...line.matchAll(this.amountRegex)];
+            if (amountMatches.length < 2) continue;
+
+            // remove amount strings from line to isolate description
+            for (let j = amountMatches.length - 1; j >= 0; j--) {
+                const match = amountMatches[j];
+                line = line.slice(0, match.index) + line.slice(match.index + match[0].length);
+            }
+
+            const balanceExec = amountMatches[amountMatches.length - 1];
+            const balance = parseFloat(balanceExec[1].replaceAll(',', ''));
+
+            let amount = 0;
+            for (const amountExec of amountMatches.slice(0, amountMatches.length - 1)) {
+                amount = parseFloat(amountExec[1].replaceAll(',', ''));
+                if (amount != 0) break;
+            }
+
+            if (isNaN(balance) || isNaN(amount)) continue;
+
+            if (balance < currentBalance) {
+                amount = -Math.abs(amount);
+            } else {
+                amount = Math.abs(amount);
+            }
+
+            // check and extract reference number and value date if present
+            // add it back to the line in end
+            if (!/Value[\s]+Dt/.test(line)) {
+                const firstAmountIndex = amountMatches[0].index;
+                let split = line.slice(0, firstAmountIndex).split(' ').filter(part => part.trim() !== '');
+                const valueDateIndex = split.findIndex(part => this.dateStartRegex.test(part));
+                let suffix = '';
+                if (valueDateIndex !== -1) {
+                    const valueDate = this.parseDate(split[valueDateIndex]);
+                    split = split.slice(0, valueDateIndex).concat(split.slice(valueDateIndex + 1));
+                    suffix += ' Value Dt ' + (valueDate.getDate().toString().padStart(2, '0')) + '/' +
+                        ((valueDate.getMonth() + 1).toString().padStart(2, '0')) + '/' +
+                        (valueDate.getFullYear());
+                }
+
+                let refNumberIndex = split.findLastIndex(part => this.referenceNumberRegex.test(part));
+                if (refNumberIndex === -1) {
+                    refNumberIndex = split.findLastIndex(part => /^[0-9]{4,}$/.test(part));
+                }
+                if (refNumberIndex !== -1) {
+                    const refNumber = split[refNumberIndex];
+                    split = split.slice(0, refNumberIndex).concat(split.slice(refNumberIndex + 1));
+                    if (/^[0-9]+$/.test(refNumber) && parseInt(refNumber) > 0) {
+                        suffix += ' Ref ' + refNumber.replace(/^0+/, '');
+                    }
+                }
+
+                line = split.join(' ') + ' ' + line.slice(firstAmountIndex) + suffix;
+            }
+
+            currentBalance = balance;
+            line = line.replace(/\s+/g, ' ').trim();
+            transactions.push({
+                date,
+                amount,
+                description: line
+            });
+        }
+        return transactions;
+    }
+
+    private static parseDate(dateStr: string): Date {
+        const parts = dateStr.split('/').map(part => parseInt(part, 10));
+        const fullYear = parts[2] < 100 ? (parts[2] + 2000) : parts[2];
+        return new Date(fullYear, parts[1] - 1, parts[0]);
+    }
+
+    private static removeHeaderAndFooterLines(pages: string[][]): string[] {
+
+        if (pages.length === 0) return [];
+
+        const cleanedLines: string[] = [];
+        if (pages.length === 1) {
+            const page = pages[0];
+            const headerLineIndex = page.findIndex(line => this.dateStartRegex.test(line));
+            if (headerLineIndex === -1) return [];
+            let footerLineIndex = page.length;
+            for (let i = headerLineIndex; i < footerLineIndex; i++) {
+                if (this.skipLinesAfter.some(regex => regex.test(page[i]))) {
+                    footerLineIndex = i;
+                    break;
+                }
+            }
+            const contentLines = page.slice(headerLineIndex, footerLineIndex);
+            cleanedLines.push(...contentLines);
+        } else {
+
+            // using centermost page as reference for header/footer lines
+            const referencePage = Math.floor(pages.length / 2);
+            for (const page of pages) {
+                const headerLineIndex = this.countMatchingLines(page, pages[referencePage], 'start');
+                let footerLineIndex = page.length - this.countMatchingLines(page, pages[referencePage], 'end');
+                for (let i = headerLineIndex; i < footerLineIndex; i++) {
+                    if (this.skipLinesAfter.some(regex => regex.test(page[i]))) {
+                        footerLineIndex = i;
+                        break;
+                    }
+                }
+                const contentLines = page.slice(headerLineIndex, footerLineIndex);
+                cleanedLines.push(...contentLines);
+            }
+        }
+        return cleanedLines;
+    }
+
+    private static countMatchingLines(page: string[], referencePage: string[], from: 'start' | 'end'): number {
+        let count = 0;
+        const minLines = Math.min(page.length, referencePage.length);
+        for (let i = 0; i < minLines; i++) {
+            const pageLine = from === 'start' ? page[i] : page[page.length - 1 - i];
+            const referenceLine = from === 'start' ? referencePage[i] : referencePage[referencePage.length - 1 - i];
+            if (pageLine === referenceLine) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        return count;
     }
 }

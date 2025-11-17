@@ -9,6 +9,7 @@ import type { ImportError } from "@/modules/app/services/ImportService";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/base-ui/components/ui/table";
 import { Asterisk, Check, FileText, Trash, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -48,14 +49,19 @@ const DevImportPage: React.FC = () => {
         if (!selectedAdapter || !file) return;
         setImportData(null);
         setImportError(null);
-        selectedAdapter.isFileSupported(file, password ? [password] : [])
-            .then(isSupported => {
-                setSupported(isSupported);
-                if (!isSupported) return;
-                selectedAdapter.readFile(file, password ? [password] : [])
-                    .then(result => setImportData(result))
-                    .catch(err => setImportError(err));
-            });
+        try {
+            selectedAdapter.isFileSupported(file, password ? [password] : [])
+                .then(isSupported => {
+                    setSupported(isSupported);
+                    if (!isSupported) return;
+                    selectedAdapter.readFile(file, password ? [password] : [])
+                        .then(result => setImportData(result))
+                        .catch(err => setImportError(err));
+                })
+                .catch(err => { setSupported(false); setImportError(err); });
+        } catch (err) {
+            setImportError(err as ImportError);
+        }
     }, [selectedAdapter, file, password]);
 
     const AdapterIcon = (adapter: IImportAdapter) => {
@@ -117,9 +123,27 @@ const DevImportPage: React.FC = () => {
 
             {importData && <>
                 <div className="mt-4 self-start">Import Data:</div>
-                <pre className="p-4 border rounded-md bg-muted/50">
-                    {JSON.stringify(importData, null, 2)}
-                </pre>
+                <div className="flex flex-col gap-2 items-start w-full">
+                    <span className="text-xl">Account no: {importData.identifiers.join(', ')}</span>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {importData.transactions.map((tx, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{tx.date.toDateString()}</TableCell>
+                                    <TableCell>{tx.description}</TableCell>
+                                    <TableCell>{tx.amount.toFixed(2)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </>}
 
             {importError && <>
