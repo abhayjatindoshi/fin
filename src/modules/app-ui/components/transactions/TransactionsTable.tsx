@@ -1,3 +1,4 @@
+import { SystemTags } from "@/modules/app/common/SystemTags";
 import { EntityName } from "@/modules/app/entities/entities";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import type { Tag } from "@/modules/app/entities/Tag";
@@ -6,18 +7,21 @@ import { ImportHandler } from "@/modules/app/import/ImportHandler";
 import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBox";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Checkbox } from "@/modules/base-ui/components/ui/checkbox";
+import { Input } from "@/modules/base-ui/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/modules/base-ui/components/ui/popover";
 import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { withSync } from "@/modules/data-sync/ui/SyncedComponent";
-import { BanknoteArrowDown, Hash } from "lucide-react";
+import { Portal } from "@radix-ui/react-portal";
+import { CircleX, Hash } from "lucide-react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import { Subject, debounceTime } from "rxjs";
 import AccountNumber from "../../common/AccountNumber";
 import Money from "../../common/Money";
 import ImportIcon from "../../icons/import/ImportIcon";
+import TagIcons from "../../icons/tags/TagIcons";
 import { useApp } from "../../providers/AppProvider";
 import type { TransactionFilterOptions } from "./TransactionsFilter";
 
@@ -34,6 +38,12 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filter, accounts 
     const adaptersMap = useRef(ImportHandler.getAllAdapterMeta());
     const [transactions, setTransactions] = useState<Array<Transaction> | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [tagSearchQuery, setTagSearchQuery] = useState<string>('');
+
+    // tag selection dialog
+    const tagSelectionRef = useRef<HTMLDivElement | null>(null);
+    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+    const [showTagDialog, setShowTagDialog] = useState<boolean>(false);
 
     useEffect(() => {
         if (!filter || !orchestrator) return;
@@ -72,6 +82,27 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filter, accounts 
         };
     }, [filter]);
 
+    const openTagDialog = (event: React.MouseEvent<HTMLElement>, tx: Transaction) => {
+        if (!tagSelectionRef.current) return;
+        setSelectedTransaction(tx);
+        setTagSearchQuery('');
+        setShowTagDialog(true);
+        const rect = event.currentTarget.getBoundingClientRect();
+        const tagSelectionRect = tagSelectionRef.current.getBoundingClientRect();
+        tagSelectionRef.current.style.position = 'fixed';
+        tagSelectionRef.current.style.top = `${rect.bottom}px`;
+        tagSelectionRef.current.style.left = `${rect.left - (tagSelectionRect.width)}px`;
+    }
+
+    const setTag = (tag: Tag) => {
+        if (!selectedTransaction || !orchestrator) return;
+        const repo = orchestrator.repo(EntityName.Transaction);
+        selectedTransaction.tagId = tag.id;
+        repo.save({ ...selectedTransaction });
+        setSelectedTransaction(null);
+        setShowTagDialog(false);
+    }
+
     const BankIcon = (accountId: string) => {
         const account = accounts.find(a => a.id === accountId);
         if (!account) return null;
@@ -93,14 +124,17 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filter, accounts 
         </Popover>
     }
 
-    const TransactionRow = (tx: Transaction, i: number) => {
+    const TransactionRow = (tx: Transaction) => {
         const DateCell = <div className="flex flex-col">
             <span className="text-sm">{moment(tx.transactionAt).format('MMM DD')}</span>
             <span className="text-xs text-muted-foreground">{moment(tx.transactionAt).format("'YY")}</span>
         </div>;
         const MoneyCell = <Money amount={tx.amount} />;
-        const TagCell = <Button variant="secondary" size="sm" className="m-0" >
-            {i % 2 == 0 ? <><Hash /> Tag</> : <><BanknoteArrowDown className="size-5" /> <span className="font-semibold text-xs">CASH WITHDRAWAL</span></>}
+        const TagCell = <Button variant="secondary" size="sm" className="m-0" onClick={(event) => openTagDialog(event, tx)}>
+            {tx.tagId !== undefined ?
+                <>{TagIcon(SystemTags[tx.tagId].icon, false)} <span className="font-semibold text-xs">{SystemTags[tx.tagId].name}</span></> :
+                <><Hash className="text-muted-foreground" /> <span className="text-muted-foreground">Add tag</span></>
+            }
         </Button>;
         const DescriptionCell = <span className="text-muted-foreground">{tx.narration}</span>;
         const AccountIcon = BankIcon(tx.accountId);
@@ -152,11 +186,70 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ filter, accounts 
             .forEach(repo.delete.bind(repo));
     }
 
+    const TagIcon = (icon: string, parent: boolean) => {
+        const IconComponent = TagIcons[icon];
+        const classes = icon === 'binary' ? 'text-red-500' : 'text-foreground';
+        if (IconComponent) {
+            if (parent) return <IconComponent className={`w-12 h-12 p-3 rounded-lg hover:bg-gradient-to-br bg-gradient-to-tl from-accent/30 to-muted/30 ${classes}`} />;
+            return <IconComponent className={`w-6 h-6 ${classes}`} />;
+        }
+        return <CircleX className={`w-6 h-6 ${classes}`} />;
+    }
+
     return <>
         <Button variant="destructive" size="sm" className="w-24" onClick={deleteAll}>Delete All</Button>
         <ul className={`flex flex-col ${isMobile ? 'gap-2 m-2' : 'my-4 border rounded-xl'}`}>
             {transactions && transactions.map(TransactionRow)}
         </ul>
+        <Portal className={showTagDialog ? "block" : "hidden"}>
+            <div className="absolute top-0 left-0 bg-background/50 w-full h-full z-10" onClick={() => setShowTagDialog(false)}>
+                <div ref={tagSelectionRef} className="flex flex-col border m-2 rounded-2xl z-12 bg-muted/50 backdrop-blur-lg" onClick={(event) => event.stopPropagation()}>
+                    <div className="flex flex-col gap-4 overflow-auto max-h-96">
+                        <div className="sticky top-0 p-2 rounded-t-2xl w-full">
+                            <Input className="bg-muted/50 backdrop-blur-lg" autoFocus value={tagSearchQuery} onChange={e => setTagSearchQuery(e.target.value)} placeholder="Search tags..." />
+                        </div>
+                        {Object.values(SystemTags)
+                            .filter(t => !t.parent)
+                            .filter(t => tagSearchQuery === '' ||
+                                t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()) ||
+                                t.description?.toLowerCase().includes(tagSearchQuery.toLowerCase()) ||
+                                Object.values(SystemTags).filter(st => st.parent == t.id)
+                                    .some(st => st.name.toLowerCase().includes(tagSearchQuery.toLowerCase()))
+                            )
+                            .map(tag => (
+                                <div key={tag.id}
+                                    onClick={() => setTag(tag)}
+                                    className="flex flex-col gap-2 mx-2 hover:bg-muted/50 rounded-lg p-2 cursor-pointer">
+                                    <div className="flex flex-row items-center gap-2">
+                                        {TagIcon(tag.icon, true)}
+                                        <div className="flex flex-col">
+                                            <span>{tag.name}</span>
+                                            <span className="text-muted-foreground">{tag.description}</span>
+                                        </div>
+                                    </div>
+                                    {tag.id && <div className="flex flex-row flex-wrap mt-2 items-center">
+                                        {Object.values(SystemTags)
+                                            .filter(subtag => subtag.parent === tag.id)
+                                            .filter(subtag => tagSearchQuery === '' ||
+                                                tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()) ||
+                                                tag.description?.toLowerCase().includes(tagSearchQuery.toLowerCase()) ||
+                                                subtag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+                                            )
+                                            .map(subtag => (
+                                                <div key={subtag.id}
+                                                    onClick={e => { e.stopPropagation(); setTag(subtag); }}
+                                                    className="flex flex-row items-center gap-2 hover:bg-background/50 rounded-lg p-2 cursor-pointer">
+                                                    {TagIcon(subtag.icon, false)}
+                                                    <span>{subtag.name}</span>
+                                                </div>
+                                            ))}
+                                    </div>}
+                                </div>
+                            ))}
+                    </div>
+                </div>
+            </div>
+        </Portal >
     </>;
 }
 
