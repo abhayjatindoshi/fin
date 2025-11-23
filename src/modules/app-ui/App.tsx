@@ -6,6 +6,7 @@ import { DataSyncProvider } from "../data-sync/providers/DataSyncProvider";
 import { TenantProvider } from "../data-sync/providers/TenantProvider";
 import { ImportProvider } from "./components/import/ImportProvider";
 import { AppProvider } from "./providers/AppProvider";
+import { EntityProvider } from "./providers/EntityProvider";
 import AppRouter from "./router";
 
 export const App: React.FC = () => {
@@ -18,9 +19,11 @@ export const App: React.FC = () => {
                         <TenantProvider>
                             <DataSyncProvider>
                                 <AppProvider>
-                                    <ImportProvider>
-                                        <AppRouter />
-                                    </ImportProvider>
+                                    <EntityProvider>
+                                        <ImportProvider>
+                                            <AppRouter />
+                                        </ImportProvider>
+                                    </EntityProvider>
                                 </AppProvider>
                             </DataSyncProvider>
                         </TenantProvider>

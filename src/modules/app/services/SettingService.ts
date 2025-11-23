@@ -6,6 +6,7 @@ import { BaseService } from "./BaseService";
 const defaultValues = {
     "calendar.firstMonth": "0",
     "calendar.firstDay": "0",
+    "transaction.defaultCurrencyCode": "INR",
 };
 
 export type SettingKeys = keyof typeof defaultValues;

@@ -3,6 +3,7 @@ import moment from "moment";
 import type { SettingKeys } from "../services/SettingService";
 
 export const TransactionDateFilterOptions = {
+    'today': 'Today',
     'this_week': 'This week',
     'last_week': 'Last week',
     'this_month': 'This month',
@@ -30,6 +31,11 @@ export class EntityUtils {
         const firstMonthOfYear = parseInt(settings["calendar.firstMonth"] ?? '0');
 
         switch (key) {
+            case 'today': {
+                const startDate = now.clone().startOf('day');
+                const endDate = now.clone().endOf('day');
+                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), endDate: endDate.toDate() };
+            }
             case 'this_week': {
                 const startDate = now.clone().startOf('week').add(firstDayOfWeek, 'days');
                 return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate() };
