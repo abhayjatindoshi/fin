@@ -108,6 +108,10 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
             if (data) {
                 this.logger.v(this.constructor.name, 'Storing entity to main store', { entityKey });
                 await this.store.storeData(this.tenant, entityKey, data);
+                const localMetadata = await this.metadataManager.getLocalMetadata();
+                const storeMetadata = await this.metadataManager.getStoreMetadata();
+                storeMetadata.entityKeys[entityKey] = localMetadata.entityKeys[entityKey];
+                await this.metadataManager.saveMetadata(this.store, storeMetadata);
             }
             return;
         }
@@ -119,6 +123,13 @@ export class DataManager<U extends EntityUtil<SchemaMap>, FilterOptions, T exten
                 this.logger.v(this.constructor.name, 'Storing entity to local and main store', { entityKey });
                 await this.local.storeData(this.tenant, entityKey, data);
                 await this.store.storeData(this.tenant, entityKey, data);
+                const cloudMetadata = await this.metadataManager.getCloudMetadata();
+                const localMetadata = await this.metadataManager.getLocalMetadata();
+                const storeMetadata = await this.metadataManager.getStoreMetadata();
+                localMetadata.entityKeys[entityKey] = cloudMetadata.entityKeys[entityKey];
+                storeMetadata.entityKeys[entityKey] = cloudMetadata.entityKeys[entityKey];
+                await this.metadataManager.saveMetadata(this.local, localMetadata);
+                await this.metadataManager.saveMetadata(this.store, storeMetadata);
             }
         }
     }

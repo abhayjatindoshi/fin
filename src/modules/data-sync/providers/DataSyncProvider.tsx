@@ -39,12 +39,15 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions,
         setLoading(true);
         chain.current = chain.current.then(async () => {
             if (orchestrator) {
+                orchestrator.ctx.logger.i("DataSyncProvider", "Unloading existing orchestrator before loading new one");
                 await DataOrchestrator.unload();
                 setOrchestrator(null);
             }
 
             await DataOrchestrator.load<U, FilterOptions, T>(config);
-            setOrchestrator(DataOrchestrator.getInstance<U, FilterOptions, T>());
+            const instance = DataOrchestrator.getInstance<U, FilterOptions, T>();
+            instance.ctx.logger.i("DataSyncProvider", "Loaded DataOrchestrator");
+            setOrchestrator(instance);
         }).finally(() => setLoading(false));
 
         return chain.current;
@@ -54,6 +57,7 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions,
         setLoading(true);
         chain.current = chain.current.then(async () => {
             if (!orchestrator) return;
+            orchestrator.ctx.logger.i("DataSyncProvider", "Unloading DataOrchestrator");
             await DataOrchestrator.unload();
             setOrchestrator(null);
         }).finally(() => setLoading(false));
