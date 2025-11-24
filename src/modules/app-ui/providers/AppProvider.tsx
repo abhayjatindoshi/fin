@@ -16,11 +16,17 @@ interface AppContextProps {
 
     devModeEnabled: boolean;
     setDevModeEnabled: (enabled: boolean) => void;
+
+    scrollElementRef?: React.RefObject<HTMLElement | null>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
-export const AppProvider: React.FC<PropsWithChildren> = ({ children }) => {
+type AppProviderProps = PropsWithChildren<{
+    scrollElementRef?: React.RefObject<HTMLElement | null>;
+}>;
+
+export const AppProvider: React.FC<AppProviderProps> = ({ children, scrollElementRef }) => {
 
     const { orchestrator } = useDataSync();
     const settingsService = useMemo(() => orchestrator ? new SettingService() : null, [orchestrator]);
@@ -55,7 +61,8 @@ export const AppProvider: React.FC<PropsWithChildren> = ({ children }) => {
         <AppContext.Provider value={{
             width, isMobile,
             settings, updateSetting,
-            devModeEnabled, setDevModeEnabled
+            devModeEnabled, setDevModeEnabled,
+            scrollElementRef,
         }}>
             {children}
         </AppContext.Provider>

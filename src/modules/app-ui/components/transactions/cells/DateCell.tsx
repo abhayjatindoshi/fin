@@ -12,7 +12,6 @@ const DateCell: React.FC<DateCellProps> = ({ date, className }) => {
 
     return <div className={className}>
         <span className="text-sm">{dateObj.format('MMM DD')} </span>
-        <span className="text-xs text-muted-foreground">{dateObj.format("'YY")}</span>
     </div>;
 };
 

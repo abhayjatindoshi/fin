@@ -1,9 +1,12 @@
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { DataOrchestrator } from "../DataOrchestrator";
 import type { Tenant } from "../entities/Tenant";
 import type { EntityUtil } from "../EntityUtil";
 import type { InputArgs, SchemaMap } from "../interfaces/types";
 
+type WindowWithOrchestrator = Window & {
+    orchestrator?: DataOrchestrator<any, any, any>;
+}
 
 type DataSyncProviderState<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> = {
     orchestrator: DataOrchestrator<U, FilterOptions, T> | null,
@@ -23,6 +26,14 @@ export const DataSyncProvider = <U extends EntityUtil<SchemaMap>, FilterOptions,
     const [orchestrator, setOrchestrator] = useState<DataOrchestrator<U, FilterOptions, T> | null>(null);
 
     const chain = useRef(Promise.resolve());
+
+    useEffect(() => {
+        if (!orchestrator) {
+            (window as WindowWithOrchestrator).orchestrator = undefined;
+        } else {
+            (window as WindowWithOrchestrator).orchestrator = orchestrator;
+        }
+    }, [orchestrator]);
 
     const load = useCallback(async (config: InputArgs<U, FilterOptions, T>) => {
         setLoading(true);
