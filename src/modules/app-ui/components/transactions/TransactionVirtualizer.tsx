@@ -22,7 +22,9 @@ export type DateRowProps = {
 type TransactionVirtualizerProps = {
     transactions: Array<Transaction>
     TransactionRow: React.FC<TransactionRowProps>
+    transactionRowSize: number
     DateRow: React.FC<DateRowProps>
+    dateRowSize: number
 }
 
 const constructRows = (transactions: Array<Transaction>): [Array<Transaction | Date>, Array<number>] => {
@@ -49,7 +51,11 @@ const constructRows = (transactions: Array<Transaction>): [Array<Transaction | D
     return [rows, stickyIndices];
 }
 
-const TransactionVirtualizer: React.FC<TransactionVirtualizerProps> = ({ transactions, TransactionRow, DateRow }) => {
+const TransactionVirtualizer: React.FC<TransactionVirtualizerProps> = ({
+    transactions,
+    TransactionRow, transactionRowSize,
+    DateRow, dateRowSize
+}) => {
     const { scrollElementRef } = useApp();
     const activeStickyIndexRef = useRef<number>(0);
     const [rows, stickyIndices] = constructRows(transactions);
@@ -63,7 +69,7 @@ const TransactionVirtualizer: React.FC<TransactionVirtualizerProps> = ({ transac
         count: rows.length,
         overscan: 2,
         getScrollElement: () => scrollElementRef?.current ?? null,
-        estimateSize: (index) => rows[index] instanceof Date ? 50 : 53,
+        estimateSize: (index) => rows[index] instanceof Date ? dateRowSize : transactionRowSize,
         rangeExtractor: useCallback((range: Range) => {
             activeStickyIndexRef.current = [...stickyIndices]
                 .reverse().find(i => range.startIndex >= i) ?? 0;
@@ -92,8 +98,7 @@ const TransactionVirtualizer: React.FC<TransactionVirtualizerProps> = ({ transac
         }
 
         if (isActiveSticky(item.index)) {
-            style.position = 'fixed';
-            style.top = '4rem';
+            style.position = 'sticky';
         } else {
             style.position = 'absolute';
             style.transform = `translateY(${item.start}px)`;
@@ -102,7 +107,7 @@ const TransactionVirtualizer: React.FC<TransactionVirtualizerProps> = ({ transac
         return style;
     }
 
-    return <div className="h-full w-full overflow-auto">
+    return <div className="h-full w-full overflow-hidden">
         <div className="w-full relative" style={{ height: virtualizer.getTotalSize() + 'px' }}>
             {items.map(item => (
                 rows[item.index] instanceof Date ?

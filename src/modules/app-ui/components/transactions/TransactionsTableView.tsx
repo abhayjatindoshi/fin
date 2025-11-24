@@ -48,7 +48,7 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
     const TransactionRow: React.FC<TransactionRowProps> = ({ item, transaction, style, first, last }) => {
 
         const className = `py-2 flex flex-row items-center gap-2 
-            hover:bg-muted/50
+            hover:bg-muted/50 border
             ${first ? 'rounded-t-lg' : ''} 
             ${last ? 'rounded-b-lg' : ''}`;
 
@@ -68,72 +68,26 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
         </div>
     }
 
-    const DateRow: React.FC<DateRowProps> = ({ item, date, active, style }) => (
-        <div key={item.key} data-index={item.index} style={style}>
-            <div className={`my-2 py-1 w-fit font-semibold text-muted-foreground 
-                ${active ? 'px-4 bg-secondary/50 backdrop-blur-xl rounded-full border' : 'mt-5'}`} style={style}>
+    const DateRow: React.FC<DateRowProps> = ({ item, date, active, style }) => {
+
+        const className = `my-2 py-1 w-fit font-semibold 
+            text-muted-foreground
+            ${active && `fixed top-26 left-24 px-4 bg-secondary/50 
+                backdrop-blur-xl rounded-full border mt-5`}`;
+
+        return <div key={item.key} data-index={item.index} style={style}>
+            <div className={className}>
                 {moment(date).format('MMMM YYYY')}
             </div>
         </div>
-    )
-
-    // const borderStyleValue = '1px solid var(--border)';
-    // const borderRadiusValue = 'calc(var(--radius))';
-
-    // const styles = (item: VirtualItem) => {
-    //     const style: CSSProperties = {
-    //         top: 0,
-    //         left: 0,
-    //         width: '100%',
-    //         height: `${item.size}px`,
-    //     };
-
-    //     if (isSticky(item.index)) {
-    //         style.zIndex = 10;
-    //     } else {
-    //         style.borderLeft = borderStyleValue;
-    //         style.borderRight = borderStyleValue;
-    //         style.borderBottom = borderStyleValue;
-
-    //         if (isFirstRow(item.index)) {
-    //             style.borderTop = borderStyleValue;
-    //             style.borderTopLeftRadius = borderRadiusValue;
-    //             style.borderTopRightRadius = borderRadiusValue;
-    //         } else if (isLastRow(item.index)) {
-    //             style.borderBottomLeftRadius = borderRadiusValue;
-    //             style.borderBottomRightRadius = borderRadiusValue;
-    //         }
-    //     }
-
-    //     if (isActiveSticky(item.index)) {
-    //         style.position = 'fixed';
-    //         style.top = '116px';
-    //         style.left = '6rem';
-    //     } else {
-    //         style.position = 'absolute';
-    //         style.transform = `translateY(${item.start}px)`;
-    //     }
-
-    //     return style;
-    // }
+    }
 
     return <>
         <TransactionVirtualizer
             transactions={transactions}
-            TransactionRow={TransactionRow}
-            DateRow={DateRow}
+            TransactionRow={TransactionRow} transactionRowSize={53}
+            DateRow={DateRow} dateRowSize={50}
         />
-        {/* <div className="h-full w-full overflow-auto">
-            <div className="w-full relative" style={{ height: virtualizer.getTotalSize() + 'px' }}>
-                {items.map(item => (
-                    <div key={item.key} data-index={item.index} style={styles(item)}>
-                        {rows[item.index] instanceof Date ?
-                            <DateRow date={rows[item.index] as Date} active={isActiveSticky(item.index)} /> :
-                            <TransactionRow tx={rows[item.index] as Transaction} />}
-                    </div>
-                ))}
-            </div>
-        </div> */}
         <TagPicker
             variant="popup"
             open={showTagPicker}
