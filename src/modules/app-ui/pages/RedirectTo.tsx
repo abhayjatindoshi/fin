@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface RedirectToProps {
     to: string;
@@ -8,9 +8,10 @@ interface RedirectToProps {
 export const RedirectTo: React.FC<RedirectToProps> = ({ to }: RedirectToProps) => {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
-        if (!to.startsWith('/')) to = window.location.pathname + '/' + to;
+        if (!to.startsWith('/')) to = location.pathname + '/' + to;
         navigate(to);
     }, [to]);
 

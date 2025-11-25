@@ -1,6 +1,6 @@
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import React, { useEffect, useMemo } from "react";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { AuthServiceMap } from "../app/AuthMap";
 import { util } from "../app/entities/entities";
 import { AppLogger } from "../app/logging/AppLogger";
@@ -20,6 +20,7 @@ export const AppLoader: React.FC = () => {
     const { load: loadDataSync, orchestrator, unload, loading: dataSyncLoading } = useDataSync();
     const { load: loadTenant, manager, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
     const { householdId } = useParams();
+    const location = useLocation();
     const navigate = useNavigate();
 
     const loading = dataSyncLoading || tenantLoading || authLoading;
@@ -62,7 +63,7 @@ export const AppLoader: React.FC = () => {
             if (orchestrator.isDirty()) {
                 e.preventDefault();
                 unload();
-                if (window.location.pathname !== '/') {
+                if (location.pathname !== '/') {
                     setCurrentTenant(null);
                     navigate('/');
                 }
