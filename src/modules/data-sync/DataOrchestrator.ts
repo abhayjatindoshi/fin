@@ -38,7 +38,7 @@ export class DataOrchestrator<U extends EntityUtil<SchemaMap>, FilterOptions, T 
     }
 
     ctx: Context<U, FilterOptions, T>;
-    private intervals: Array<NodeJS.Timeout> = [];
+    private intervals: Array<number> = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private repoMap: Record<string, DataRepository<U, any, FilterOptions, T>> = {};
 

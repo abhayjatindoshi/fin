@@ -85,7 +85,7 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
     return <>
         <TransactionVirtualizer
             transactions={transactions}
-            TransactionRow={TransactionRow} transactionRowSize={53}
+            TransactionRow={TransactionRow} transactionRowSize={54}
             DateRow={DateRow} dateRowSize={50}
         />
         <TagPicker

@@ -1,3 +1,5 @@
+/// <reference types="google.accounts" />
+
 import type { AuthHandler, AuthType, Token, UserDetails } from "../types";
 import { Utils } from "../Utils";
 

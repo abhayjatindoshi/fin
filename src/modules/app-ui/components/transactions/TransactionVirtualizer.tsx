@@ -94,11 +94,12 @@ const TransactionVirtualizer: React.FC<TransactionVirtualizerProps> = ({
         };
 
         if (isSticky(item.index)) {
-            style.zIndex = 10;
+            style.zIndex = 9;
         }
 
         if (isActiveSticky(item.index)) {
             style.position = 'sticky';
+            style.zIndex = 10;
         } else {
             style.position = 'absolute';
             style.transform = `translateY(${item.start}px)`;
