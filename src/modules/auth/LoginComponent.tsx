@@ -27,8 +27,8 @@ export const LoginComponent: React.FC = () => {
             <div key={type} style={{ marginTop: 12 }}>
                 {createElement(buttonMap[type], {
                     onClick: () => login(type),
-                    loading: currentTypeLoggingIn === type,
-                    disabled: currentTypeLoggingIn !== null && currentTypeLoggingIn !== type
+                    loading: currentTypeLoggingIn === type || (auth.loading && auth.authType === type),
+                    disabled: currentTypeLoggingIn !== null || auth.loading,
                 })}
             </div>
         ))}

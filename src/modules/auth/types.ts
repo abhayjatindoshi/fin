@@ -10,12 +10,13 @@ export type UserDetails = {
     picture: string;
 }
 
-export interface AuthHandler {
+export interface AuthHandler<AuthToken extends Token, AuthStateData extends StateData> {
     type: AuthType;
-    restore(token: Token): Promise<boolean>;
-    login(): Promise<void>;
+    restore(token: AuthToken): Promise<boolean>;
+    loginUrl(state: string): Promise<[string, AuthStateData?]>;
+    callback(params: Record<string, string>, stateData?: AuthStateData): Promise<AuthToken | null>;
     logout(): Promise<void>;
-    getToken(): Promise<Token | null>;
+    getToken(): Promise<AuthToken | null>;
     getUserDetails(): Promise<UserDetails | null>;
 }
 
@@ -23,6 +24,11 @@ export type Token = {
     type: AuthType;
     token: string;
     expiry: Date;
+}
+
+export type StateData = {
+    type: AuthType;
+    state: string;
 }
 
 export type LoginButtonProps = {

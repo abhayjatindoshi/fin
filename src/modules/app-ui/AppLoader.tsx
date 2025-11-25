@@ -1,7 +1,7 @@
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import React, { useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { AuthServiceMap } from "../app/AuthMap";
+import { AuthConfigMap, AuthServiceMap } from "../app/AuthMap";
 import { util } from "../app/entities/entities";
 import { AppLogger } from "../app/logging/AppLogger";
 import { DateStrategy } from "../app/store/DateStrategy";
@@ -16,7 +16,7 @@ import Logo from "./common/Logo";
 import { ThemeSwitcher } from "./common/ThemeSwitcher";
 
 export const AppLoader: React.FC = () => {
-    const { currentUser, loading: authLoading, token } = useAuth();
+    const { currentUser, loading: authLoading, callback, token } = useAuth();
     const { load: loadDataSync, orchestrator, unload, loading: dataSyncLoading } = useDataSync();
     const { load: loadTenant, manager, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
     const { householdId } = useParams();
@@ -29,6 +29,13 @@ export const AppLoader: React.FC = () => {
         if (!currentUser || !token) return null;
         return AuthServiceMap[currentUser.type](token);
     }, [currentUser, token]);
+
+    useEffect(() => {
+        const callbackUrls = Object.values(AuthConfigMap).map(c => c.callbackUrl);
+        if (callbackUrls.some(url => url && url.endsWith(location.pathname))) {
+            callback();
+        }
+    }, [location])
 
     useEffect(() => {
         if (!householdId || householdId != currentTenant?.id) {

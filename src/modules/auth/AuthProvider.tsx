@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AppLogger } from "../app/logging/AppLogger";
 import { Utils } from "../common/Utils";
-import { GoogleAuthHandler, type GoogleAuthConfig } from "./google/GoogleAuthHandler";
-import type { AuthHandler, AuthType, Token, UserDetails } from "./types";
+import { Utils as AuthUtils } from "./Utils";
+import { type GoogleAuthConfig, GoogleAuthHandler } from "./google/GoogleAuthHandler";
+import type { AuthHandler, AuthType, StateData, Token, UserDetails } from "./types";
 
-type BaseAuthConfig = {
+export type BaseAuthConfig = {
     type: AuthType;
+    callbackUrl?: string;
 }
 
 export type AuthConfig = BaseAuthConfig & (
@@ -16,8 +18,10 @@ export type AuthConfig = BaseAuthConfig & (
 type AuthProviderState = {
     currentUser: UserDetails | null;
     supportedAuthTypes: AuthType[];
+    authType: AuthType | null;
     loading: boolean;
     login: (type: AuthType) => Promise<void>;
+    callback: () => Promise<void>;
     token: () => Promise<Token | null>;
     logout: () => Promise<void>;
 }
@@ -32,14 +36,14 @@ type AuthProviderProps = {
 
 export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProviderProps) => {
     const logger = AppLogger.tagged('AuthProvider');
-    const [handler, setHandler] = useState<AuthHandler | null>(null);
+    const [handler, setHandler] = useState<AuthHandler<Token, StateData> | null>(null);
     const [currentUser, setCurrentUser] = useState<UserDetails | null>(null);
     const [loading, setLoading] = useState(false);
     const supportedAuthTypes = useMemo(() => config.map(c => c.type), [config]);
 
-    const createHandler = (conf: AuthConfig): AuthHandler => {
+    const createHandler = (conf: AuthConfig): AuthHandler<Token, StateData> | undefined => {
         switch (conf.type) {
-            case 'google': return new GoogleAuthHandler(conf as GoogleAuthConfig);
+            case 'google': return new GoogleAuthHandler(conf as GoogleAuthConfig)
             // other auth handlers can be added here
         }
     };
@@ -64,6 +68,8 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
             if (!conf) return clearSession('No config for stored token type');
 
             const newHandler = createHandler(conf);
+            if (!newHandler) return clearSession('Could not create handler for stored token type');
+            setHandler(newHandler);
 
             const restored = await newHandler.restore(storedToken);
             if (!restored) return clearSession();
@@ -71,7 +77,6 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
             const user = await newHandler.getUserDetails();
             if (!user) return clearSession('Could not obtain user after restore');
 
-            setHandler(newHandler);
             logger.i('Restored session for user:', user);
             setCurrentUser(user);
 
@@ -94,20 +99,64 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
     }, [handler]);
 
     const login = useCallback(async (type: AuthType): Promise<void> => {
-        const conf = config.find(c => c.type === type);
-        if (!conf) throw new Error(`No configuration found for auth type: ${type}`);
+        setLoading(true);
+        try {
+            const conf = config.find(c => c.type === type);
+            if (!conf) throw new Error(`No configuration found for auth type: ${type}`);
 
-        const newHandler = createHandler(conf);
-        setHandler(newHandler);
+            const newHandler = createHandler(conf);
+            if (!newHandler) throw new Error(`Could not create auth handler for type: ${type}`);
+            setHandler(newHandler);
 
-        await newHandler.login();
+            const state = `${storageKey}-state-${type}-${AuthUtils.bytesToString(AuthUtils.getRandomBytes(8))}`;
+            const [loginUrl, stateData] = await newHandler.loginUrl(state);
+            if (stateData) {
+                localStorage.setItem(state, Utils.stringifyJson(stateData));
+            }
 
-        const token = await newHandler.getToken();
-        if (token) localStorage.setItem(storageKey, Utils.stringifyJson(token));
-
-        const user = await newHandler.getUserDetails();
-        setCurrentUser(user);
+            window.location.href = loginUrl;
+        } finally {
+            setLoading(false);
+        }
     }, [config]);
+
+    const callback = useCallback(async (): Promise<void> => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const state = params.get('state');
+            if (!state) return;
+            const stateDataString = localStorage.getItem(state);
+            if (!stateDataString) return;
+
+            Object.keys(localStorage)
+                .filter(key => key.startsWith(`${storageKey}-state-`))
+                .forEach(key => localStorage.removeItem(key));
+
+            const stateData = Utils.parseJson<StateData>(stateDataString);
+            const conf = config.find(c => c.type === stateData.type);
+            if (!conf) throw new Error(`No configuration found for auth type: ${stateData.type}`);
+
+            const newHandler = createHandler(conf);
+            if (!newHandler) throw new Error(`Could not create auth handler for type: ${stateData.type}`);
+            setHandler(newHandler);
+
+            const authToken = await newHandler.callback(Object.fromEntries(params), stateData);
+            if (!authToken) throw new Error('Authentication failed: No token received');
+
+            const user = await newHandler.getUserDetails();
+            if (!user) throw new Error('Authentication failed: Could not obtain user details');
+
+            localStorage.setItem(storageKey, Utils.stringifyJson(authToken));
+
+            setCurrentUser(user);
+            logger.i('User logged in:', user);
+
+        } finally {
+            setLoading(false);
+        }
+
+    }, [storageKey]);
 
     const logout = useCallback(async (): Promise<void> => {
         await handler?.logout();
@@ -115,7 +164,11 @@ export const AuthProvider = ({ config, storageKey = 'auth', children }: AuthProv
         window.location.href = '/';
     }, [handler]);
 
-    return <AuthProviderContext.Provider value={{ currentUser, supportedAuthTypes, loading, login, token, logout, }}>
+    return <AuthProviderContext.Provider value={{
+        currentUser, supportedAuthTypes, loading,
+        authType: handler?.type || null,
+        login, callback, token, logout,
+    }}>
         {children}
     </AuthProviderContext.Provider>
 }

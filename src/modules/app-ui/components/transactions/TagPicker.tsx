@@ -5,7 +5,7 @@ import { Popover, PopoverContent } from "@/modules/base-ui/components/ui/popover
 import { Sheet, SheetClose, SheetContent } from "@/modules/base-ui/components/ui/sheet";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type PropsWithChildren } from "react";
 import { Subject, debounceTime, distinctUntilChanged } from "rxjs";
 import { TagIconComponent } from "../../icons/tags/TagIcons";
 import { useEntity, type EnhancedTag } from "../../providers/EntityProvider";
@@ -75,6 +75,38 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
         searchSubject.next(query);
     }
 
+    const HorizontalScrollIndicators: React.FC<PropsWithChildren<{ className?: string }>> = ({ children, className }) => {
+
+        const scrollElementRef = useRef<HTMLDivElement | null>(null);
+        const [canScrollLeft, setCanScrollLeft] = useState(false);
+        const [canScrollRight, setCanScrollRight] = useState(false);
+
+        const onScroll = () => {
+            if (!scrollElementRef.current) return;
+            const { scrollLeft, scrollWidth, clientWidth } = scrollElementRef.current;
+            setCanScrollLeft(scrollLeft > 0);
+            setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
+        }
+
+        useEffect(() => {
+            if (!scrollElementRef.current) return;
+            onScroll();
+        }, []);
+
+        return <div
+            ref={scrollElementRef}
+            onScroll={onScroll}
+            className={`
+                overflow-y-auto [scrollbar-width:none] rounded-sm  ${className}
+                ${canScrollLeft && canScrollRight ? 'bg-[linear-gradient(to_right,_var(--muted)_0%,_#0000_20%,_#0000_80%,_var(--muted)_100%)]' :
+                    canScrollLeft ? 'bg-gradient-to-r from-muted to-20%' :
+                        canScrollRight ? 'bg-gradient-to-l from-muted to-20%' : ''
+                }
+                `}>
+            {children}
+        </div >
+    }
+
     const TagItem = ({ tag }: { tag: EnhancedTag }) => {
         const childTags = tag.children;
 
@@ -97,7 +129,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
                     <span className="text-sm text-muted-foreground">{tag.description}</span>
                 </div>
             </div>
-            {childTags.length > 0 && <div className="flex flex-row overflow-y-auto [scrollbar-width:none]">
+            {childTags.length > 0 && <HorizontalScrollIndicators className="flex flex-row">
                 {childTags.map(childTag => (
                     <div key={childTag.id}
                         onClick={(e) => selectTag(e, childTag)}
@@ -109,7 +141,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
                         <span className="text-nowrap">{childTag.name}</span>
                     </div>
                 ))}
-            </div>}
+            </HorizontalScrollIndicators>}
         </div>
     }
 

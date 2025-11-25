@@ -1,118 +1,220 @@
-/// <reference types="google.accounts" />
-
-import type { AuthHandler, AuthType, Token, UserDetails } from "../types";
+import type { BaseAuthConfig } from "../AuthProvider";
+import type { AuthHandler, AuthType, StateData, Token, UserDetails } from "../types";
 import { Utils } from "../Utils";
 
-type TokenClient = google.accounts.oauth2.TokenClient;
-type TokenResponse = google.accounts.oauth2.TokenResponse;
-
-export type GoogleAuthConfig = {
+export type GoogleAuthConfig = BaseAuthConfig & {
     type: 'google';
     clientId: string;
     scopes: string[];
 }
 
-export class GoogleAuthHandler implements AuthHandler {
-    type: AuthType = 'google';
+interface GoogleToken extends Token {
+    refreshToken?: string;
+}
+
+interface GoogleStateData extends StateData {
+    scopes: string[];
+    codeVerifier: string;
+}
+
+type TokenResponse = {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    scope: string;
+    token_type: string;
+}
+
+type UserResponse = {
+    sub: string;
+    name: string;
+    email: string;
+    picture: string;
+}
+
+export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateData> {
+    type: AuthType = "google";
     private config: GoogleAuthConfig;
-    private tokenClient: TokenClient | null = null;
-    private token: Token | null = null;
-    private userInfo: UserDetails | null = null;
-    private prompt: 'none' | 'consent' | 'select_account' = 'none';
-    private resolve!: (token: Token | null) => void;
-    private reject!: (error: TokenResponse) => void;
+    private token: GoogleToken | null = null;
 
     constructor(config: GoogleAuthConfig) {
         this.config = config;
     }
 
-    async restore(token: Token): Promise<boolean> {
-        if (token.expiry.getTime() < new Date().getTime()) {
-            return this.getToken().then(t => t !== null);
+    async restore(token: GoogleToken): Promise<boolean> {
+        if (token.expiry.getTime() > new Date().getTime()) {
+            this.token = token;
+            return true;
         }
-        this.token = token;
-        const user = await this.getUserDetails();
-        return user !== null;
+        const refreshedToken = await this.refreshToken(token);
+        if (!refreshedToken) return false;
+        this.token = refreshedToken;
+        return true;
     }
 
-    async login(): Promise<void> {
-        return this.getToken().then();
+    async loginUrl(state: string): Promise<[string, GoogleStateData?]> {
+        if (!this.config.callbackUrl) return Promise.resolve(['', undefined]);
+        const codeVerifier = this.generateCodeVerifier();
+        const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+        const stateData: GoogleStateData = {
+            type: this.type,
+            scopes: this.config.scopes,
+            state, codeVerifier
+        };
+        const params = new URLSearchParams({
+            client_id: this.config.clientId,
+            response_type: 'code',
+            redirect_uri: this.processCallbackUrl(this.config.callbackUrl),
+            state: state,
+            scope: this.config.scopes.join(' '),
+            code_challenge: codeChallenge,
+            code_challenge_method: 'S256',
+        });
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+        return [url, stateData];
+    }
+
+    async callback(params: Record<string, string>, stateData?: GoogleStateData): Promise<GoogleToken | null> {
+        if (!stateData) return Promise.resolve(null);
+
+        const code = params['code'];
+        if (!code) return Promise.resolve(null);
+
+        this.token = await this.fetchToken(code, stateData.codeVerifier);
+        return this.token;
     }
 
     async logout(): Promise<void> {
+        if (!this.token) return Promise.resolve();
+        await this.revokeToken(this.token);
         this.token = null;
-        this.userInfo = null;
+        return Promise.resolve();
     }
 
-    async getUserDetails(): Promise<UserDetails | null> {
+    getToken(): Promise<GoogleToken | null> {
+        return Promise.resolve(this.token);
+    }
 
-        if (this.userInfo) return this.userInfo;
+    getUserDetails(): Promise<UserDetails | null> {
+        return this.fetchUserInfo();
+    }
 
-        const token = await this.getToken();
-        if (!token) return null;
+    private async fetchToken(code: string, codeVerifier: string): Promise<GoogleToken | null> {
+        if (!this.config.callbackUrl) return null;
+        const params = new URLSearchParams({
+            client_id: this.config.clientId,
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: this.processCallbackUrl(this.config.callbackUrl),
+            code_verifier: codeVerifier,
+        });
+
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+        });
+
+        const responseBody = await response.json() as TokenResponse;
+        if (!response.ok) {
+            console.error('Failed to fetch token:', responseBody);
+            return null;
+        }
+
+        return {
+            type: 'google',
+            token: responseBody.access_token,
+            expiry: new Date(Date.now() + responseBody.expires_in * 1000),
+            refreshToken: responseBody.refresh_token,
+        }
+    }
+
+    private async refreshToken(token: GoogleToken): Promise<GoogleToken | null> {
+        if (!token.refreshToken) return null;
+        const params = new URLSearchParams({
+            client_id: this.config.clientId,
+            grant_type: 'refresh_token',
+            refresh_token: token.refreshToken,
+        });
+
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+        });
+
+        const responseBody = await response.json() as TokenResponse;
+        if (!response.ok) {
+            console.error('Failed to refresh token:', responseBody);
+            return null;
+        }
+
+        return {
+            type: 'google',
+            token: responseBody.access_token,
+            expiry: new Date(Date.now() + responseBody.expires_in * 1000),
+            refreshToken: token.refreshToken,
+        };
+    }
+
+    private async revokeToken(token: GoogleToken): Promise<boolean> {
+        if (!token.refreshToken) return true;
+        const params = new URLSearchParams({
+            token: token.refreshToken,
+        });
+        const response = await fetch('https://oauth2.googleapis.com/revoke', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+        });
+
+        return response.ok;
+    }
+
+    private async fetchUserInfo(): Promise<UserDetails | null> {
+        if (!this.token) return null;
 
         const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
             headers: {
-                'Authorization': `Bearer ${token.token}`
+                'Authorization': `Bearer ${this.token.token}`
             }
         });
 
+        const responseBody = await response.json() as UserResponse;
         if (!response.ok) {
-            throw new Error('Failed to fetch user info');
+            console.error('Failed to fetch user info:', responseBody);
+            return null;
         }
-        const data = await response.json();
-        this.userInfo = {
-            id: data.sub,
+        return {
+            id: responseBody.sub,
             type: this.type,
-            name: data.name,
-            email: data.email,
-            picture: data.picture,
+            name: responseBody.name,
+            email: responseBody.email,
+            picture: responseBody.picture,
         };
-        return this.userInfo;
     }
 
-    async getToken(): Promise<Token | null> {
-        if (this.token && this.token.expiry.getTime() > new Date().getTime()) return this.token;
-        const promise = new Promise<Token | null>((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-        });
-        const tokenClient = await this.getTokenClient();
-        tokenClient.requestAccessToken();
-        return promise;
+    private generateCodeVerifier(length = 128): string {
+        const array = Utils.getRandomBytes(length);
+        return Utils.bytesToString(array)
     }
 
-    private async tokenCallbackHandler(response: TokenResponse) {
-        if (response.error) {
-            if (response.error === 'interaction_required') {
-                this.prompt = 'consent';
-                this.tokenClient = null;
-                const tokenClient = await this.getTokenClient();
-                tokenClient.requestAccessToken();
-            }
-            this.reject(response);
-        } else {
-            if (!response.access_token || !response.expires_in) this.reject(response);
-            this.token = {
-                type: this.type,
-                token: response.access_token,
-                expiry: new Date(Date.now() + (parseInt(response.expires_in) * 1000)),
-            };
-            this.resolve(this.token);
+    private async generateCodeChallenge(codeVerifier: string): Promise<string> {
+        return await Utils.hashUsingSHA256(codeVerifier);
+    }
+
+    private processCallbackUrl(url: string): string {
+        if (!url.startsWith('/')) return url;
+        let baseUrl = window.location.origin + window.location.pathname;
+        if (!baseUrl.endsWith('/')) {
+            baseUrl += '/';
         }
+        return baseUrl + url.substring(1);
     }
-
-    private async getTokenClient(): Promise<TokenClient> {
-        if (!this.tokenClient) {
-            await Utils.loadScript('https://accounts.google.com/gsi/client');
-            this.tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: this.config.clientId,
-                scope: this.config.scopes.join(' '),
-                prompt: this.prompt,
-                callback: this.tokenCallbackHandler.bind(this),
-            });
-        }
-        return this.tokenClient;
-    }
-
 }
