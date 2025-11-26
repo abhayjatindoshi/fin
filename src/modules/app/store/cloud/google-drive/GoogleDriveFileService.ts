@@ -28,7 +28,7 @@ type Metadata = {
 
 export const GoogleAuthConfig: AuthConfig = {
     type: 'google',
-    clientId: '8125620125-hqmsum4hao3uc2hocfcj041nmof9bbt7.apps.googleusercontent.com',
+    clientId: '8125620125-vonaes0gtu3gb7gls8ni5hgjprlj1jie.apps.googleusercontent.com',
     callbackUrl: 'https://abhayjatindoshi.github.io/fin/auth/google',
     scopes: [
         'openid', 'profile', 'email',
