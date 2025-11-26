@@ -1,5 +1,6 @@
 import { FileUtils } from "../common/FileUtils";
 import { HdfcBankAccount } from "./adapters/hdfc/HdfcBankAccount";
+import { JupiterBankAccount } from "./adapters/jupiter/JupiterBankAccount";
 import type { IEmailImportAdapter } from "./interfaces/IEmailImportAdapter";
 import type { IFileImportAdapter } from "./interfaces/IFileImportAdapter";
 import type { IImportAdapter } from "./interfaces/IImportAdapter";
@@ -40,3 +41,4 @@ export class ImportHandler {
 }
 
 ImportHandler.registerFileAdapter(new HdfcBankAccount());
+ImportHandler.registerFileAdapter(new JupiterBankAccount());
