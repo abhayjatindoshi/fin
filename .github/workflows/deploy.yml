@@ -34,7 +34,7 @@ jobs:
       - name: build
         run: |
           touch .env
-          echo ${{ secrets.ENV_FILE }} >> .env
+          echo "${{ secrets.ENV_FILE }}" >> .env
           npm ci
           npm run build
 
