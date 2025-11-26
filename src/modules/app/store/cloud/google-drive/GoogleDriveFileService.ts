@@ -28,8 +28,9 @@ type Metadata = {
 
 export const GoogleAuthConfig: AuthConfig = {
     type: 'google',
-    clientId: '8125620125-vonaes0gtu3gb7gls8ni5hgjprlj1jie.apps.googleusercontent.com',
-    callbackUrl: 'https://abhayjatindoshi.github.io/fin/auth/google',
+    clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
+    callbackUrl: import.meta.env.VITE_GOOGLE_CALLBACK_URL,
     scopes: [
         'openid', 'profile', 'email',
         'https://www.googleapis.com/auth/drive.file',

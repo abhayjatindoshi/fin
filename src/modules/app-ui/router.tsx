@@ -13,7 +13,7 @@ import TransactionsPage from './pages/TransactionsPage';
 
 export default function AppRouter() {
     return (
-        <BrowserRouter basename='/fin'>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
             <Routes>
                 <Route path="/" element={<AppLoader />}>
                     <Route path="/:householdId" element={<BaseLayout />}>

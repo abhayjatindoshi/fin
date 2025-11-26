@@ -33,7 +33,7 @@ export const AppLoader: React.FC = () => {
     useEffect(() => {
         const callbackUrls = Object.values(AuthConfigMap).map(c => c.callbackUrl);
         if (callbackUrls.some(url => url && url.endsWith(location.pathname))) {
-            callback();
+            callback().then(() => navigate('/'));
         }
     }, [location])
 

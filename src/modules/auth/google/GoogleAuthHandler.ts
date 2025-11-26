@@ -5,6 +5,7 @@ import { Utils } from "../Utils";
 export type GoogleAuthConfig = BaseAuthConfig & {
     type: 'google';
     clientId: string;
+    clientSecret: string;
     scopes: string[];
 }
 
@@ -69,6 +70,7 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
             scope: this.config.scopes.join(' '),
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
+            access_type: 'offline',
         });
         const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
         return [url, stateData];
@@ -107,6 +109,7 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
             code: code,
             redirect_uri: this.processCallbackUrl(this.config.callbackUrl),
             code_verifier: codeVerifier,
+            client_secret: this.config.clientSecret,
         });
 
         const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -135,6 +138,7 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
         if (!token.refreshToken) return null;
         const params = new URLSearchParams({
             client_id: this.config.clientId,
+            client_secret: this.config.clientSecret,
             grant_type: 'refresh_token',
             refresh_token: token.refreshToken,
         });
