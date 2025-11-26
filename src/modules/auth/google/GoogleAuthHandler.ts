@@ -65,12 +65,13 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
         const params = new URLSearchParams({
             client_id: this.config.clientId,
             response_type: 'code',
-            redirect_uri: this.processCallbackUrl(this.config.callbackUrl),
+            redirect_uri: this.config.callbackUrl,
             state: state,
             scope: this.config.scopes.join(' '),
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
             access_type: 'offline',
+            prompt: 'consent',
         });
         const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
         return [url, stateData];
@@ -107,7 +108,7 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
             client_id: this.config.clientId,
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: this.processCallbackUrl(this.config.callbackUrl),
+            redirect_uri: this.config.callbackUrl,
             code_verifier: codeVerifier,
             client_secret: this.config.clientSecret,
         });
@@ -211,14 +212,5 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
 
     private async generateCodeChallenge(codeVerifier: string): Promise<string> {
         return await Utils.hashUsingSHA256(codeVerifier);
-    }
-
-    private processCallbackUrl(url: string): string {
-        if (!url.startsWith('/')) return url;
-        let baseUrl = window.location.origin + window.location.pathname;
-        if (!baseUrl.endsWith('/')) {
-            baseUrl += '/';
-        }
-        return baseUrl + url.substring(1);
     }
 }
