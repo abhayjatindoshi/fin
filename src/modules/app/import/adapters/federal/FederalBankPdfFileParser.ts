@@ -1,17 +1,20 @@
 import type { ImportedTransaction } from "../../interfaces/ImportData";
 
-export class JupiterPdfFileParser {
-    public static isJupiterFile(pages: string[][]): boolean {
-        return pages.some(page => /Jupiter/i.test(page.join(' ')));
+export class FederalBankPdfFileParser {
+    public static isFederalBankFile(pages: string[][]): boolean {
+        console.log(pages);
+        return pages.some(page => /Federal Bank/i.test(page.join(' ')));
     }
 
-    private static accountNumberRegex = /Account[\s]+Number[\s]+(\d{10,})/i;
+    private static cardNumberLabelRegex = /Credit[\s]+Card[\s]+Number/i;
+    private static cardNumberRegex = /([\dX]{16})/;
 
-    public static extractAccountNumber(pages: string[][]): string | null {
+    public static extractCardNumber(pages: string[][]): string | null {
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
-                if (this.accountNumberRegex.test(page[i])) {
-                    const match = page[i].match(this.accountNumberRegex);
+                if (this.cardNumberLabelRegex.test(page[i])) {
+                    while (!this.cardNumberRegex.test(page[i]) && i < page.length - 1) i++;
+                    const match = page[i].match(this.cardNumberRegex);
                     if (match) return match[1];
                 }
             }
@@ -19,8 +22,8 @@ export class JupiterPdfFileParser {
         return null;
     }
 
-    private static dateStartRegex = /^\d{1,2}\/\d{1,2}\/\d{2,4}.*/;
-    private static dateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g;
+    private static lineRegex = /^\d{1,2}-\d{1,2}-\d{2,4}.+[Cr|Dr]$/;
+    private static dateRegex = /(\d{1,2})-(\d{1,2})-(\d{2,4})/g;
 
     public static extractTransactions(pages: string[][]): ImportedTransaction[] {
         const cleanedLines: string[] = this.removeHeaderAndFooterLines(pages);
@@ -28,34 +31,14 @@ export class JupiterPdfFileParser {
         return transactions;
     }
 
-    private static amountRegex = /(\d{1,}\.\d{2})/g;
+    private static amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
 
     // 53, 836
     private static parseTransactions(lines: string[]): ImportedTransaction[] {
+
         const transactions: ImportedTransaction[] = [];
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
-
-            // Find the date at the start of the line
-            if (!this.dateStartRegex.test(line)) continue;
-
-            // merge lines until we find a line that ends with an amount
-            let mergedLines = '';
-            let found = false;
-            const scanLimit = Math.min(5, lines.length - i);
-            for (let j = 0; j < scanLimit; j++) {
-                mergedLines += lines[i + j] + ' ';
-                const amountMatches = [...mergedLines.matchAll(this.amountRegex)];
-                if (amountMatches.length >= 1) {
-                    if (i + j == lines.length - 1 || this.dateStartRegex.test(lines[i + j + 1])) {
-                        i += j;
-                        line = mergedLines;
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) continue;
 
             // extract and parse date
             const dateMatches = [...line.matchAll(this.dateRegex)];
@@ -70,15 +53,14 @@ export class JupiterPdfFileParser {
 
             // extract amount
             const amountMatches = [...line.matchAll(this.amountRegex)];
-            if (amountMatches.length < 2) continue;
-            let amount = parseFloat(amountMatches[0][1]);
+            if (amountMatches.length < 1) continue;
+            let amount = parseFloat(amountMatches[0][1].replaceAll(',', ''));
             for (let j = amountMatches.length - 1; j >= 0; j--) {
                 const am = amountMatches[j];
                 const amountStr = am[0];
                 line = line.slice(0, am.index) + line.slice(am.index! + amountStr.length);
             }
 
-            line = line.replace('TFR', '');
             if (line.indexOf('Cr') !== -1) {
                 line = line.replace('Cr', '');
                 amount = Math.abs(amount);
@@ -109,25 +91,14 @@ export class JupiterPdfFileParser {
         )
     }
 
-    private static skipLinesAfter = [
-        /^Page/i,
-        /^GRAND TOTAL/i,
-    ]
-
     private static removeHeaderAndFooterLines(pages: string[][]): string[] {
         const cleanedLines: string[] = [];
         for (const page of pages) {
-            const headerLineIndex = page.findIndex(line => this.dateStartRegex.test(line));
-            if (headerLineIndex === -1) continue;
-            let footerLineIndex = page.length;
-            for (let i = headerLineIndex; i < page.length; i++) {
-                if (this.skipLinesAfter.some(regex => regex.test(page[i]))) {
-                    footerLineIndex = i;
-                    break;
+            for (const line of page) {
+                if (this.lineRegex.test(line)) {
+                    cleanedLines.push(line);
                 }
             }
-            const contentLines = page.slice(headerLineIndex, footerLineIndex);
-            cleanedLines.push(...contentLines);
         }
         return cleanedLines;
     }

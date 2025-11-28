@@ -1,4 +1,5 @@
-import HdfcBank from './icons/hdfc.svg?react';
+import Federal from './icons/federal.svg?react';
+import Hdfc from './icons/hdfc.svg?react';
 import Jupiter from './icons/jupiter.svg?react';
 
 type ImportIconComponentProps = React.SVGProps<SVGSVGElement> & {
@@ -11,8 +12,9 @@ export const ImportIconComponent: React.FC<ImportIconComponentProps> = ({ name, 
 };
 
 const ImportIcon: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
-    hdfc: HdfcBank,
+    hdfc: Hdfc,
     jupiter: Jupiter,
+    federal: Federal,
 };
 
 export default ImportIcon;

@@ -94,8 +94,13 @@ export class GoogleAuthHandler implements AuthHandler<GoogleToken, GoogleStateDa
         return Promise.resolve();
     }
 
-    getToken(): Promise<GoogleToken | null> {
-        return Promise.resolve(this.token);
+    async getToken(): Promise<GoogleToken | null> {
+        if (!this.token) return null;
+        const validToken = await this.restore(this.token);
+        if (validToken) {
+            return this.token;
+        }
+        return null;
     }
 
     getUserDetails(): Promise<UserDetails | null> {

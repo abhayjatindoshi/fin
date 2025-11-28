@@ -35,7 +35,6 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
     }, [open]);
 
     const filterTagsByQuery = (query: string) => {
-        console.log("Filtering tags for query:", query);
         const words = query.replaceAll(/[^\w]/g, ' ')
             .toLowerCase()
             .split(' ')

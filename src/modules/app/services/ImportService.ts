@@ -63,18 +63,41 @@ export class ImportService extends BaseService {
         });
     }
 
-    public async import(file: File, adapter?: IFileImportAdapter): Promise<ImportResult> {
+    private async filterSupportedAdapters(file: File, passwordMap: Record<string, Set<string>>): Promise<IFileImportAdapter[]> {
         const adapters = ImportHandler.getSupportedFileAdapters(file);
+        const supportedAdapters = [];
+        for (const adapter of adapters) {
+            const passwords = Array.from(passwordMap[adapter.name] || new Set<string>());
+            try {
+                if (await adapter.isFileSupported(file, passwords)) {
+                    supportedAdapters.push(adapter);
+                }
+            } catch { }
+        }
+        return supportedAdapters;
+    }
+
+    private async getPasswordMap(): Promise<Record<string, Set<string>>> {
+        const allAdapterData = await this.repository(EntityName.AdapterData).getAll() as AdapterData[];
+        return allAdapterData.reduce((map, data) => {
+            if (!map[data.name]) {
+                map[data.name] = new Set<string>();
+            }
+            data.passwords.forEach(pw => map[data.name].add(pw));
+            return map;
+        }, {} as Record<string, Set<string>>);
+    }
+
+    public async import(file: File, adapter?: IFileImportAdapter): Promise<ImportResult> {
+        const passwordMap = await this.getPasswordMap();
+        const adapters = await this.filterSupportedAdapters(file, passwordMap);
         if (adapters.length === 0) throw new ImportError('NO_ADAPTER', 'No suitable adapter found for the provided file');
         if (adapters.length > 1 && !adapter) throw new ImportError('MULTIPLE_ADAPTERS', 'Multiple adapters found for the provided file; please specify one explicitly', adapters);
         if (adapter && !adapters.includes(adapter)) throw new ImportError('UNSUPPORTED_FILE', 'The specified adapter does not support the provided file', adapters);
         adapter = adapter || adapters[0];
 
         try {
-            const adapterDataArray = await this.repository(EntityName.AdapterData).getAll({ where: { name: adapter.name } }) as AdapterData[];
-            const allPasswords = adapterDataArray.flatMap(data => data.passwords);
-            const importData = await adapter.readFile(file, allPasswords);
-
+            const importData = await adapter.readFile(file, Array.from(passwordMap[adapter.name] || new Set<string>()));
             const allAccounts = await this.repository(EntityName.MoneyAccount).getAll({ where: { adapterName: adapter.name } }) as MoneyAccount[];
             const matchingAccounts = allAccounts.filter(account => importData.identifiers.some(id => account.identifiers.includes(id)));
 

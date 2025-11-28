@@ -2,8 +2,11 @@ import { ImportError } from "@/modules/app/services/ImportService";
 import type { ImportedTransaction } from "../../interfaces/ImportData";
 
 export class HdfcPdfFileParser {
+
+    private static hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
+
     public static isHdfcFile(pages: string[][]): boolean {
-        return pages.some(page => /HDFC/i.test(page.join(' ')));
+        return pages.some(page => this.hdfcIfscCodeRegex.test(page.join(' ')));
     }
 
     private static accountNumberLabelRegex = /Account[\s]+Number|Account[\s]+No/i;
