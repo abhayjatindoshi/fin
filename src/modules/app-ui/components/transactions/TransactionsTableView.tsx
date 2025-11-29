@@ -1,6 +1,5 @@
 import { EntityName } from "@/modules/app/entities/entities";
 import type { Transaction } from "@/modules/app/entities/Transaction";
-import { ImportHandler } from "@/modules/app/import/ImportHandler";
 import { Checkbox } from "@/modules/base-ui/components/ui/checkbox";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import moment from "moment";
@@ -22,7 +21,6 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
     const { orchestrator } = useDataSync();
     const { accountMap } = useEntity();
 
-    const adaptersMap = useRef(ImportHandler.getAllAdapterMeta());
     const popupAnchorPosition = useRef<DOMRect | undefined>(undefined);
 
     const [showTagPicker, setShowTagPicker] = useState<boolean>(false);
@@ -60,9 +58,7 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
                 <div className="flex-1 truncate"><DescriptionCell transaction={transaction} editable /></div>
                 <div className="w-48"><TagCell tagId={transaction.tagId ?? null} onClick={(e) => openTagPicker(e, transaction)} /></div>
                 <div className="w-24">
-                    {accountMap && <AccountCell
-                        adapter={adaptersMap.current[accountMap[transaction.accountId].adapterName]}
-                        account={accountMap[transaction.accountId]} />}
+                    {accountMap && <AccountCell account={accountMap[transaction.accountId]} />}
                 </div>
             </div>
         </div>

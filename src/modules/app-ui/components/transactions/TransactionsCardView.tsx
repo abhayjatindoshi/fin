@@ -1,10 +1,9 @@
 import { EntityName } from "@/modules/app/entities/entities";
 import type { Transaction } from "@/modules/app/entities/Transaction";
-import { ImportHandler } from "@/modules/app/import/ImportHandler";
 import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import moment from "moment";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useEntity } from "../../providers/EntityProvider";
 import AccountCell from "./cells/AccountCell";
 import AmountCell from "./cells/AmountCell";
@@ -22,8 +21,6 @@ type TransactionsCardViewProps = {
 const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transactions }) => {
     const { orchestrator } = useDataSync();
     const { accountMap } = useEntity();
-
-    const adaptersMap = useRef(ImportHandler.getAllAdapterMeta());
 
     const [showTagPicker, setShowTagPicker] = useState<boolean>(false);
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -54,9 +51,7 @@ const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transaction
                     <div className="text-3xl"><AmountCell amount={transaction.amount} /></div>
                     <div className="flex flex-row gap-3 items-center">
                         <TagCell tagId={transaction.tagId ?? null} onClick={() => openTagPicker(transaction)} />
-                        {accountMap && <AccountCell
-                            adapter={adaptersMap.current[accountMap[transaction.accountId].adapterName]}
-                            account={accountMap[transaction.accountId]} />}
+                        {accountMap && <AccountCell account={accountMap[transaction.accountId]} />}
                     </div>
                 </div>
             </div>

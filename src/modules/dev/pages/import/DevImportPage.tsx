@@ -1,11 +1,10 @@
 import FileSize from "@/modules/app-ui/common/FileSize";
 import { useImport } from "@/modules/app-ui/components/import/ImportProvider";
-import ImportIcon from "@/modules/app-ui/icons/import/ImportIcon";
-import { ImportHandler } from "@/modules/app/import/ImportHandler";
-import type { IFileImportAdapter } from "@/modules/app/import/interfaces/IFileImportAdapter";
-import type { IImportAdapter } from "@/modules/app/import/interfaces/IImportAdapter";
+import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
+import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
+import type { IFile, IFileImportAdapter } from "@/modules/app/import/interfaces/IFileImportAdapter";
 import type { ImportData } from "@/modules/app/import/interfaces/ImportData";
-import type { ImportError } from "@/modules/app/services/ImportService";
+import { ImportService } from "@/modules/app/services/ImportService";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
@@ -17,14 +16,16 @@ const DevImportPage: React.FC = () => {
 
     const { enabled, setEnabled } = useImport();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const service = useRef(new ImportService());
     const [file, setFile] = useState<File | null>(null);
+    const [openFile, setOpenFile] = useState<IFile | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
-    const [supportedAdapters, setSupportedAdapters] = useState<IFileImportAdapter[]>([]);
-    const [selectedAdapter, setSelectedAdapter] = useState<IFileImportAdapter | null>(null);
+    const [supportedAdapters, setSupportedAdapters] = useState<IFileImportAdapter<any>[]>([]);
+    const [selectedAdapter, setSelectedAdapter] = useState<IFileImportAdapter<any> | null>(null);
     const [password, setPassword] = useState<string>('');
     const [supported, setSupported] = useState<boolean | null>(null);
     const [importData, setImportData] = useState<ImportData | null>(null);
-    const [importError, setImportError] = useState<ImportError | null>(null);
+    const [importError, setImportError] = useState<Error | null>(null);
 
     useEffect(() => {
         setEnabled(false);
@@ -42,34 +43,41 @@ const DevImportPage: React.FC = () => {
 
     useEffect(() => {
         if (!file) return;
-        const adapters = ImportHandler.getSupportedFileAdapters(file);
-        setSupportedAdapters(adapters);
-    }, [file]);
+        (async () => {
+            const openFile = await service.current.readFile(file, password);
+            if (!openFile) {
+                setImportError(new Error('Unable to open file'));
+            } else if ('message' in openFile) {
+                setImportError(new Error(openFile.message));
+            } else {
+                setOpenFile(openFile);
+                const adapters = service.current.getSupportedFileAdapters(openFile);
+                setSupportedAdapters(adapters);
+            }
+        })();
+    }, [file, password]);
 
     useEffect(() => {
-        if (!selectedAdapter || !file) return;
+        if (!openFile || !selectedAdapter) return;
+        setSupported(selectedAdapter.isSupported(openFile));
+    }, [openFile, selectedAdapter]);
+
+    useEffect(() => {
+        if (!selectedAdapter || !openFile || !supported) return;
+
         setImportData(null);
         setImportError(null);
-        try {
-            selectedAdapter.isFileSupported(file, password ? [password] : [])
-                .then(isSupported => {
-                    setSupported(isSupported);
-                    if (!isSupported) return;
-                    selectedAdapter.readFile(file, password ? [password] : [])
-                        .then(result => setImportData(result))
-                        .catch(err => setImportError(err));
-                })
-                .catch(err => { setSupported(false); setImportError(err); });
-        } catch (err) {
-            setImportError(err as ImportError);
-        }
-    }, [selectedAdapter, file, password]);
 
-    const AdapterIcon = (adapter: IImportAdapter) => {
-        const IconComponent = ImportIcon[adapter.display.icon];
-        if (!IconComponent) return null;
-        return <IconComponent className="size-8" />;
-    }
+        selectedAdapter.read(openFile)
+            .then(result => setImportData(result))
+            .catch(err => setImportError(err));
+
+    }, [selectedAdapter, openFile, supported]);
+
+    const supportedAdapterMeta = supportedAdapters.map(adapter => {
+        const [bank, offering] = ImportMatrix.AdapterBankData[adapter.id]
+        return { adapter, bank, offering };
+    })
 
     return <div className="flex flex-col items-center gap-2 m-4 min-w-0">
         <div className="self-end">Global import handler: {enabled ? "Enabled" : "Disabled"}</div>
@@ -105,12 +113,18 @@ const DevImportPage: React.FC = () => {
                 <InputGroupInput placeholder="Password (if any)" value={password} onChange={(e) => setPassword(e.target.value)} />
             </InputGroup>
             <div className="mt-4">Click on the adapter icon to import</div>
-            <div className="flex flex-row gap-2 mb-4">
-                {Object.values(supportedAdapters).map(adapter => <Button
-                    key={adapter.name}
-                    variant={selectedAdapter?.name === adapter.name ? 'outline' : 'ghost'}
+            <div className="flex flex-row flex-wrap gap-2 mb-4">
+                {Object.values(supportedAdapterMeta).map(({ adapter, bank, offering }) => <Button
+                    key={adapter.id} size="lg" className="h-14"
+                    variant={selectedAdapter?.id === adapter.id ? 'secondary' : 'outline'}
                     onClick={() => selectedAdapter ? setSelectedAdapter(null) : setSelectedAdapter(adapter)}>
-                    {AdapterIcon(adapter)}
+                    <div className="flex flex-row gap-2 items-center">
+                        <ImportIconComponent name={bank?.display?.icon ?? ''} className="size-7" />
+                        <div className="flex flex-col items-start">
+                            <span className="font-semibold uppercase">{bank?.display?.name}</span>
+                            <span className="text-sm">{offering?.display?.name}</span>
+                        </div>
+                    </div>
                 </Button>)}
             </div>
         </>}

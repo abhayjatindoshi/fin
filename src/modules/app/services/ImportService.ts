@@ -1,36 +1,23 @@
+import { Utils } from "@/modules/common/Utils";
 import { EntityUtils } from "../common/EntityUtils";
-import { AdapterDataSchema, type AdapterData } from "../entities/AdapterData";
+import { FileUtils } from "../common/FileUtils";
 import { EntityName } from "../entities/entities";
-import type { MoneyAccount } from "../entities/MoneyAccount";
+import { type MoneyAccount } from "../entities/MoneyAccount";
 import { TransactionSchema, type Transaction, type TransactionSource } from "../entities/Transaction";
-import { ImportHandler } from "../import/ImportHandler";
-import type { IFileImportAdapter } from "../import/interfaces/IFileImportAdapter";
-import type { ImportedTransaction } from "../import/interfaces/ImportData";
+import { ImportMatrix } from "../import/ImportMatrix";
+import type { IBank } from "../import/interfaces/IBank";
+import type { IBankOffering } from "../import/interfaces/IBankOffering";
+import type { IFile, IFileImportAdapter } from "../import/interfaces/IFileImportAdapter";
+import type { ImportData, ImportedTransaction } from "../import/interfaces/ImportData";
+import type { IPdfFile } from "../import/interfaces/IPdfImportAdapter";
 import { BaseService } from "./BaseService";
+import { SettingService } from "./SettingService";
 
-export type ImportErrorType =
-    | 'NO_ADAPTER'
-    | 'MULTIPLE_ADAPTERS'
-    | 'UNSUPPORTED_FILE'
-    | 'PASSWORD_REQUIRED'
-    | 'IMPORT_FAILED'
-    ;
-
-export class ImportError extends Error {
-
-    public type: ImportErrorType;
-    public adapters?: IFileImportAdapter[];
-
-    constructor(type: ImportErrorType, message: string, adapters?: IFileImportAdapter[]) {
-        super(message);
-        this.type = type;
-        this.adapters = adapters;
-    }
-
-    public toString(): string {
-        return `[${this.type}]: ${this.message}`;
-    }
+export type PasswordPrompt = {
+    message: string;
 }
+
+export type ImportError = Error
 
 export type ImportResult = {
     importSource: TransactionSource;
@@ -40,107 +27,54 @@ export type ImportResult = {
 
 export class ImportService extends BaseService {
 
-    public getAdapterData(account: MoneyAccount): IFileImportAdapter | undefined {
-        return ImportHandler.getFileAdapterByName(account.adapterName);
+    // Step 1: find the file type
+    // Step 2: check if we have stored passwords to unlock the file
+    // Step 3: find and prompt user if multiple adapters that support this file
+    // Step 4: use the selected adapter to generate import data
+    // Step 5: apply the import data
+
+    async readFile(file: File, password?: string): Promise<IFile | PasswordPrompt | null> {
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            return this.readPdfFile(file, password);
+        }
+        return null;
     }
 
-    public async addPassword(adapter: IFileImportAdapter, password: string) {
-        const adapterDataRepo = this.repository(EntityName.AdapterData);
-        const adapterData = await adapterDataRepo.getAll({ where: { name: adapter.name } }) as AdapterData[];
-        if (adapterData.length === 0) {
-            const newData: AdapterData = AdapterDataSchema.parse({
-                name: adapter.name,
-                passwords: [password],
-            });
-            adapterDataRepo.save(newData);
-            return;
-        }
-        adapterData.forEach(data => {
-            if (!data.passwords.includes(password)) {
-                data.passwords.push(password);
-                adapterDataRepo.save(data);
-            }
-        });
-    }
-
-    private async filterSupportedAdapters(file: File, passwordMap: Record<string, Set<string>>): Promise<IFileImportAdapter[]> {
-        const adapters = ImportHandler.getSupportedFileAdapters(file);
-        const supportedAdapters = [];
-        for (const adapter of adapters) {
-            const passwords = Array.from(passwordMap[adapter.name] || new Set<string>());
-            try {
-                if (await adapter.isFileSupported(file, passwords)) {
-                    supportedAdapters.push(adapter);
-                }
-            } catch { }
-        }
+    getSupportedFileAdapters(file: IFile): IFileImportAdapter<any>[] {
+        const supportedAdapters = Object.values(ImportMatrix.Adapters)
+            .filter(a => a.type === 'file')
+            .map(a => a as IFileImportAdapter<any>)
+            .filter(a => a.fileType === file.type)
+            .filter(a => a.isSupported(file))
         return supportedAdapters;
     }
 
-    private async getPasswordMap(): Promise<Record<string, Set<string>>> {
-        const allAdapterData = await this.repository(EntityName.AdapterData).getAll() as AdapterData[];
-        return allAdapterData.reduce((map, data) => {
-            if (!map[data.name]) {
-                map[data.name] = new Set<string>();
-            }
-            data.passwords.forEach(pw => map[data.name].add(pw));
-            return map;
-        }, {} as Record<string, Set<string>>);
-    }
-
-    public async import(file: File, adapter?: IFileImportAdapter): Promise<ImportResult> {
-        const passwordMap = await this.getPasswordMap();
-        const adapters = await this.filterSupportedAdapters(file, passwordMap);
-        if (adapters.length === 0) throw new ImportError('NO_ADAPTER', 'No suitable adapter found for the provided file');
-        if (adapters.length > 1 && !adapter) throw new ImportError('MULTIPLE_ADAPTERS', 'Multiple adapters found for the provided file; please specify one explicitly', adapters);
-        if (adapter && !adapters.includes(adapter)) throw new ImportError('UNSUPPORTED_FILE', 'The specified adapter does not support the provided file', adapters);
-        adapter = adapter || adapters[0];
-
+    async importFile(file: IFile, adapter: IFileImportAdapter<any>): Promise<ImportResult | ImportError> {
         try {
-            const importData = await adapter.readFile(file, Array.from(passwordMap[adapter.name] || new Set<string>()));
-            const allAccounts = await this.repository(EntityName.MoneyAccount).getAll({ where: { adapterName: adapter.name } }) as MoneyAccount[];
-            const matchingAccounts = allAccounts.filter(account => importData.identifiers.some(id => account.identifiers.includes(id)));
-
-            if (matchingAccounts.length === 0) {
-                matchingAccounts.push({
-                    adapterName: adapter.name,
-                    accountNumber: importData.identifiers[0],
-                    initialBalance: 0,
-                    identifiers: importData.identifiers,
-                    active: true,
-                } as MoneyAccount);
-            }
-
-            const years = Array.from(new Set(importData.transactions.map(tx => tx.date.getFullYear())));
-            const allTransactions = await this.repository(EntityName.Transaction).getAll({ years: years }) as Transaction[];
-            await Promise.all(importData.transactions.map(async tx => {
-                tx.hash = EntityUtils.hashTransaction(tx.date, tx.amount, tx.description);
-                tx.isNew = !allTransactions.some(existingTx => existingTx.hash === tx.hash);
-            }));
-
+            const importData = await adapter.read(file);
+            const [bank, offering] = ImportMatrix.AdapterBankData[adapter.id];
+            const matchingAccounts = await this.findMatchingAccounts(bank, offering, importData);
+            const parsedTransactions = await this.parseTransactions(importData.transactions);
             return {
                 importSource: {
                     type: 'file',
                     fileName: file.name,
                 },
                 importedAccounts: matchingAccounts,
-                importedTransactions: importData.transactions,
+                importedTransactions: parsedTransactions,
             }
         } catch (error) {
-            // Preserve existing ImportError types (e.g. PASSWORD_REQUIRED) for UI to handle
-            if (error instanceof ImportError) {
-                error.adapters = adapters;
-                throw error;
-            }
-            throw new ImportError('IMPORT_FAILED', (error as Error).message, adapters);
+            return error as ImportError;
         }
     }
 
-    public async apply(importResult: ImportResult): Promise<void> {
+    async applyImport(importResult: ImportResult): Promise<void> {
         const moneyAccountRepo = this.repository(EntityName.MoneyAccount);
         const transactionRepo = this.repository(EntityName.Transaction);
 
-        if (importResult.importedAccounts.length !== 1) throw new ImportError('IMPORT_FAILED', 'Only one account must be imported');
+        if (importResult.importedAccounts.length !== 1) {
+            throw new Error('Only one account must be imported');
+        }
 
         const account = importResult.importedAccounts[0];
         if (!account.id) {
@@ -161,5 +95,78 @@ export class ImportService extends BaseService {
             });
             transactionRepo.save(transaction);
         }
+    }
+
+    private async readPdfFile(file: File, passwordInput?: string): Promise<IPdfFile | PasswordPrompt> {
+        const passwords = passwordInput ? [passwordInput] :
+            await this.getStoredPasswords();
+
+        let pages: string[][] | null = null;
+        for (const password of passwords) {
+            try {
+                pages = await FileUtils.readPdfFile(file, password);
+                await this.addStoredPassword(password);
+                break;
+            } catch { }
+        }
+
+        if (!pages) {
+            if (passwordInput) {
+                return { message: "You've entered an incorrect password. Please try again." };
+            } else {
+                return { message: "This PDF file is password protected. Please enter the password to proceed." };
+            }
+        }
+
+        return {
+            name: file.name,
+            type: 'pdf',
+            pages: pages
+        }
+    }
+
+    private async addStoredPassword(password: string): Promise<void> {
+        const storedPasswords = await this.getStoredPasswords();
+        if (!storedPasswords.includes(password)) {
+            storedPasswords.push(password);
+            await new SettingService().update("import.storedPasswords", Utils.stringifyJson(storedPasswords));
+        }
+    }
+
+    private async getStoredPasswords(): Promise<string[]> {
+        const storedPasswords = await new SettingService().get("import.storedPasswords");
+        try {
+            return Utils.parseJson(storedPasswords)
+        } catch {
+            return [];
+        }
+    }
+
+    private async findMatchingAccounts(bank: IBank, offering: IBankOffering, importData: ImportData): Promise<MoneyAccount[]> {
+        const accountRepo = this.repository(EntityName.MoneyAccount);
+        const allAccounts = await accountRepo.getAll() as MoneyAccount[];
+        const matchingAccounts = allAccounts
+            .filter(a => a.identifiers.some(id => importData.identifiers.includes(id)));
+
+        if (matchingAccounts.length > 0) return matchingAccounts;
+
+        return [{
+            bankId: bank.id,
+            offeringId: offering.id,
+            accountNumber: importData.identifiers[0],
+            initialBalance: 0,
+            identifiers: importData.identifiers,
+            active: true,
+        } as MoneyAccount];
+    }
+
+    private async parseTransactions(transactions: ImportedTransaction[]): Promise<ImportedTransaction[]> {
+        const years = Array.from(new Set(transactions.map(tx => tx.date.getFullYear())));
+        const allTransactions = await this.repository(EntityName.Transaction).getAll({ years: years }) as Transaction[];
+        await Promise.all(transactions.map(async tx => {
+            tx.hash = EntityUtils.hashTransaction(tx.date, tx.amount, tx.description);
+            tx.isNew = !allTransactions.some(existingTx => existingTx.hash === tx.hash);
+        }));
+        return transactions;
     }
 }

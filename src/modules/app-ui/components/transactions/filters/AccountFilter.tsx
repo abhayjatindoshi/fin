@@ -1,6 +1,9 @@
 import AccountNumber from "@/modules/app-ui/common/AccountNumber";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
 import { useEntity } from "@/modules/app-ui/providers/EntityProvider";
+import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
+import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
+import type { IBank } from "@/modules/app/import/interfaces/IBank";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
 import { Landmark } from "lucide-react";
@@ -12,37 +15,32 @@ type AccountFilterProps = {
     dropdownClassName?: string;
 };
 
-type DisplayAccount = {
-    id: string;
-    accountNumber: string;
-    bankName: string;
-    bankIcon: string;
+type AccountMeta = {
+    account: MoneyAccount;
+    bank: IBank | undefined;
 }
 
 const AccountFilter: React.FC<AccountFilterProps> = ({ accountId = null, setAccountId, className, dropdownClassName }) => {
 
-    const { accountMap, adapterMap } = useEntity();
+    const { accountMap } = useEntity();
 
-    const displayAccountMap = !accountMap ? {} : Object.values(accountMap).reduce((obj, account) => {
-        if (!account.id) return obj;
-        const adapter = adapterMap?.[account.adapterName];
-        if (!adapter) return obj;
-        obj[account.id] = {
-            id: account.id,
-            accountNumber: account.accountNumber,
-            bankName: adapter.display.bankName,
-            bankIcon: adapter.display.icon,
-        }
-        return obj;
-    }, {} as Record<string, DisplayAccount>);
+    const accountsMetaMap = Object.values(accountMap ?? {}).map(account => {
+        const bank = ImportMatrix.Banks[account.bankId];
+        const offering = bank?.offerings?.find(o => o.id === account.offeringId);
+        return { account, bank, offering };
+    }).reduce((acc, curr) => {
+        if (!curr.account.id) return acc;
+        acc[curr.account.id] = curr;
+        return acc;
+    }, {} as Record<string, AccountMeta>);
 
     return <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <Button variant="outline" className={className}>
                 {accountId ?
                     <>
-                        <ImportIconComponent name={displayAccountMap[accountId]?.bankIcon} />
-                        <AccountNumber accountNumber={displayAccountMap[accountId]?.accountNumber} />
+                        <ImportIconComponent name={accountsMetaMap[accountId]?.bank?.display?.icon ?? ''} />
+                        <AccountNumber accountNumber={accountsMetaMap[accountId]?.account.accountNumber} />
                     </> :
                     <><Landmark /> All accounts</>
                 }
@@ -54,12 +52,12 @@ const AccountFilter: React.FC<AccountFilterProps> = ({ accountId = null, setAcco
                     <Landmark className="size-4 mx-1" /> All accounts
                 </div>
             </DropdownMenuItem>
-            {Object.values(displayAccountMap).map(account => (
+            {Object.values(accountsMetaMap).map(({ account, bank }) => (
                 <DropdownMenuItem key={account.id} onClick={() => setAccountId(account.id ?? null)}>
                     <div className="flex flex-row gap-4 items-center">
-                        <ImportIconComponent name={account.bankIcon ?? ''} className="size-6" />
+                        <ImportIconComponent name={bank?.display?.icon ?? ''} className="size-6" />
                         <div className="flex flex-col gap-1">
-                            <span className="uppercase">{account.bankName}</span>
+                            <span className="uppercase">{bank?.display?.name ?? ''}</span>
                             <span className="text-sm text-muted-foreground"><AccountNumber accountNumber={account.accountNumber} /></span>
                         </div>
                     </div>

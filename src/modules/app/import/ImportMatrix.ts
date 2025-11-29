@@ -1,29 +1,38 @@
-import { FederalBankCreditCard } from "./adapters/federal/FederalBankCreditCard";
-import { HdfcBankAccount } from "./adapters/hdfc/HdfcBankAccount";
-import { JupiterBankAccount } from "./adapters/jupiter/JupiterBankAccount";
-import type { IEmailImportAdapter } from "./interfaces/IEmailImportAdapter";
-import type { IFileImportAdapter } from "./interfaces/IFileImportAdapter";
+import { FederalBank } from "./banks/federal/FederalBank";
+import { HdfcBank } from "./banks/hdfc/HdfcBank";
+import { Jupiter } from "./banks/jupiter/Jupiter";
+import type { IBank } from "./interfaces/IBank";
+import type { IBankOffering } from "./interfaces/IBankOffering";
 import type { IImportAdapter } from "./interfaces/IImportAdapter";
 
 export class ImportMatrix {
 
-    static adapters: Record<string, IImportAdapter> = {};
-    static fileAdapters: Record<string, IFileImportAdapter> = {};
-    static emailAdapters: Record<string, IEmailImportAdapter> = {};
-
+    public static Banks: Record<string, IBank> = {};
+    public static Adapters: Record<string, IImportAdapter> = {};
+    public static AdapterBankData: Record<string, [IBank, IBankOffering]> = {};
 
     static init() {
-        const adapters = [
-            new HdfcBankAccount(),
-            new JupiterBankAccount(),
-            new FederalBankCreditCard(),
+        const banks: IBank[] = [
+            new FederalBank(),
+            new HdfcBank(),
+            new Jupiter(),
         ]
 
-        adapters.forEach(adapter => {
-            ImportMatrix.adapters[adapter.name] = adapter;
-            if (adapter instanceof IFileImportAdapter) {
-                ImportMatrix.fileAdapters[adapter.name] = adapter;
-            }
-        });;
+        banks.forEach(bank => {
+            ImportMatrix.Banks[bank.id] = bank;
+            bank.offerings.forEach(offering => {
+                offering.adapters.forEach(adapter => {
+                    let adapterId = `${bank.id}-${offering.id}-${adapter.type}`;
+                    if ('fileType' in adapter) {
+                        adapterId += `-${adapter.fileType}`;
+                    }
+                    adapter.id = adapterId;
+                    ImportMatrix.Adapters[adapterId] = adapter;
+                    ImportMatrix.AdapterBankData[adapterId] = [bank, offering];
+                });
+            });
+        });
     }
+
+    static { ImportMatrix.init(); }
 }

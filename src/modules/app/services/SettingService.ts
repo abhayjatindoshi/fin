@@ -7,11 +7,11 @@ const defaultValues = {
     "calendar.firstMonth": "0",
     "calendar.firstDay": "0",
     "transaction.defaultCurrencyCode": "INR",
+    "import.storedPasswords": "[]",
 };
 
 export type SettingKeys = keyof typeof defaultValues;
 export class SettingService extends BaseService {
-
 
     async update(key: SettingKeys, value: string): Promise<boolean> {
 
@@ -26,6 +26,12 @@ export class SettingService extends BaseService {
             repo.save(SettingSchema.parse({ key, value }));
         }
         return true;
+    }
+
+    async get(key: SettingKeys): Promise<string> {
+        const repo = this.repository(EntityName.Setting);
+        const entries = await repo.getAll({ where: { key } }) as Array<Setting>;
+        return entries.length > 0 ? entries[0].value : defaultValues[key];
     }
 
     observe(): Observable<Record<SettingKeys, string>> {

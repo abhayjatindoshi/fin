@@ -1,18 +1,44 @@
-import { ImportError } from "@/modules/app/services/ImportService";
-import type { ImportedTransaction } from "../../interfaces/ImportData";
+import type { ImportData, ImportedTransaction } from "../../interfaces/ImportData";
+import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
-export class HdfcPdfFileParser {
+export class HdfcBankPdfAdapter implements IPdfImportAdapter {
+    id = '';
+    type: 'file' = 'file';
+    fileType: 'pdf' = 'pdf';
 
-    private static hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
+    private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
+    private accountNumberLabelRegex = /Account[\s]+Number|Account[\s]+No/i;
+    private accountNumberRegex = /(\d{10,})/;
+    private openingBalanceLabelRegex = /Opening[\s]+Balance/i;
+    private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
+    private dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
+    private skipLinesAfter = [
+        /^Page/i,
+        /^STATEMENT[\s]+SUMMARY/i,
+        /^Cr[\s]+Count/i,
+        /^\*{2,}/i,
+    ]
 
-    public static isHdfcFile(pages: string[][]): boolean {
-        return pages.some(page => this.hdfcIfscCodeRegex.test(page.join(' ')));
+    private referenceNumberRegex = /^[\w]{12,25}$/i
+
+    isSupported(file: IPdfFile): boolean {
+        return file.pages.some(page => this.hdfcIfscCodeRegex.test(page.join(' ')));
     }
 
-    private static accountNumberLabelRegex = /Account[\s]+Number|Account[\s]+No/i;
-    private static accountNumberRegex = /(\d{10,})/;
+    async read(file: IPdfFile): Promise<ImportData> {
 
-    public static extractAccountNumber(pages: string[][]): string | null {
+        const accountNumber = this.extractAccountNumber(file.pages);
+        if (!accountNumber) throw new Error('Unable to extract account number from HDFC PDF file.');
+
+        const transactions = this.extractTransactions(file.pages);
+
+        return {
+            identifiers: [accountNumber],
+            transactions
+        }
+    }
+
+    public extractAccountNumber(pages: string[][]): string | null {
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
                 if (this.accountNumberLabelRegex.test(page[i])) {
@@ -25,10 +51,7 @@ export class HdfcPdfFileParser {
         return null;
     }
 
-    private static openingBalanceLabelRegex = /Opening[\s]+Balance/i;
-    private static amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
-
-    private static extractOpeningBalance(pages: string[][]): number | null {
+    private extractOpeningBalance(pages: string[][]): number | null {
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
                 if (!this.openingBalanceLabelRegex.test(page[i])) continue;
@@ -44,11 +67,9 @@ export class HdfcPdfFileParser {
         return null;
     }
 
-    private static dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
-
-    public static extractTransactions(pages: string[][]): ImportedTransaction[] {
+    public extractTransactions(pages: string[][]): ImportedTransaction[] {
         const openingBalance = this.extractOpeningBalance(pages);
-        if (openingBalance === null) throw new ImportError('IMPORT_FAILED', "Could not find opening balance in HDFC statement PDF.");
+        if (openingBalance === null) throw new Error("Could not find opening balance in HDFC statement PDF.");
         const filteredPages = pages
             .filter(page => page.some(line => this.dateStartRegex.test(line)));
         const cleanedLines: string[] = this.removeHeaderAndFooterLines(filteredPages);
@@ -56,16 +77,7 @@ export class HdfcPdfFileParser {
         return transactions;
     }
 
-    private static skipLinesAfter = [
-        /^Page/i,
-        /^STATEMENT[\s]+SUMMARY/i,
-        /^Cr[\s]+Count/i,
-        /^\*{2,}/i,
-    ]
-
-    private static referenceNumberRegex = /^[\w]{12,25}$/i
-
-    private static parseTransactions(lines: string[], openingBalance: number): ImportedTransaction[] {
+    private parseTransactions(lines: string[], openingBalance: number): ImportedTransaction[] {
         const transactions: ImportedTransaction[] = [];
         let currentBalance = openingBalance;
         for (let i = 0; i < lines.length; i++) {
@@ -166,13 +178,13 @@ export class HdfcPdfFileParser {
         return transactions;
     }
 
-    private static parseDate(dateStr: string): Date {
+    private parseDate(dateStr: string): Date {
         const parts = dateStr.split('/').map(part => parseInt(part, 10));
         const fullYear = parts[2] < 100 ? (parts[2] + 2000) : parts[2];
         return new Date(fullYear, parts[1] - 1, parts[0]);
     }
 
-    private static removeHeaderAndFooterLines(pages: string[][]): string[] {
+    private removeHeaderAndFooterLines(pages: string[][]): string[] {
 
         if (pages.length === 0) return [];
 
@@ -210,7 +222,7 @@ export class HdfcPdfFileParser {
         return cleanedLines;
     }
 
-    private static countMatchingLines(page: string[], referencePage: string[], from: 'start' | 'end'): number {
+    private countMatchingLines(page: string[], referencePage: string[], from: 'start' | 'end'): number {
         let count = 0;
         const minLines = Math.min(page.length, referencePage.length);
         for (let i = 0; i < minLines; i++) {

@@ -2,7 +2,8 @@ import { EntitySchema } from "@/modules/data-sync/entities/Entity";
 import * as z from "zod";
 
 export const MoneyAccountSchema = EntitySchema.extend({
-    adapterName: z.string(),
+    bankId: z.string(),
+    offeringId: z.string(),
     accountNumber: z.string(),
     initialBalance: z.number(),
     identifiers: z.array(z.string()),

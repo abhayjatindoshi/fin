@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogTitle } from "@/modules/base-ui/components/ui/dialog";
-import { createContext, useContext, useState, type PropsWithChildren } from "react";
+import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
+import { createContext, useContext, useEffect, useState, type PropsWithChildren } from "react";
 import Dropzone from "./Dropzone";
 import ImportPage from "./ImportPage";
 
@@ -13,14 +14,24 @@ interface ImportContextProps {
 const ImportContext = createContext<ImportContextProps | undefined>(undefined);
 
 export const ImportProvider: React.FC<PropsWithChildren> = ({ children }: PropsWithChildren) => {
+
+    const { orchestrator } = useDataSync();
     const [showImportModal, setShowImportModal] = useState<boolean>(false);
-    const [enabled, setEnabled] = useState<boolean>(true);
+    const [enabled, setEnabled] = useState<boolean>(false);
     const [files, setFiles] = useState<File[]>([]);
 
     const importFiles = async (files: File[]) => {
         setFiles(files);
         setShowImportModal(true);
     };
+
+    useEffect(() => {
+        if (orchestrator) {
+            setEnabled(true);
+        } else {
+            setEnabled(false);
+        }
+    }, [orchestrator]);
 
     return (
         <ImportContext.Provider value={{

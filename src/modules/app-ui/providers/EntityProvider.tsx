@@ -2,8 +2,6 @@ import { SystemTags } from "@/modules/app/common/SystemTags";
 import { EntityName } from "@/modules/app/entities/entities";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import type { Tag } from "@/modules/app/entities/Tag";
-import { ImportHandler } from "@/modules/app/import/ImportHandler";
-import type { IImportAdapter } from "@/modules/app/import/interfaces/IImportAdapter";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
@@ -14,7 +12,6 @@ export type EnhancedTag = Tag & {
 
 interface EntityContextProps {
     accountMap?: Record<string, MoneyAccount>;
-    adapterMap?: Record<string, IImportAdapter>;
     tagMap?: Record<string, EnhancedTag>;
 }
 
@@ -57,7 +54,6 @@ export const EntityProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
     const [accountMap, setAccountMap] = useState<Record<string, MoneyAccount>>({});
     const [tagMap, setTagMap] = useState<Record<string, EnhancedTag>>({});
 
-    const adapterMap = useMemo(() => ImportHandler.getAllAdapterMeta(), []);
     const systemTagMap = useMemo(() => convertToEnhancedTagMap(Object.values(SystemTags)), []);
 
     useEffect(() => {
@@ -84,7 +80,7 @@ export const EntityProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
     }, [orchestrator]);
 
     return (
-        <EntityContext.Provider value={{ accountMap, adapterMap, tagMap }}>
+        <EntityContext.Provider value={{ accountMap, tagMap }}>
             {children}
         </EntityContext.Provider>
     )

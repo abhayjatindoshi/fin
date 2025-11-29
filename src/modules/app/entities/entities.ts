@@ -1,5 +1,4 @@
 import { EU } from "@/modules/data-sync/EntityUtil";
-import { AdapterDataSchema } from "./AdapterData";
 import { HouseholdSchema } from "./Household";
 import { MoneyAccountSchema } from "./MoneyAccount";
 import { SettingSchema } from "./Setting";
@@ -9,7 +8,6 @@ import { type EntityConfigMap } from "./types";
 import { UserAccountSchema } from "./UserAccount";
 
 export const util = EU
-    .register("AdapterData", AdapterDataSchema)
     .register("MoneyAccount", MoneyAccountSchema)
     .register("Setting", SettingSchema)
     .register("Tag", TagSchema)
@@ -22,7 +20,6 @@ export const EntityName = util.entityNames();
 
 export const EntityConfig: EntityConfigMap<typeof util> = {
     // Core system entities
-    AdapterData: { scope: 'global' },
     Metadata: { scope: 'global' },
     MoneyAccount: { scope: 'global' },
     Setting: { scope: 'global' },

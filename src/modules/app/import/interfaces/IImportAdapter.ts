@@ -1,11 +1,6 @@
-export interface IImportAdapter {
-    name: string;
-    type: ImportAdapterType;
-    display: {
-        bankName: string;
-        icon: string;
-        type: string;
-    }
-}
+export type ImportAdapterType = 'file' | 'email';
 
-export type ImportAdapterType = 'savings-account' | 'credit-card';
+export interface IImportAdapter {
+    id: string;
+    type: ImportAdapterType;
+}

@@ -1,13 +1,40 @@
-import type { ImportedTransaction } from "../../interfaces/ImportData";
+import type { ImportData, ImportedTransaction } from "../../interfaces/ImportData";
+import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
-export class JupiterPdfFileParser {
-    public static isJupiterFile(pages: string[][]): boolean {
-        return pages.some(page => /Jupiter/i.test(page.join(' ')));
+export class JupiterPdfAdapter implements IPdfImportAdapter {
+    id = '';
+    fileType: "pdf" = "pdf";
+    type: "file" = "file";
+
+    private accountNumberRegex = /Account[\s]+Number[\s]+(\d{10,})/i;
+    private dateStartRegex = /^\d{1,2}\/\d{1,2}\/\d{2,4}.*/;
+    private dateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g;
+    private amountRegex = /(\d{1,}\.\d{2})/g;
+    private skipLinesAfter = [
+        /^Page/i,
+        /^GRAND TOTAL/i,
+    ]
+
+
+    isSupported(file: IPdfFile): boolean {
+        return file.pages.some(page => /Jupiter/i.test(page.join(' '))) &&
+            file.pages.some(page => /Fintech Partnerships/.test(page.join(' ')));
     }
 
-    private static accountNumberRegex = /Account[\s]+Number[\s]+(\d{10,})/i;
+    async read(file: IPdfFile): Promise<ImportData> {
+        const accountNumber = this.extractAccountNumber(file.pages);
+        if (!accountNumber) throw new Error('Unable to extract account number from Jupiter PDF file.');
 
-    public static extractAccountNumber(pages: string[][]): string | null {
+        const transactions = this.extractTransactions(file.pages);
+
+        return {
+            identifiers: [accountNumber],
+            transactions
+        }
+
+    }
+
+    public extractAccountNumber(pages: string[][]): string | null {
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
                 if (this.accountNumberRegex.test(page[i])) {
@@ -19,19 +46,13 @@ export class JupiterPdfFileParser {
         return null;
     }
 
-    private static dateStartRegex = /^\d{1,2}\/\d{1,2}\/\d{2,4}.*/;
-    private static dateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g;
-
-    public static extractTransactions(pages: string[][]): ImportedTransaction[] {
+    public extractTransactions(pages: string[][]): ImportedTransaction[] {
         const cleanedLines: string[] = this.removeHeaderAndFooterLines(pages);
         const transactions = this.parseTransactions(cleanedLines);
         return transactions;
     }
 
-    private static amountRegex = /(\d{1,}\.\d{2})/g;
-
-    // 53, 836
-    private static parseTransactions(lines: string[]): ImportedTransaction[] {
+    private parseTransactions(lines: string[]): ImportedTransaction[] {
         const transactions: ImportedTransaction[] = [];
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
@@ -100,7 +121,7 @@ export class JupiterPdfFileParser {
         return transactions;
     }
 
-    private static parseDate(dateMatch: RegExpMatchArray): Date {
+    private parseDate(dateMatch: RegExpMatchArray): Date {
         const [_, dayStr, monthStr, yearStr] = dateMatch;
         return new Date(
             parseInt(yearStr),
@@ -109,12 +130,7 @@ export class JupiterPdfFileParser {
         )
     }
 
-    private static skipLinesAfter = [
-        /^Page/i,
-        /^GRAND TOTAL/i,
-    ]
-
-    private static removeHeaderAndFooterLines(pages: string[][]): string[] {
+    private removeHeaderAndFooterLines(pages: string[][]): string[] {
         const cleanedLines: string[] = [];
         for (const page of pages) {
             const headerLineIndex = page.findIndex(line => this.dateStartRegex.test(line));

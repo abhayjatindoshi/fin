@@ -1,15 +1,34 @@
-import type { ImportedTransaction } from "../../interfaces/ImportData";
+import type { ImportData, ImportedTransaction } from "../../interfaces/ImportData";
+import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
-export class FederalBankPdfFileParser {
-    public static isFederalBankFile(pages: string[][]): boolean {
-        console.log(pages);
-        return pages.some(page => /Federal Bank/i.test(page.join(' ')));
+export class FederalBankPdfAdapter implements IPdfImportAdapter {
+    id = '';
+    type: 'file' = 'file';
+    fileType: 'pdf' = 'pdf';
+
+    private cardNumberLabelRegex = /Credit[\s]+Card[\s]+Number/i;
+    private cardNumberRegex = /([\dX]{16})/;
+    private lineRegex = /^\d{1,2}-\d{1,2}-\d{2,4}.+[Cr|Dr]$/;
+    private dateRegex = /(\d{1,2})-(\d{1,2})-(\d{2,4})/g;
+    private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
+
+    isSupported(file: IPdfFile): boolean {
+        return file.pages.some(page => /support\@federalbank\.co\.in/i.test(page.join(' '))) &&
+            !file.pages.some(page => /Fintech Partnerships/i.test(page.join(' ')));
     }
 
-    private static cardNumberLabelRegex = /Credit[\s]+Card[\s]+Number/i;
-    private static cardNumberRegex = /([\dX]{16})/;
+    async read(file: IPdfFile): Promise<ImportData> {
+        const cardNumber = this.extractCardNumber(file.pages);
+        if (!cardNumber) throw new Error('Unable to extract account number from Federal Bank PDF file.');
+        const transactions = this.extractTransactions(file.pages);
 
-    public static extractCardNumber(pages: string[][]): string | null {
+        return {
+            identifiers: [cardNumber],
+            transactions
+        }
+    }
+
+    public extractCardNumber(pages: string[][]): string | null {
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
                 if (this.cardNumberLabelRegex.test(page[i])) {
@@ -22,19 +41,13 @@ export class FederalBankPdfFileParser {
         return null;
     }
 
-    private static lineRegex = /^\d{1,2}-\d{1,2}-\d{2,4}.+[Cr|Dr]$/;
-    private static dateRegex = /(\d{1,2})-(\d{1,2})-(\d{2,4})/g;
-
-    public static extractTransactions(pages: string[][]): ImportedTransaction[] {
+    public extractTransactions(pages: string[][]): ImportedTransaction[] {
         const cleanedLines: string[] = this.removeHeaderAndFooterLines(pages);
         const transactions = this.parseTransactions(cleanedLines);
         return transactions;
     }
 
-    private static amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
-
-    // 53, 836
-    private static parseTransactions(lines: string[]): ImportedTransaction[] {
+    private parseTransactions(lines: string[]): ImportedTransaction[] {
 
         const transactions: ImportedTransaction[] = [];
         for (let i = 0; i < lines.length; i++) {
@@ -82,7 +95,7 @@ export class FederalBankPdfFileParser {
         return transactions;
     }
 
-    private static parseDate(dateMatch: RegExpMatchArray): Date {
+    private parseDate(dateMatch: RegExpMatchArray): Date {
         const [_, dayStr, monthStr, yearStr] = dateMatch;
         return new Date(
             parseInt(yearStr),
@@ -91,7 +104,7 @@ export class FederalBankPdfFileParser {
         )
     }
 
-    private static removeHeaderAndFooterLines(pages: string[][]): string[] {
+    private removeHeaderAndFooterLines(pages: string[][]): string[] {
         const cleanedLines: string[] = [];
         for (const page of pages) {
             for (const line of page) {

@@ -1,27 +1,48 @@
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
-import type { IFileImportAdapter } from "@/modules/app/import/interfaces/IFileImportAdapter";
-import { ImportError, ImportService, type ImportResult } from "@/modules/app/services/ImportService";
+import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
+import type { IFile, IFileImportAdapter } from "@/modules/app/import/interfaces/IFileImportAdapter";
+import { ImportService, type ImportResult, type PasswordPrompt } from "@/modules/app/services/ImportService";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Input } from "@/modules/base-ui/components/ui/input";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/modules/base-ui/components/ui/item";
-import { Clock, File, FileText, Hourglass, SquareCheck, SquareX } from "lucide-react";
+import { Clock, FileIcon, FileText, Hourglass, SquareCheck, SquareX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
+import AccountNumber from "../../common/AccountNumber";
+import { useForceUpdate } from "../../common/ComponentUtils";
 import FileSize from "../../common/FileSize";
-import ImportIcon from "../../icons/import/ImportIcon";
+import { ImportIconComponent } from "../../icons/import/ImportIcon";
+
 
 type ImportPageProps = {
     files: File[];
     close: () => void;
 }
 
-type ImportStatus = 'pending' | 'importing' | 'imported' | 'error';
+type ImportStatus =
+    | 'readingFile'
+    | 'passwordPrompt'
+    | 'findingAdapters'
+    | 'adapterPrompt'
+    | 'parsing'
+    | 'accountPrompt'
+    | 'finalPrompt'
+    | 'importing'
+    | 'imported'
+    | 'error'
+    ;
 
 const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps) => {
 
     const statusIcon = (status: ImportStatus, className?: string): JSX.Element => {
         switch (status) {
-            case 'pending':
+            case 'passwordPrompt':
+            case 'adapterPrompt':
+            case 'accountPrompt':
+            case 'finalPrompt':
                 return <Clock className={`scale-150 ${className}`} />;
+            case 'readingFile':
+            case 'findingAdapters':
+            case 'parsing':
             case 'importing':
                 return <Hourglass className={`scale-150 animate-spin ${className}`} />;
             case 'imported':
@@ -33,91 +54,248 @@ const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps
 
     const fileIcon = (file: File, className?: string) => {
         if (file.type === 'application/pdf') return <FileText className={`scale-150 ${className}`} />;
-        return <File className={`scale-150 ${className}`} />;
+        return <FileIcon className={`scale-150 ${className}`} />;
     }
 
-    const bankLogo = (name: string, props?: React.SVGProps<SVGSVGElement>): JSX.Element | null => {
-        const LogoComponent = ImportIcon[name as keyof typeof ImportIcon];
-        return LogoComponent ? <LogoComponent {...props} /> : null;
-    }
+    const importService = useRef(new ImportService());
+    const promiseRef = useRef<Promise<void>>(Promise.resolve());
+    const status = useRef<ImportStatus>('readingFile');
+    const password = useRef("");
+    const openFile = useRef<IFile | null>(null);
+    const importError = useRef<Error | null>(null);
+    const passwordPrompt = useRef<PasswordPrompt | null>(null);
+    const supportedAdapters = useRef<IFileImportAdapter<any>[] | null>(null);
+    const selectedAdapter = useRef<IFileImportAdapter<any> | null>(null);
+    const selectedAccount = useRef<MoneyAccount | null>(null);
+    const importResult = useRef<ImportResult | null>(null);
+    const forceUpdate = useForceUpdate();
 
-    const adapter = (account: MoneyAccount): IFileImportAdapter | undefined => {
-        return serviceRef.current.getAdapterData(account);
-    }
-
-    const [status, setStatus] = useState<ImportStatus>('pending');
-    const [importError, setImportError] = useState<ImportError | null>(null);
-    const [importResult, setImportResult] = useState<ImportResult | null>(null);
-    const [selectedAdapter, setSelectedAdapter] = useState<IFileImportAdapter | undefined>(undefined);
-    const [password, setPassword] = useState("");
-
-    const serviceRef = useRef(new ImportService());
-
-    const runImport = useCallback(async () => {
-        if (files.length !== 1) {
-            setImportError(new ImportError('IMPORT_FAILED', 'Only one file can be imported at a time.'));
-            setStatus('error');
-            return;
-        }
-
-        setStatus('importing');
-        setImportError(null);
-
+    const runImport = useCallback(async (): Promise<ImportStatus> => {
         try {
-            const result = await serviceRef.current.import(files[0], selectedAdapter);
-            setImportResult(result);
-            setStatus('imported');
+            switch (status.current) {
+                case 'readingFile': {
+                    const result = await importService.current.readFile(files[0], password.current);
+                    if (result === null) {
+                        importError.current = new Error('Failed to import file.');
+                        return 'error';
+                    }
+                    if ('message' in result) {
+                        passwordPrompt.current = result;
+                        return 'passwordPrompt';
+                    } else {
+                        openFile.current = result;
+                        return 'findingAdapters';
+                    }
+                }
+                case 'passwordPrompt': {
+                    // wait for user to enter password and retry
+                    return 'passwordPrompt';
+                }
+                case 'findingAdapters': {
+                    if (!openFile.current) return 'readingFile';
+                    const result = importService.current.getSupportedFileAdapters(openFile.current);
+                    supportedAdapters.current = result;
+                    if (result.length === 1) {
+                        selectedAdapter.current = result[0];
+                        return 'importing';
+                    } else {
+                        return 'adapterPrompt';
+                    }
+                }
+                case 'adapterPrompt': {
+                    // wait for user to select adapter
+                    return 'adapterPrompt';
+                }
+                case 'parsing': {
+                    if (!selectedAdapter.current) return 'findingAdapters';
+                    if (!openFile.current) return 'readingFile';
+                    const result = await importService.current.importFile(openFile.current, selectedAdapter.current);
+                    if (result instanceof Error) {
+                        importError.current = result;
+                        return 'error';
+                    } else {
+                        importResult.current = result;
+                        if (result.importedAccounts.length === 1) {
+                            selectedAccount.current = result.importedAccounts[0];
+                            return 'finalPrompt';
+                        } else {
+                            return 'accountPrompt';
+                        }
+                    }
+                }
+                case 'accountPrompt': {
+                    // wait for user to select account
+                    return 'accountPrompt';
+                }
+                case 'finalPrompt': {
+                    // wait for user to confirm import
+                    return 'finalPrompt';
+                }
+                case 'importing': {
+                    if (!importResult.current || !selectedAccount.current) return 'parsing';
+                    importResult.current.importedAccounts = [selectedAccount.current];
+                    await importService.current.applyImport(importResult.current);
+                    return 'imported';
+                }
+                case 'imported': {
+                    // display success and wait for user to close
+                    return 'imported';
+                }
+                case 'error': {
+                    // display error and wait for user to close
+                    return 'error';
+                }
+            }
         } catch (error) {
-            if (error instanceof ImportError) setImportError(error);
-            else setImportError(new ImportError('IMPORT_FAILED', (error as Error).message));
-            setStatus('error');
-            return;
+            importError.current = error as Error;
+            return 'error';
         }
-    }, [files, selectedAdapter]);
+    }, [status, files, password, openFile, selectedAdapter, importResult]);
+
+    const triggerNextStep = async (setStatus: ImportStatus) => {
+        status.current = setStatus;
+        while (true) {
+            let currentStatus = status.current;
+            promiseRef.current = promiseRef.current
+                .then(runImport)
+                .then((newStatus) => { status.current = newStatus });
+            await promiseRef.current;
+            forceUpdate();
+            if (currentStatus === status.current) break;
+        }
+    }
 
     useEffect(() => {
-        runImport();
-    }, [runImport]);
+        triggerNextStep('readingFile');
+    }, []);
 
-    const setAdapter = (adapter: IFileImportAdapter) => {
-        setSelectedAdapter(adapter)
-        setTimeout(() => {
-            runImport();
-        }, 0);
-    }
+    const PasswordPrompt = () => {
+        if (!passwordPrompt) return null;
 
-    const setAccount = (account: MoneyAccount) => {
-        if (!importResult) return;
-        setImportResult((importResult) => {
-            importResult!.importedAccounts = [account];
-            return importResult;
-        })
-    }
+        const [passwordInputText, setPasswordInputText] = useState("");
 
-    const addPassword = () => {
-        if (selectedAdapter) {
-            serviceRef.current.addPassword(selectedAdapter, password);
-        } else if (importError && importError.adapters && importError.adapters.length === 1) {
-            serviceRef.current.addPassword(importError.adapters[0], password);
+        const importFile = () => {
+            password.current = passwordInputText;
+            triggerNextStep('readingFile');
         }
-        setImportError(null);
-        setTimeout(() => {
-            runImport();
-        }, 0);
+
+        return <div>
+            <div className="text-lg">Password Required</div>
+            <div className="text-sm text-muted-foreground">The file appears to be password protected. Enter password to retry.</div>
+            <div className="flex flex-col gap-2 mt-2">
+                <Input type="password" placeholder="Enter file password..." value={passwordInputText} onChange={e => setPasswordInputText(e.target.value)} />
+                <Button disabled={!passwordInputText} onClick={importFile}>Import</Button>
+                {passwordPrompt.current?.message && <div className="text-sm text-destructive">{passwordPrompt.current.message}</div>}
+            </div>
+        </div>;
     }
 
-    const applyImport = () => {
-        if (!importResult) return;
-        serviceRef.current.apply(importResult);
-        close();
+    const AdapterPrompt = () => {
+        if (!supportedAdapters.current) return null;
+
+        const supportedBanks = supportedAdapters.current.map(a => ({
+            bank: ImportMatrix.AdapterBankData[a.id]?.[0] ?? undefined,
+            offering: ImportMatrix.AdapterBankData[a.id]?.[1] ?? undefined,
+            adapter: a
+        }));
+
+        const selectAdapter = (adapter: IFileImportAdapter<any>) => {
+            selectedAdapter.current = adapter;
+            triggerNextStep('parsing');
+        };
+
+        return <div>
+            <div className="text-lg">Select account</div>
+            <div className="text-sm text-muted-foreground">Multiple accounts detected. Choose one to continue.</div>
+            <div className="flex flex-col gap-2 mt-2">
+                {supportedBanks.map(({ bank, offering, adapter }) =>
+                    <Item key={adapter.id} variant="outline" className="hover:bg-muted cursor-pointer" onClick={() => selectAdapter(adapter)}>
+                        <ItemMedia variant="image">
+                            <ImportIconComponent name={bank?.display?.icon} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle>{bank?.display?.name}</ItemTitle>
+                            <ItemDescription>{offering?.display?.name}</ItemDescription>
+                        </ItemContent>
+                    </Item>)}
+            </div>
+        </div>
     }
 
-    const importSummary = (importResult: ImportResult) => {
-        const transactionCount = importResult.importedTransactions.length;
-        const newTransactionCount = importResult.importedTransactions.filter(tx => tx.isNew).length;
+    const AccountPrompt = () => {
+        if (!importResult.current) return null;
+
+        const foundAccounts = importResult.current.importedAccounts.map(account => {
+            const bank = ImportMatrix.Banks[account.bankId] ?? undefined;
+            const offering = bank?.offerings?.find(o => o.id === account.offeringId);
+            return { bank, offering, account };
+        });
+
+        const setAccount = (account: MoneyAccount) => {
+            selectedAccount.current = account;
+            triggerNextStep('finalPrompt');
+        }
+
+        return <div>
+            <div className="text-lg">Multiple matching accounts found</div>
+            <div className="text-sm text-muted-foreground">Multiple accounts detected. Choose one to continue.</div>
+            <div className="flex flex-col gap-2 mt-2">
+                {foundAccounts.map(({ bank, offering, account }) => (
+                    <Item key={`${account.id}`} variant="outline" className="hover:bg-muted cursor-pointer" onClick={() => setAccount(account)}>
+                        <ItemMedia variant="image">
+                            <ImportIconComponent name={bank?.display?.icon} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <div className="flex flex-row justify-between w-full">
+                                <div>
+                                    <ItemTitle>
+                                        {bank?.display?.name && <span className="uppercase">{bank?.display?.name}</span>}
+                                    </ItemTitle>
+                                    <ItemDescription className="flex justify-between">
+                                        {offering?.display?.name && <span className="text-sm text-muted-foreground">{offering?.display?.name}</span>}
+                                    </ItemDescription>
+                                </div>
+                                <span className="text-xl"><AccountNumber accountNumber={account.accountNumber} /></span>
+                            </div>
+                        </ItemContent>
+                    </Item>
+                ))}
+            </div>
+        </div>
+    }
+
+    const FinalPrompt = () => {
+        if (!importResult.current || !selectedAccount.current) return null;
+
+        const applyImport = () => {
+            triggerNextStep('importing');
+        }
+
+        const transactionCount = importResult.current.importedTransactions.length;
+        const newTransactionCount = importResult.current.importedTransactions.filter(tx => tx.isNew).length;
         const existingTransactionCount = transactionCount - newTransactionCount;
+        const selectedAccountBank = ImportMatrix.Banks[selectedAccount.current.bankId] ?? undefined;
+        const selectedAccountOffering = selectedAccountBank?.offerings?.find(o => o.id === selectedAccount.current?.offeringId);
 
         return (<>
+            <Item variant="outline">
+                <ItemMedia variant="image">
+                    <ImportIconComponent name={selectedAccountBank?.display?.icon} />
+                </ItemMedia>
+                <ItemContent>
+                    <div className="flex flex-row justify-between w-full">
+                        <div>
+                            <ItemTitle>
+                                {selectedAccountBank?.display?.name && <span className="uppercase">{selectedAccountBank?.display?.name}</span>}
+                            </ItemTitle>
+                            <ItemDescription className="flex justify-between">
+                                {selectedAccountOffering?.display?.name && <span className="text-sm text-muted-foreground">{selectedAccountOffering?.display?.name}</span>}
+                            </ItemDescription>
+                        </div>
+                        <span className="text-xl"><AccountNumber accountNumber={selectedAccount.current?.accountNumber} /></span>
+                    </div>
+                </ItemContent>
+            </Item>
             <span>Detected <span className="text-accent">{transactionCount} transaction</span> records. </span>
             {existingTransactionCount > 0 &&
                 <span>Out of which there are <span className="text-accent">{newTransactionCount} new transactions </span>
@@ -131,57 +309,16 @@ const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps
         </>);
     }
 
-    if (importError && importError.type === 'MULTIPLE_ADAPTERS') {
-        return <div>
-            <div className="text-lg">Select account</div>
-            <div className="text-sm text-muted-foreground">Multiple accounts detected. Choose one to continue.</div>
-            <div className="flex flex-col gap-2 mt-2">
-                {importError.adapters?.map(a =>
-                    <Item key={a.name} variant="outline" className="hover:bg-muted cursor-pointer" onClick={() => setAdapter(a)}>
-                        <ItemMedia variant="image">
-                            {bankLogo(a.display.icon)}
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle>{a.display.bankName}</ItemTitle>
-                            <ItemDescription>{a.display.type}</ItemDescription>
-                        </ItemContent>
-                    </Item>)}
-            </div>
-        </div>
+    const Imported = () => {
+        return <div>Import complete!</div>
     }
 
-    if (importError && importError.type === 'PASSWORD_REQUIRED') {
-        return <div>
-            <div className="text-lg">Password Required</div>
-            <div className="text-sm text-muted-foreground">The file appears to be password protected. Enter password to retry.</div>
-            <div className="flex flex-col gap-2 mt-2">
-                <Input type="password" placeholder="Enter file password..." value={password} onChange={e => setPassword(e.target.value)} />
-                <Button disabled={!password} onClick={() => addPassword()}>Import</Button>
-            </div>
-        </div>;
+    const ErrorPrompt = () => {
+        if (!importError.current) return null;
+        return <div className="text-destructive">Error: {importError.current.message}</div>;
     }
 
-    if (importResult && importResult.importedAccounts.length > 1) {
-        return <div>
-            <div className="text-lg">Select account type</div>
-            <div className="text-sm text-muted-foreground">Multiple account types detected. Choose one to continue.</div>
-            <div className="flex flex-col gap-2 mt-2">
-                {importResult.importedAccounts.map(account => (
-                    [adapter(account)].filter(a => a !== undefined).map(adapter =>
-                        <Item key={`${adapter.name}-${account.id}`} variant="outline" className="hover:bg-muted cursor-pointer" onClick={() => setAccount(account)}>
-                            <ItemMedia variant="image">
-                                {bankLogo(adapter.display.icon)}
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle>{adapter.name}</ItemTitle>
-                                <ItemDescription>{account.accountNumber}</ItemDescription>
-                            </ItemContent>
-                        </Item>
-                    )
-                ))}
-            </div>
-        </div>
-    }
+    if (files.length === 0 || files.length > 1) return null;
 
     return <>
         {files.map(file => <Item key={file.name}>
@@ -193,11 +330,15 @@ const ImportPage: React.FC<ImportPageProps> = ({ files, close }: ImportPageProps
                 <ItemDescription><FileSize file={file} /></ItemDescription>
             </ItemContent>
             <ItemActions>
-                {statusIcon(status, 'shrink-0')}
+                {statusIcon(status.current, 'shrink-0')}
             </ItemActions>
         </Item>)}
-        {importError && <div className="text-destructive">Error: {importError.message}</div>}
-        {importResult && importSummary(importResult)}
+        {status.current === 'passwordPrompt' && <PasswordPrompt />}
+        {status.current === 'adapterPrompt' && <AdapterPrompt />}
+        {status.current === 'accountPrompt' && <AccountPrompt />}
+        {status.current === 'finalPrompt' && <FinalPrompt />}
+        {status.current === 'imported' && <Imported />}
+        {status.current === 'error' && <ErrorPrompt />}
     </>;
 
 }
