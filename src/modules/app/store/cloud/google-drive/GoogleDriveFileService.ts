@@ -33,7 +33,7 @@ export const GoogleAuthConfig: AuthConfig = {
     callbackUrl: import.meta.env.VITE_GOOGLE_CALLBACK_URL,
     scopes: [
         'openid', 'profile', 'email',
-        'https://www.googleapis.com/auth/drive.file',
+        'https://www.googleapis.com/auth/drive',
         'https://www.googleapis.com/auth/drive.readonly',
         'https://www.googleapis.com/auth/drive.appdata',
     ]
