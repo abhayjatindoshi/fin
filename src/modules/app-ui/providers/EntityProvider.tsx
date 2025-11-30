@@ -1,9 +1,10 @@
-import { SystemTags } from "@/modules/app/common/SystemTags";
 import { EntityName } from "@/modules/app/entities/entities";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import type { Tag } from "@/modules/app/entities/Tag";
+import { TaggingService } from "@/modules/app/services/TaggingService";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
-import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
+import { toRecord, unsubscribeAll } from "../common/ComponentUtils";
 
 export type EnhancedTag = Tag & {
     searchWords: string[];
@@ -17,65 +18,27 @@ interface EntityContextProps {
 
 const EntityContext = createContext<EntityContextProps>({});
 
-const getSearchWords = (tag: Tag): string[] => {
-    const searchPath = tag.name.replace(/[^\w]/g, " ") +
-        " " + (tag.description ? tag.description.replace(/[^\w]/g, " ") : "");
-
-    return [...new Set(searchPath.toLowerCase().split(" ").filter(w => w.trim() !== ""))];
-}
-
-
-const convertToEnhancedTagMap = (tags: Tag[], refMap?: Record<string, EnhancedTag>): Record<string, EnhancedTag> => {
-    const enhancedTagMap: Record<string, EnhancedTag> = {};
-    tags.forEach(tag => {
-        if (!tag.id) return;
-        enhancedTagMap[tag.id] = {
-            ...tag,
-            searchWords: getSearchWords(tag),
-            children: []
-        };
-    });
-
-    Object.values(enhancedTagMap).forEach(tag => {
-        if (tag.parent && enhancedTagMap[tag.parent]) {
-            enhancedTagMap[tag.parent].children.push(tag);
-        } else if (tag.parent && refMap && refMap[tag.parent]) {
-            refMap[tag.parent].children.push(tag);
-        }
-    });
-
-    return { ...enhancedTagMap, ...refMap };
-}
-
 export const EntityProvider: React.FC<PropsWithChildren> = ({ children }: PropsWithChildren<EntityContextProps>) => {
 
     const { orchestrator } = useDataSync();
 
+    const taggingService = useRef(new TaggingService());
     const [accountMap, setAccountMap] = useState<Record<string, MoneyAccount>>({});
     const [tagMap, setTagMap] = useState<Record<string, EnhancedTag>>({});
-
-    const systemTagMap = useMemo(() => convertToEnhancedTagMap(Object.values(SystemTags)), []);
 
     useEffect(() => {
         if (!orchestrator) return;
 
         const accountRepo = orchestrator.repo(EntityName.MoneyAccount);
-        const tagRepo = orchestrator.repo(EntityName.Tag);
 
         const subscriptions = [
             accountRepo.observeAll().subscribe(accounts => {
-                setAccountMap((accounts as MoneyAccount[]).reduce((map, acc) => {
-                    if (!acc.id) return map;
-                    map[acc.id] = acc;
-                    return map;
-                }, {} as Record<string, MoneyAccount>));
+                setAccountMap(toRecord(accounts as MoneyAccount[], 'id'));
             }),
-            tagRepo.observeAll().subscribe(customTags => {
-                setTagMap(convertToEnhancedTagMap(customTags as Tag[], systemTagMap));
-            }),
+            taggingService.current.observeTagMap().subscribe(setTagMap),
         ]
 
-        return () => subscriptions.forEach(sub => sub.unsubscribe());
+        return unsubscribeAll(...subscriptions);
 
     }, [orchestrator]);
 

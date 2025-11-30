@@ -86,7 +86,7 @@ const tags: SystemTags = {
         }
     },
     "Food & Drinks": {
-        icon: "salad", description: "Eating out, Swiggy, Zomato etc.", children: {
+        icon: "salad", description: "Eating food outside", children: {
             "Beverages": { icon: "glass-water" },
             "Date": { icon: "rose" },
             "Dessert": { icon: "ice-cream-bowl" },

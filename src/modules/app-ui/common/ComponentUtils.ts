@@ -17,3 +17,13 @@ export function useForceUpdate() {
     // A function that increment 👆🏻 the previous state like here 
     // is better than directly setting `setValue(value + 1)`
 }
+
+export function toRecord<T extends { [key: string]: any }>(items: T[], key: keyof T): Record<string, T> {
+    return items.reduce((map, item) => {
+        const keyValue = item[key];
+        if (typeof keyValue === 'string') {
+            map[keyValue] = item;
+        }
+        return map;
+    }, {} as Record<string, T>);
+};

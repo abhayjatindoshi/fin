@@ -27,9 +27,10 @@ export default function AppRouter() {
                             <Route path="import" element={<DevImportPage />} />
                             <Route path="store/:entityName?/:entityId?" element={<DevStorePage />} />
                         </Route>
+                        <Route path="*" element={<NotFoundPage />} />
                     </Route>
-                    <Route path="*" element={<NotFoundPage />} />
                 </Route>
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </BrowserRouter>
     );

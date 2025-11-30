@@ -1,5 +1,6 @@
 import { DollarSign, Euro, GeorgianLari, IndianRupee, JapaneseYen, PhilippinePeso, PoundSterling, RussianRuble, SaudiRiyal, SwissFranc, TurkishLira } from "lucide-react";
 import type { ReactNode } from "react";
+import { toRecord } from "./ComponentUtils";
 
 export type CurrencyDetails = {
     code: string;
@@ -22,10 +23,7 @@ const CurrencyCodeList: Array<CurrencyDetails> = [
     { code: 'TRY', name: 'Turkish Lira', symbolStr: '₺', icon: <TurkishLira /> },
 ];
 
-export const CurrencyCode = CurrencyCodeList.reduce((acc, curr) => {
-    acc[curr.code] = curr;
-    return acc;
-}, {} as Record<string, CurrencyDetails>);
+export const CurrencyCode = toRecord(CurrencyCodeList, 'code');
 
 export type CurrencyCodeType = keyof typeof CurrencyCode;
 

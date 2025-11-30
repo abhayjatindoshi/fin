@@ -1,4 +1,4 @@
-import type { Tag } from "@/modules/app/entities/Tag";
+import { TagSchema, type Tag } from "@/modules/app/entities/Tag";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Input } from "@/modules/base-ui/components/ui/input";
 import { Popover, PopoverContent } from "@/modules/base-ui/components/ui/popover";
@@ -16,14 +16,24 @@ type TagPickerProps = {
     onOpenChange: (open: boolean) => void;
     anchorPosition?: DOMRect;
     selectedTagId?: string | undefined;
-    setSelectedTagId?: (tagId: string | undefined) => void;
+    setSelectedTag?: (tag: Tag | null) => void;
 };
 
-export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChange, selectedTagId, setSelectedTagId, anchorPosition }) => {
+const removeTag: EnhancedTag = {
+    ...TagSchema.parse({
+        id: 'remove-tag',
+        name: 'Remove Tag',
+        icon: 'bookmark-x',
+        description: 'Remove tag from transaction',
+    }), children: [], searchWords: []
+};
+
+export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChange, selectedTagId, setSelectedTag, anchorPosition }) => {
     const { tagMap } = useEntity();
 
     if (!tagMap) return null;
 
+    const showRemoveTag = selectedTagId !== undefined && selectedTagId !== null;
     const allTags = Object.values(tagMap).filter(tag => !tag.parent);
     const [filteredTags, setFilteredTags] = useState(allTags);
     const [searchQuery, setSearchQuery] = useState("");
@@ -111,7 +121,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
 
         const selectTag = (e: React.MouseEvent<HTMLElement>, tag: Tag) => {
             e.stopPropagation();
-            setSelectedTagId && setSelectedTagId(tag.id);
+            setSelectedTag && setSelectedTag(tag.id === 'remove-tag' ? null : tag);
             onOpenChange(false);
         }
 
@@ -119,6 +129,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
             className={`flex flex-col gap-2 p-2 
             hover:bg-accent/50 dark:hover:bg-background 
             rounded-xl overflow-hidden cursor-pointer
+            ${tag.id === 'remove-tag' && 'text-destructive'}
             ${selectedTagId === tag.id ? 'bg-accent/20 border' : ''}`}
         >
             <div className="flex flex-row gap-2 items-center" onClick={(e) => selectTag(e, tag)}>
@@ -147,12 +158,13 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
     type TagContainerProps = {
         className?: string;
     }
+
     const TagsContainer: React.FC<TagContainerProps> = ({ className }) => {
 
         const scrollElementRef = useRef<HTMLDivElement | null>(null);
 
         const virtualizer = useVirtualizer({
-            count: filteredTags.length,
+            count: filteredTags.length + (showRemoveTag ? 1 : 0),
             getScrollElement: () => scrollElementRef.current,
             estimateSize: () => 20,
         });
@@ -175,7 +187,12 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
                 <div className="absolute top-0 left-0 w-full" style={{ transform: `translateY(${items[0]?.start ?? 0}px)` }}>
                     {items.map(item => (
                         <div key={item.key} data-index={item.index} ref={virtualizer.measureElement}>
-                            <TagItem tag={filteredTags[item.index]} />
+                            {showRemoveTag ?
+                                item.index === 0 ?
+                                    <TagItem tag={removeTag} /> :
+                                    <TagItem tag={filteredTags[item.index - 1]} /> :
+                                <TagItem tag={filteredTags[item.index]} />
+                            }
                         </div>
                     ))}
                 </div>

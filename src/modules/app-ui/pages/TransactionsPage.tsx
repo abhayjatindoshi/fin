@@ -42,12 +42,19 @@ const TransactionsPage: React.FC = () => {
                     .filter(t => !filter.accountIds || filter.accountIds.length == 0 || filter.accountIds.includes(t.accountId))
                     .filter(t => !filter.startDate || t.transactionAt >= filter.startDate!)
                     .filter(t => !filter.endDate || t.transactionAt <= filter.endDate!)
-                    .filter(t => !filter.searchQuery || t.narration.toLowerCase().includes(filter.searchQuery.toLowerCase()))
+                    .filter(t => !filter.searchQuery
+                        || t.narration.toLowerCase().includes(filter.searchQuery.toLowerCase())
+                        || /^[\d.]+$/i.test(filter.searchQuery) && filter.searchQuery === t.amount.toString()
+                    )
                 setTransactions(result);
             });
 
         return () => subscription.unsubscribe();
     }, [orchestrator, filterSubject]);
+
+    const forceUpdate = () => {
+        setFilter({ ...filter });
+    }
 
     useEffect(() => {
         filterSubject.next(filter);
@@ -64,8 +71,8 @@ const TransactionsPage: React.FC = () => {
                         <span className="text-muted-foreground mt-4">No transactions found</span>
                     </div> :
                     isMobile ?
-                        <TransactionsCardView transactions={transactions} /> :
-                        <TransactionsTableView transactions={transactions} />
+                        <TransactionsCardView transactions={transactions} forceUpdate={forceUpdate} /> :
+                        <TransactionsTableView transactions={transactions} forceUpdate={forceUpdate} />
             }
         </div>
     );

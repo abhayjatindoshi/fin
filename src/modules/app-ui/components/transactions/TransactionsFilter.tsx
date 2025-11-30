@@ -3,7 +3,7 @@ import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import { Search } from "lucide-react";
 import moment from "moment";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useApp } from "../../providers/AppProvider";
 import AccountFilter from "./filters/AccountFilter";
 import DateSort from "./filters/DateSort";
@@ -56,7 +56,8 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
         setFilter({ ...filter, searchQuery: term });
     }
 
-    const SearchBar = ({ autoFocus, onClick, search, setSearch }: { autoFocus?: boolean; onClick?: () => void; search?: string; setSearch?: (term: string) => void }) => {
+    const SearchBar = useMemo(() => ({ autoFocus, onClick, search, setSearch }: { autoFocus?: boolean; onClick?: () => void; search?: string; setSearch?: (term: string) => void }) => {
+
         return <InputGroup className={`${isMobile ? 'flex-1' : 'w-48'} ${blurClasses}`}>
             <InputGroupInput autoFocus={autoFocus}
                 onClick={onClick}
@@ -67,7 +68,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
                 <Search />
             </InputGroupAddon>
         </InputGroup>
-    }
+    }, []);
 
     const enableSearchOverlay = (currentFilter: TransactionFilterOptions) => {
         setFilter(currentFilter);

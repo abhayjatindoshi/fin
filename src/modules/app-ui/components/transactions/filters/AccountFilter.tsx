@@ -1,9 +1,8 @@
 import AccountNumber from "@/modules/app-ui/common/AccountNumber";
+import { toRecord } from "@/modules/app-ui/common/ComponentUtils";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
 import { useEntity } from "@/modules/app-ui/providers/EntityProvider";
-import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
 import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
-import type { IBank } from "@/modules/app/import/interfaces/IBank";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
 import { Landmark } from "lucide-react";
@@ -15,24 +14,15 @@ type AccountFilterProps = {
     dropdownClassName?: string;
 };
 
-type AccountMeta = {
-    account: MoneyAccount;
-    bank: IBank | undefined;
-}
-
 const AccountFilter: React.FC<AccountFilterProps> = ({ accountId = null, setAccountId, className, dropdownClassName }) => {
 
     const { accountMap } = useEntity();
 
-    const accountsMetaMap = Object.values(accountMap ?? {}).map(account => {
+    const accountsMetaMap = toRecord(Object.values(accountMap ?? {}).map(account => {
         const bank = ImportMatrix.Banks[account.bankId];
         const offering = bank?.offerings?.find(o => o.id === account.offeringId);
-        return { account, bank, offering };
-    }).reduce((acc, curr) => {
-        if (!curr.account.id) return acc;
-        acc[curr.account.id] = curr;
-        return acc;
-    }, {} as Record<string, AccountMeta>);
+        return { id: account.id, account, bank, offering };
+    }), 'id');
 
     return <DropdownMenu>
         <DropdownMenuTrigger asChild>

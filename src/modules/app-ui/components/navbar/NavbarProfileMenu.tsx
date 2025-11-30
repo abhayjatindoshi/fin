@@ -1,12 +1,19 @@
 import { useAuth } from "@/modules/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/modules/base-ui/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
-import { LogOut, RefreshCw, Settings } from "lucide-react";
+import { useTenant } from "@/modules/data-sync/providers/TenantProvider";
+import { CodeXml, LogOut, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ThemeSwitcher } from "../../common/ThemeSwitcher";
+import { useApp } from "../../providers/AppProvider";
 
 const NavbarProfileMenu: React.FC = () => {
 
+    const navigate = useNavigate();
+    const { currentTenant } = useTenant();
     const { currentUser, logout } = useAuth();
+    const { devModeEnabled, setDevModeEnabled } = useApp();
+
 
     return (
         <DropdownMenu>
@@ -24,11 +31,12 @@ const NavbarProfileMenu: React.FC = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                    <DropdownMenuItem>
-                        <RefreshCw />
-                        Sync Now
+                    <DropdownMenuItem onClick={() => setDevModeEnabled(!devModeEnabled)}>
+                        <CodeXml />
+                        Dev Mode
+                        <span className={`flex size-2 rounded-full ${devModeEnabled ? 'bg-green-500' : 'bg-red-500'} `} title={devModeEnabled ? "Enabled" : "Disabled"}></span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/' + currentTenant?.id + '/settings')}>
                         <Settings />
                         Settings
                     </DropdownMenuItem>

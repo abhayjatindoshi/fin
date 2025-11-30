@@ -6,9 +6,7 @@ import type { Household } from "../entities/Household";
 import type { util } from "../entities/entities";
 
 export abstract class BaseService {
-    private orchestrator: DataOrchestrator<typeof util, DateStrategyOptions, Household> = DataOrchestrator.getInstance();
-
     public repository<N extends EntityNameOf<typeof util>>(entityName: N): DataRepository<typeof util, N, DateStrategyOptions, Household> {
-        return this.orchestrator.repo<N>(entityName);
+        return DataOrchestrator.getInstance<typeof util, DateStrategyOptions, Household>().repo<N>(entityName);
     }
 }

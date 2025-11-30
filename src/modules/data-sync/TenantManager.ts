@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { BehaviorSubject, Observable } from "rxjs";
+import { toRecord } from "../app-ui/common/ComponentUtils";
 import type { Tenant } from "./entities/Tenant";
 import type { EntityUtil } from "./EntityUtil";
 import type { TenantSettings } from "./interfaces/IPersistence";
@@ -145,10 +146,7 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
 
     private toEntityKeyData(tenants: T[]): EntityKeyData {
         return {
-            Tenant: tenants.reduce((obj, tenant) => {
-                obj[tenant.id!] = tenant;
-                return obj;
-            }, {} as Record<string, T>)
+            Tenant: toRecord(tenants, 'id')
         };
     }
 
