@@ -1,0 +1,33 @@
+import { EU } from "@/modules/data-sync/EntityUtil";
+import { HouseholdSchema } from "./Household";
+import { MoneyAccountSchema } from "./MoneyAccount";
+import { SettingSchema } from "./Setting";
+import { TagSchema } from "./Tag";
+import { TransactionSchema, type Transaction } from "./Transaction";
+import { type EntityConfigMap } from "./types";
+import { UserAccountSchema } from "./UserAccount";
+
+export const util = EU
+    .register("MoneyAccount", MoneyAccountSchema)
+    .register("Setting", SettingSchema)
+    .register("Tag", TagSchema)
+    .register("Tenant", HouseholdSchema)
+    .register("Transaction", TransactionSchema)
+    .register("UserAccount", UserAccountSchema)
+    ;
+
+export const EntityName = util.entityNames();
+
+export const EntityConfig: EntityConfigMap<typeof util> = {
+    // Core system entities
+    Metadata: { scope: 'global' },
+    MoneyAccount: { scope: 'global' },
+    Setting: { scope: 'global' },
+    Tag: { scope: 'global' },
+    Tenant: { scope: 'global' },
+    Transaction: {
+        scope: 'monthly',
+        getKeyDate: (entity: Transaction) => entity.transactionAt
+    },
+    UserAccount: { scope: 'global' },
+};
