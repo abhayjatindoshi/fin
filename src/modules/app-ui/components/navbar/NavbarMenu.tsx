@@ -18,7 +18,7 @@ type MenuItem = {
 }
 
 const menu: MenuItem[] = [
-    { key: 'dashboard', label: 'Dashboard', url: '/dashboard', icon: Home },
+    { key: 'home', label: 'Home', url: '/home', icon: Home },
     { key: 'transactions', label: 'Transactions', url: '/transactions', icon: ArrowRightLeft },
     { key: 'budget', label: 'Budget', url: '/budget', icon: PieChart },
     { key: 'settings', label: 'Settings', url: '/settings', icon: Cog },

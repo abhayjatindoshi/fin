@@ -5,7 +5,9 @@ import DevImportPage from '../dev/pages/import/DevImportPage';
 import DevStorePage from '../dev/pages/store/DevStorePage';
 import { AppLoader } from './AppLoader';
 import BaseLayout from './components/layouts/BaseLayout';
-import Dashboard from './pages/Dashboard';
+import AboutPage from './pages/AboutPage';
+import BudgetPage from './pages/BudgetPage';
+import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import { RedirectTo } from './pages/RedirectTo';
 import SettingsPage from './pages/SettingsPage';
@@ -17,10 +19,12 @@ export default function AppRouter() {
             <Routes>
                 <Route path="/" element={<AppLoader />}>
                     <Route path="/:householdId" element={<BaseLayout />}>
-                        <Route index element={<RedirectTo to="dashboard" />} />
-                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route index element={<RedirectTo to="home" />} />
+                        <Route path="home" element={<HomePage />} />
                         <Route path="transactions" element={<TransactionsPage />} />
+                        <Route path="budget" element={<BudgetPage />} />
                         <Route path="settings" element={<SettingsPage />} />
+                        <Route path="about" element={<AboutPage />} />
                         <Route path="dev">
                             <Route index element={<DevPage />} />
                             <Route path="data-sync" element={<DevDataSyncPage />} />

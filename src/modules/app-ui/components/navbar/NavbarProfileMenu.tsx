@@ -2,7 +2,7 @@ import { useAuth } from "@/modules/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/modules/base-ui/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
 import { useTenant } from "@/modules/data-sync/providers/TenantProvider";
-import { CodeXml, LogOut, Settings } from "lucide-react";
+import { ArrowLeftRight, BookA, CodeXml, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ThemeSwitcher } from "../../common/ThemeSwitcher";
 import { useApp } from "../../providers/AppProvider";
@@ -36,9 +36,17 @@ const NavbarProfileMenu: React.FC = () => {
                         Dev Mode
                         <span className={`flex size-2 rounded-full ${devModeEnabled ? 'bg-green-500' : 'bg-red-500'} `} title={devModeEnabled ? "Enabled" : "Disabled"}></span>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/')}>
+                        <ArrowLeftRight />
+                        Switch Household
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/' + currentTenant?.id + '/settings')}>
                         <Settings />
                         Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/' + currentTenant?.id + '/about')}>
+                        <BookA />
+                        About
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
