@@ -19,7 +19,7 @@ const ImportComponent: React.FC = () => {
     }
 
     return <div
-        className="flex flex-row items-center gap-4 cursor-pointer hover:bg-muted/50 p-4"
+        className="rounded-lg w-48 flex flex-row items-center gap-4 cursor-pointer hover:bg-muted/50 p-4"
         onClick={() => inputRef.current?.click()}>
         <ImportIcon className="size-10" />
         <div className="flex flex-col items-center gap-1">
@@ -34,7 +34,10 @@ const ImportWidget: React.FC = () => {
     return <BaseWidget
         WidgetComponent={ImportComponent}
         WidgetSettings={() => <div>settings</div>}
-        resizeable={true} defaultSize={{ width: 190, height: 84 }}
+        resizeable={true} size={{
+            default: { width: 12, height: 5 },
+            min: { width: 12, height: 5 }
+        }}
     />;
 }
 

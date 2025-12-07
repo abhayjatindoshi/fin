@@ -161,6 +161,21 @@
   }
 }
 
+.react-resizable {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  bottom: 0;
+  right: 0;
+  background: wheat;
+  cursor: se-resize;
+}
+
 .grainy {
   position: relative;
 }
