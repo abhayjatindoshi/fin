@@ -19,7 +19,7 @@ const ImportComponent: React.FC = () => {
     }
 
     return <div
-        className="rounded-lg w-48 flex flex-row items-center gap-4 cursor-pointer hover:bg-muted/50 p-4"
+        className="w-48 h-20 rounded-lg flex flex-row items-center justify-center gap-4 cursor-pointer hover:bg-muted/50"
         onClick={() => inputRef.current?.click()}>
         <ImportIcon className="size-10" />
         <div className="flex flex-col items-center gap-1">
