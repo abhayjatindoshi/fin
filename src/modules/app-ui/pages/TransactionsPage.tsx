@@ -4,7 +4,9 @@ import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBo
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from "rxjs";
+import TransactionDetailView from "../components/transactions/TransactionDetailView";
 import TransactionsCardView from "../components/transactions/TransactionsCardView";
 import TransactionsFilter, { type TransactionFilterOptions } from "../components/transactions/TransactionsFilter";
 import TransactionsTableView from "../components/transactions/TransactionsTableView";
@@ -14,6 +16,7 @@ const TransactionsPage: React.FC = () => {
 
     const { isMobile } = useApp();
     const { orchestrator } = useDataSync();
+    const { transactionId } = useParams();
     const filterSubject = new Subject<TransactionFilterOptions>();
     const [filter, setFilter] = useState<TransactionFilterOptions>({ sort: 'desc' });
     const [transactions, setTransactions] = useState<Array<Transaction> | null>(null);
@@ -61,19 +64,22 @@ const TransactionsPage: React.FC = () => {
     }, [filter]);
 
     return (
-        <div className="flex flex-col pb-4">
-            <TransactionsFilter filter={filter} setFilter={setFilter} />
-            {transactions == null ?
-                <Spinner className="m-auto justify-center" /> :
-                transactions.length === 0 ?
-                    <div className="flex flex-col items-center mt-12">
-                        <EmptyOpenBox className="mx-auto opacity-50 [&>svg]:size-12" animated={false} />
-                        <span className="text-muted-foreground mt-4">No transactions found</span>
-                    </div> :
-                    isMobile ?
-                        <TransactionsCardView transactions={transactions} forceUpdate={forceUpdate} /> :
-                        <TransactionsTableView transactions={transactions} forceUpdate={forceUpdate} />
-            }
+        <div className="flex flex-row gap-4">
+            {(!isMobile || !transactionId) && <div className="flex flex-col pb-4 flex-1">
+                <TransactionsFilter filter={filter} setFilter={setFilter} />
+                {transactions == null ?
+                    <Spinner className="m-auto justify-center" /> :
+                    transactions.length === 0 ?
+                        <div className="flex flex-col items-center mt-12">
+                            <EmptyOpenBox className="mx-auto opacity-50 [&>svg]:size-12" animated={false} />
+                            <span className="text-muted-foreground mt-4">No transactions found</span>
+                        </div> :
+                        isMobile ?
+                            <TransactionsCardView transactions={transactions} forceUpdate={forceUpdate} /> :
+                            <TransactionsTableView transactions={transactions} forceUpdate={forceUpdate} />
+                }
+            </div>}
+            {transactionId && <TransactionDetailView forceUpdate={forceUpdate} />}
         </div>
     );
 };

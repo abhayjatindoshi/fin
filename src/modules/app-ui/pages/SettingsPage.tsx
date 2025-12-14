@@ -25,7 +25,7 @@ const SettingsPage: React.FC = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="w-56 m-2 flex flex-row float-end">
-                                    {selectedCurrency.icon}
+                                    <selectedCurrency.icon />
                                     {selectedCurrency.name}
                                     <span className="grow" />
                                     <ChevronDown />

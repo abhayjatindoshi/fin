@@ -6,6 +6,7 @@ import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import moment from "moment";
 import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEntity } from "../../providers/EntityProvider";
 import BulkTagPrompt from "./BulkTagPrompt";
 import AccountCell from "./cells/AccountCell";
@@ -25,6 +26,8 @@ type TransactionsCardViewProps = {
 const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transactions, forceUpdate }) => {
     const { orchestrator } = useDataSync();
     const { accountMap } = useEntity();
+    const { householdId } = useParams();
+    const navigate = useNavigate();
 
     const [showTagPicker, setShowTagPicker] = useState<boolean>(false);
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -61,14 +64,15 @@ const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transaction
         forceUpdate();
     }
 
-    const openTagPicker = (tx: Transaction) => {
+    const openTagPicker = (e: React.MouseEvent, tx: Transaction) => {
+        e.stopPropagation();
         setSelectedTransaction(tx);
         setShowTagPicker(true);
     }
 
     const TransactionRow: React.FC<TransactionRowProps> = ({ item, transaction, style }) => {
         return <div key={item.key} data-index={item.index} style={style}>
-            <div key={transaction.id} className="flex flex-col rounded-xl border mx-4">
+            <div key={transaction.id} className="flex flex-col rounded-xl border mx-4" onClick={() => navigate(`/${householdId}/transactions/${transaction.id}`)}>
                 <div className="flex flex-row items-center justify-between gap-3 px-3 py-1">
                     <div className="flex-1"><DescriptionCell transaction={transaction} className="p-0" /></div>
                     <div className="shrink-0"><DateCell date={transaction.transactionAt} /></div>
@@ -77,7 +81,7 @@ const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transaction
                 <div className="flex flex-row justify-between gap-3 p-3">
                     <div className="text-3xl"><AmountCell amount={transaction.amount} /></div>
                     <div className="flex flex-row gap-3 items-center">
-                        <TagCell tagId={transaction.tagId ?? null} onClick={() => openTagPicker(transaction)} />
+                        <TagCell tagId={transaction.tagId ?? null} onClick={(e) => openTagPicker(e, transaction)} />
                         {accountMap && <AccountCell account={accountMap[transaction.accountId]} />}
                     </div>
                 </div>
