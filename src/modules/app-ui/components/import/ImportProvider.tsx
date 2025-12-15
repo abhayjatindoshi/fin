@@ -5,7 +5,7 @@ import Dropzone from "./Dropzone";
 import ImportPage from "./ImportPage";
 
 interface ImportContextProps {
-    import: (file: File[]) => Promise<void>;
+    importFiles: (file: File[]) => Promise<void>;
     status: 'idle' | 'importing';
     enabled: boolean;
     setEnabled: (enabled: boolean) => void;
@@ -35,7 +35,7 @@ export const ImportProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
 
     return (
         <ImportContext.Provider value={{
-            import: importFiles,
+            importFiles,
             status: showImportModal ? 'importing' : 'idle',
             enabled, setEnabled
         }}>

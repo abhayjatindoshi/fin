@@ -156,9 +156,34 @@
     scrollbar-color: color-mix(in oklab, var(--border) 40%, var(--foreground) 10%) transparent;
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
   }
+}
+
+.react-resizable {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  display: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border-right: 2px solid var(--muted-foreground);
+  border-bottom: 2px solid var(--muted-foreground);
+  clip-path: rect(15px 40px 40px 15px);
+  bottom: -2px;
+  right: -2px;
+  cursor: se-resize;
+}
+
+.react-resizable:hover .react-resizable-handle {
+  display: block;
 }
 
 .grainy {

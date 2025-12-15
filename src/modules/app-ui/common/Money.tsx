@@ -1,8 +1,12 @@
 import { Minus, Plus } from "lucide-react";
 import { useApp } from "../providers/AppProvider";
-import Currency from "./Currency";
+import Currency, { CurrencyCode } from "./Currency";
 
-const Money = ({ amount }: { amount: number }) => {
+type MoneyProps = {
+    amount: number;
+}
+
+const Money: React.FC<MoneyProps> = ({ amount }) => {
 
     const { settings } = useApp();
     const currency = settings?.['transaction.defaultCurrencyCode'] ?? 'INR';
@@ -13,8 +17,8 @@ const Money = ({ amount }: { amount: number }) => {
 
     return <div className="flex flex-row items-center">
         <span>{Symbol}</span>
-        <span><Currency code={currency} variant="icon" /></span>
-        <span className="truncate">{Intl.NumberFormat().format(Math.abs(amount))}</span>
+        <span><Currency code={currency} variant="icon" className="size-3 mb-2" /></span>
+        <span className="truncate">{Intl.NumberFormat(CurrencyCode[currency].locale).format(Math.abs(amount))}</span>
     </div>;
 }
 
