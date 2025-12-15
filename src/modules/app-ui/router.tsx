@@ -21,9 +21,7 @@ export default function AppRouter() {
                     <Route path="/:householdId" element={<BaseLayout />}>
                         <Route index element={<RedirectTo to="home" />} />
                         <Route path="home" element={<HomePage />} />
-                        <Route path="transactions" element={<TransactionsPage />}>
-                            <Route path=":transactionId" element={<TransactionsPage />} />
-                        </Route>
+                        <Route path="transactions" element={<TransactionsPage />} />
                         <Route path="budget" element={<BudgetPage />} />
                         <Route path="settings" element={<SettingsPage />} />
                         <Route path="about" element={<AboutPage />} />

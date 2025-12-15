@@ -4,7 +4,6 @@ import EmptyOpenBox from "@/modules/base-ui/components/illustrations/EmptyOpenBo
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from "rxjs";
 import TransactionDetailView from "../components/transactions/TransactionDetailView";
 import TransactionsCardView from "../components/transactions/TransactionsCardView";
@@ -16,10 +15,10 @@ const TransactionsPage: React.FC = () => {
 
     const { isMobile } = useApp();
     const { orchestrator } = useDataSync();
-    const { transactionId } = useParams();
     const filterSubject = new Subject<TransactionFilterOptions>();
     const [filter, setFilter] = useState<TransactionFilterOptions>({ sort: 'desc' });
     const [transactions, setTransactions] = useState<Array<Transaction> | null>(null);
+    const [detailedTransactionId, setDetailedTransactionId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!orchestrator) return;
@@ -65,7 +64,7 @@ const TransactionsPage: React.FC = () => {
 
     return (
         <div className="flex flex-row gap-4">
-            {(!isMobile || !transactionId) && <div className="flex flex-col pb-4 flex-1">
+            <div className={`${isMobile && detailedTransactionId ? 'hidden' : 'flex'} flex-col pb-4 flex-1`}>
                 <TransactionsFilter filter={filter} setFilter={setFilter} />
                 {transactions == null ?
                     <Spinner className="m-auto justify-center" /> :
@@ -75,11 +74,22 @@ const TransactionsPage: React.FC = () => {
                             <span className="text-muted-foreground mt-4">No transactions found</span>
                         </div> :
                         isMobile ?
-                            <TransactionsCardView transactions={transactions} forceUpdate={forceUpdate} /> :
-                            <TransactionsTableView transactions={transactions} forceUpdate={forceUpdate} />
+                            <TransactionsCardView
+                                transactions={transactions}
+                                forceUpdate={forceUpdate}
+                                detailedTransactionId={detailedTransactionId}
+                                setDetailedTransactionId={setDetailedTransactionId} /> :
+                            <TransactionsTableView
+                                transactions={transactions}
+                                forceUpdate={forceUpdate}
+                                detailedTransactionId={detailedTransactionId}
+                                setDetailedTransactionId={setDetailedTransactionId} />
                 }
-            </div>}
-            {transactionId && <TransactionDetailView forceUpdate={forceUpdate} />}
+            </div>
+            {detailedTransactionId && <TransactionDetailView
+                transactionId={detailedTransactionId}
+                forceUpdate={forceUpdate}
+                close={() => setDetailedTransactionId(null)} />}
         </div>
     );
 };

@@ -1,61 +1,44 @@
-import { EntityName, util } from "@/modules/app/entities/entities";
-import type { Transaction } from "@/modules/app/entities/Transaction";
+import { TransactionService } from "@/modules/app/services/TransactionService";
 import { Button } from "@/modules/base-ui/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
-import type { QueryOptions } from "@/modules/data-sync/interfaces/QueryOptions";
-import type { EntityNameOf } from "@/modules/data-sync/interfaces/types";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
-import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
 import { ArrowDown, ArrowUp, ChevronDown } from "lucide-react";
-import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Money from "../../common/Money";
-import { useApp } from "../../providers/AppProvider";
 import BaseWidget from "./BaseWidget";
 
 const MoneyFlowComponent: React.FC = () => {
 
     const { orchestrator } = useDataSync();
-    const { settings } = useApp();
-    const [year, setYear] = useState<number>(new Date().getFullYear());
+    const service = useRef(new TransactionService());
+    const [year, setYear] = useState<number | null>(null);
     const [moneyIn, setMoneyIn] = useState<number | null>(0);
     const [moneyOut, setMoneyOut] = useState<number | null>(0);
 
     const fetchData = useCallback(async () => {
-        if (!orchestrator || !settings) return;
-        const firstMonth = parseInt(settings["calendar.firstMonth"]);
-        if (isNaN(firstMonth)) return;
-        const today = new Date();
-        if (firstMonth > today.getMonth()) {
-            setYear(today.getFullYear() - 1);
-        }
-
-        const startDate = moment().year(year).month(firstMonth).startOf('month');
-        const endDate = startDate.clone().add(11, 'months').endOf('month');
-
-        const years = Array.from({ length: endDate.year() - startDate.year() + 1 }, (_, i) => startDate.year() + i);
-
         let totalIn = 0;
         let totalOut = 0;
 
-        const query = { years } as QueryOptions<typeof util, EntityNameOf<typeof util>> & { dateStrategyOptions?: DateStrategyOptions };
-        const repo = orchestrator.repo(EntityName.Transaction);
-        const transactions = await repo.getAll(query) as Array<Transaction>;
-        transactions
-            .filter(t => t.transactionAt >= startDate.toDate() && t.transactionAt <= endDate.toDate())
-            .forEach(t => {
-                if (t.amount > 0) {
-                    totalIn += t.amount;
-                } else {
-                    totalOut += t.amount;
-                }
-            });
+        if (!year) return;
+        const transactions = await service.current.getTransactionsForYear(year!);
+        transactions.forEach(t => {
+            if (t.amount > 0) {
+                totalIn += t.amount;
+            } else {
+                totalOut += t.amount;
+            }
+        });
 
         setMoneyIn(totalIn);
         setMoneyOut(totalOut);
 
-    }, [orchestrator, year, settings]);
+    }, [year]);
+
+    useEffect(() => {
+        if (!orchestrator) return;
+        service.current.getCurrentYear().then(setYear);
+    }, [orchestrator, service.current]);
 
     useEffect(() => {
         fetchData();
@@ -69,12 +52,12 @@ const MoneyFlowComponent: React.FC = () => {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="self-end">
-                        {year} <ChevronDown />
+                        {year === null ? <Spinner /> : year} <ChevronDown />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-secondary/50 backdrop-blur-xs">
-                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                        <DropdownMenuItem key={year} onSelect={() => setYear(year)}>{year}</DropdownMenuItem>
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                        <DropdownMenuCheckboxItem key={y} checked={year === y} onSelect={() => setYear(y)}>{y}</DropdownMenuCheckboxItem>
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
