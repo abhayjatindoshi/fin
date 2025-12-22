@@ -248,3 +248,19 @@
   /* border: 0.1rem solid oklch(from var(--foreground) l c h / 0.1); */
   background-color: oklch(from var(--foreground) l c h);
 }
+
+@layer utilities {
+  .animate-scale-in {
+    transform-origin: left;
+    animation: scale-in 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes scale-in {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}

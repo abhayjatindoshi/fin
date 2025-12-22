@@ -6,11 +6,11 @@ import DevStorePage from '../dev/pages/store/DevStorePage';
 import { AppLoader } from './AppLoader';
 import BaseLayout from './components/layouts/BaseLayout';
 import AboutPage from './pages/AboutPage';
-import BudgetPage from './pages/BudgetPage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import { RedirectTo } from './pages/RedirectTo';
 import SettingsPage from './pages/SettingsPage';
+import SpendsPage from './pages/SpendsPage';
 import TransactionsPage from './pages/TransactionsPage';
 
 export default function AppRouter() {
@@ -22,7 +22,7 @@ export default function AppRouter() {
                         <Route index element={<RedirectTo to="home" />} />
                         <Route path="home" element={<HomePage />} />
                         <Route path="transactions" element={<TransactionsPage />} />
-                        <Route path="budget" element={<BudgetPage />} />
+                        <Route path="spends" element={<SpendsPage />} />
                         <Route path="settings" element={<SettingsPage />} />
                         <Route path="about" element={<AboutPage />} />
                         <Route path="dev">

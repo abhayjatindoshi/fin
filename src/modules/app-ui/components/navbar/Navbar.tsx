@@ -12,7 +12,7 @@ const Navbar: React.FC<NavbarProps> = ({ className, isMobile = false }: NavbarPr
     const themeClasses = 'border h-12 px-3 py-1 rounded-3xl bg-secondary/50 backdrop-blur';
 
     return (
-        <div className={`flex flex-row items-center gap-2 ${className}`}>
+        <div className={`flex flex-row items-center gap-2 ${className} z-20`}>
             <NavbarLogo className={themeClasses} />
             <div className="flex-grow" />
             {!isMobile && <NavbarHouseholdPicker className={themeClasses} />}

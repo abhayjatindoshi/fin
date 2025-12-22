@@ -19,7 +19,7 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({ open, onOpenChange,
     if (isMobile) {
         return <Drawer open={open} onOpenChange={onOpenChange}>
             {trigger && <DrawerTrigger>{trigger}</DrawerTrigger>}
-            <DrawerContent>
+            <DrawerContent className="px-4 pb-4">
                 <DrawerHeader>
                     {title && <DrawerTitle>{title}</DrawerTitle>}
                     {description && <DrawerDescription>{description}</DrawerDescription>}
