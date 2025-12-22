@@ -1,10 +1,12 @@
 import type { QueryOptions } from "@/modules/data-sync/interfaces/QueryOptions";
 import type { EntityNameOf } from "@/modules/data-sync/interfaces/types";
 import type { DateStrategyOptions } from "@/modules/data-sync/strategies/EntityKeyDateStrategy";
+import moment from "moment";
 import { stringSimilarity } from 'string-similarity-js';
 import type { Transaction } from "../entities/Transaction";
 import { EntityName, type util } from "../entities/entities";
 import { BaseService } from "./BaseService";
+import { SettingService } from "./SettingService";
 
 type SearchIndex = {
     upiIds: string[];
@@ -22,6 +24,27 @@ export class TransactionService extends BaseService {
         const searchIndices = transactions.map(this.createSearchIndex.bind(this));
         const similarity = searchIndices.map(t => this.getSimilarityScore(sourceSearchIndex, t));
         return transactions.filter((_, i) => similarity[i] > 0.8);
+    }
+
+    async getCurrentYear(): Promise<number> {
+        const firstMonth = await new SettingService().get("calendar.firstMonth").then(val => parseInt(val)).catch(() => 0);
+        const today = new Date();
+        if (firstMonth > today.getMonth()) {
+            return today.getFullYear() - 1;
+        }
+        return today.getFullYear();
+    }
+
+    async getTransactionsForYear(year: number): Promise<Transaction[]> {
+        const firstMonth = await new SettingService().get("calendar.firstMonth").then(val => parseInt(val)).catch(() => 0);
+        const repo = this.repository(EntityName.Transaction);
+
+        const startDate = moment().year(year).month(firstMonth).startOf('month');
+        const endDate = startDate.clone().add(11, 'months').endOf('month');
+        const years = Array.from({ length: endDate.year() - startDate.year() + 1 }, (_, i) => startDate.year() + i);
+        const query = { years } as QueryOptions<typeof util, EntityNameOf<typeof util>> & { dateStrategyOptions?: DateStrategyOptions };
+        const transactions = await repo.getAll(query) as Array<Transaction>;
+        return transactions.filter(t => t.transactionAt >= startDate.toDate() && t.transactionAt <= endDate.toDate());
     }
 
     private upiRegex = /([a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64})/g;

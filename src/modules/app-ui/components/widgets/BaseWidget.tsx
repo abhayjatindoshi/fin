@@ -25,29 +25,29 @@ type BaseWidgetProps = {
     resizeable?: boolean;
 }
 
-const remFactor = 16;
-const defaultSize: WidgetSizeProps = {
-    default: { width: 8, height: 6 },
-    min: { width: 2, height: 2 },
-    max: { width: 20, height: 20 },
-};
-
-const setDefaults = (size?: Partial<WidgetSizeProps>): WidgetSizeProps => {
-    size = size || defaultSize;
-    size.default = size.default || defaultSize.default;
-    size.min = size.min || defaultSize.min;
-    return size as WidgetSizeProps;
-}
+// const remFactor = 16;
+// const defaultSize: WidgetSizeProps = {
+//     default: { width: 8, height: 6 },
+//     min: { width: 2, height: 2 },
+//     max: { width: 20, height: 20 },
+// };
+// 
+// const setDefaults = (size?: Partial<WidgetSizeProps>): WidgetSizeProps => {
+//     size = size || defaultSize;
+//     size.default = size.default || defaultSize.default;
+//     size.min = size.min || defaultSize.min;
+//     return size as WidgetSizeProps;
+// }
 
 const BaseWidget: React.FC<BaseWidgetProps> = ({
     WidgetSettings, WidgetComponent,
-    size,
-    resizeable
+    // size,
+    // resizeable
 }) => {
     const [showSettings, setShowSettings] = useState<boolean>(false);
     const componentRef = useRef<HTMLDivElement>(null);
 
-    const widgetSize = setDefaults(size);
+    // const widgetSize = setDefaults(size);
 
     return <div className="group flex flex-row gap-1">
         {/* <ResizableBox

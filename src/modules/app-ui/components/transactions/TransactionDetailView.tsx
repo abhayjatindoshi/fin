@@ -7,7 +7,6 @@ import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { ArrowDownCircle, ArrowLeft, ArrowUpCircle, Calendar, Download, File, NotebookPen, PencilLine, X } from "lucide-react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import AccountNumber from "../../common/AccountNumber";
 import { useApp } from "../../providers/AppProvider";
 import { useEntity } from "../../providers/EntityProvider";
@@ -17,16 +16,15 @@ import TagCell from "./cells/TagCell";
 import { TagPicker } from "./TagPicker";
 
 type TransactionDetailViewProps = {
+    transactionId: string;
     forceUpdate: () => void;
+    close: () => void;
 }
 
-const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ forceUpdate }) => {
-
+const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transactionId, forceUpdate, close }) => {
     const { accountMap } = useEntity();
     const { orchestrator } = useDataSync();
     const { isMobile } = useApp();
-    const { householdId, transactionId } = useParams();
-    const navigate = useNavigate();
 
     const [transaction, setTransaction] = useState<Transaction | null>(null);
     const [showTagPicker, setShowTagPicker] = useState<boolean>(false);
@@ -159,10 +157,10 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ forceUpda
 
     return <>
         {isMobile ? <div className="py-4">
-            <ArrowLeft onClick={() => navigate(`/${householdId}/transactions`)} className="m-4 cursor-pointer" />
+            <ArrowLeft onClick={() => close()} className="m-4 cursor-pointer" />
             <TransactionDetailViewContent />
         </div> : <div className="sticky top-20 rounded-xl border w-96 h-[calc(100vh-6rem)] overflow-y-auto ">
-            <X onClick={() => navigate(`/${householdId}/transactions`)} className="ml-auto cursor-pointer m-2" />
+            <X onClick={() => close()} className="ml-auto cursor-pointer m-2" />
             <TransactionDetailViewContent />
         </div>}
 

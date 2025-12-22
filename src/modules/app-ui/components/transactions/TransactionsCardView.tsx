@@ -6,7 +6,6 @@ import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import moment from "moment";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { useEntity } from "../../providers/EntityProvider";
 import BulkTagPrompt from "./BulkTagPrompt";
 import AccountCell from "./cells/AccountCell";
@@ -21,13 +20,13 @@ import TransactionVirtualizer from "./TransactionVirtualizer";
 type TransactionsCardViewProps = {
     transactions: Array<Transaction>;
     forceUpdate: () => void;
+    detailedTransactionId: string | null;
+    setDetailedTransactionId: (id: string | null) => void;
 }
 
-const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transactions, forceUpdate }) => {
+const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transactions, forceUpdate, setDetailedTransactionId }) => {
     const { orchestrator } = useDataSync();
     const { accountMap } = useEntity();
-    const { householdId } = useParams();
-    const navigate = useNavigate();
 
     const [showTagPicker, setShowTagPicker] = useState<boolean>(false);
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -72,7 +71,7 @@ const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transaction
 
     const TransactionRow: React.FC<TransactionRowProps> = ({ item, transaction, style }) => {
         return <div key={item.key} data-index={item.index} style={style}>
-            <div key={transaction.id} className="flex flex-col rounded-xl border mx-4" onClick={() => navigate(`/${householdId}/transactions/${transaction.id}`)}>
+            <div key={transaction.id} className="flex flex-col rounded-xl border mx-4" onClick={() => setDetailedTransactionId(transaction.id ?? null)}>
                 <div className="flex flex-row items-center justify-between gap-3 px-3 py-1">
                     <div className="flex-1"><DescriptionCell transaction={transaction} className="p-0" /></div>
                     <div className="shrink-0"><DateCell date={transaction.transactionAt} /></div>

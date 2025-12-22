@@ -29,11 +29,11 @@ export type CurrencyCodeType = keyof typeof CurrencyCode;
 
 type CurrencyProps = {
     code: CurrencyCodeType;
-    variant: 'text' | 'icon';
+    variant?: 'text' | 'icon';
     className?: string;
 }
 
-const Currency: React.FC<CurrencyProps> = ({ code, variant, className }) => {
+const Currency: React.FC<CurrencyProps> = ({ code, variant = 'icon', className }) => {
     const currency = CurrencyCode[code];
     if (!currency) return null;
     if (variant === 'icon') {

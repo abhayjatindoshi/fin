@@ -6,7 +6,6 @@ import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { ChevronRight } from "lucide-react";
 import moment from "moment";
 import { useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { useEntity } from "../../providers/EntityProvider";
 import BulkTagPrompt from "./BulkTagPrompt";
 import AccountCell from "./cells/AccountCell";
@@ -20,13 +19,13 @@ import TransactionVirtualizer, { type TransactionRowProps, type TransactionTitle
 type TransactionsTableViewProps = {
     transactions: Array<Transaction>;
     forceUpdate: () => void;
+    detailedTransactionId: string | null;
+    setDetailedTransactionId: (id: string | null) => void;
 }
 
-const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transactions, forceUpdate }) => {
+const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transactions, forceUpdate, detailedTransactionId, setDetailedTransactionId }) => {
     const { orchestrator } = useDataSync();
     const { accountMap } = useEntity();
-    const { householdId, transactionId } = useParams();
-    const navigate = useNavigate();
 
     const popupAnchorPosition = useRef<DOMRect | undefined>(undefined);
 
@@ -80,11 +79,11 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
             hover:bg-muted/50 border
             ${first ? 'rounded-t-lg' : ''} 
             ${last ? 'rounded-b-lg' : ''}
-            ${transactionId === transaction.id && 'bg-secondary/80'}
+            ${detailedTransactionId === transaction.id && 'bg-secondary/80'}
             `;
 
         return <div key={item.key} data-index={item.index} style={style}>
-            <div key={transaction.id} className={className} onClick={() => navigate(`/${householdId}/transactions/${transaction.id}`)}>
+            <div key={transaction.id} className={className} onClick={() => setDetailedTransactionId(transaction.id ?? null)}>
                 {/* <div className="w-12"><Checkbox className="ml-3" /></div> */}
                 <div className="w-24 px-4"><DateCell date={transaction.transactionAt} /></div>
                 <div className="w-40 text-xl"><AmountCell amount={transaction.amount} /></div>
@@ -92,7 +91,7 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
                 <div className="w-48"><TagCell tagId={transaction.tagId ?? null} onClick={(e) => openTagPicker(e, transaction)} /></div>
                 <div className="w-24 flex flex-row justify-between items-center">
                     {accountMap && <AccountCell account={accountMap[transaction.accountId]} />}
-                    {transactionId === transaction.id && <ChevronRight className="text-muted-foreground mr-4" />}
+                    {detailedTransactionId === transaction.id && <ChevronRight className="text-muted-foreground mr-4" />}
                 </div>
             </div>
         </div>
@@ -105,7 +104,7 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
             ${active && `bg-secondary/50 backdrop-blur-sm rounded-full border px-4`}`;
 
         const positionClasses = `${active && 'fixed top-25 left-24 mt-4 w-[calc(100vw-12rem-10px)] z-10'}
-            ${transactionId && 'w-[calc(100vw-12rem-10px-25rem)]'}`;
+            ${detailedTransactionId && 'w-[calc(100vw-12rem-10px-25rem)]'}`;
 
         return <div key={item.key} data-index={item.index} style={style}>
             <div className={`flex flex-row justify-between ${positionClasses}`}>

@@ -20,7 +20,7 @@ type MenuItem = {
 const menu: MenuItem[] = [
     { key: 'home', label: 'Home', url: '/home', icon: Home },
     { key: 'transactions', label: 'Transactions', url: '/transactions', icon: ArrowRightLeft },
-    { key: 'budget', label: 'Budget', url: '/budget', icon: PieChart },
+    { key: 'spends', label: 'Spends', url: '/spends', icon: PieChart },
     { key: 'settings', label: 'Settings', url: '/settings', icon: Cog },
 ];
 
