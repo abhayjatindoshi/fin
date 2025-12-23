@@ -6,7 +6,7 @@ import svgr from 'vite-plugin-svgr'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/fin/",
+  base: "/",
   plugins: [react(), tailwindcss(), svgr()],
   resolve: {
     alias: {
@@ -17,7 +17,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: path.resolve(__dirname, "index.html"),
-        404: path.resolve(__dirname, "404.html"),
       }
     }
   },
