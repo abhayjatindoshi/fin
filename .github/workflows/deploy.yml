@@ -1,0 +1,41 @@
+name: deploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6.0.0
+
+      - name: node
+        uses: actions/setup-node@v6.0.0
+        with:
+          node-version: lts/*
+          cache: "npm"
+
+      - name: build
+        run: |
+          touch .env
+          echo "${{ secrets.ENV_FILE }}" >> .env
+          npm ci
+          npm run build
+
+      - name: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
