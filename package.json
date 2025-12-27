@@ -5,7 +5,9 @@
   "type": "module",
   "homepage": "https://fin.abhaylabs.workers.dev",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n \"vite,wrangler\" -c \"blue,yellow\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "vite",
+    "dev:backend": "wrangler dev",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -45,6 +47,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251225.0",
     "@eslint/css": "^0.11.0",
     "@eslint/js": "^9.35.0",
     "@tailwindcss/vite": "^4.1.13",
@@ -55,6 +58,7 @@
     "@types/react-resizable": "^3.0.8",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "eslint": "^9.35.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",

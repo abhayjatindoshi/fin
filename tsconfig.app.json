@@ -3,7 +3,8 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2023",
     "types": [
-      "vite-plugin-svgr/client"
+      "vite-plugin-svgr/client",
+      "@cloudflare/workers-types/2023-07-01",
     ],
     "useDefineForClassFields": true,
     "lib": [

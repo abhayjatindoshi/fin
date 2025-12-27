@@ -1,79 +1,49 @@
-import { Spinner } from "@/modules/base-ui/components/ui/spinner";
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { AuthConfigMap, AuthServiceMap } from "../app/AuthMap";
-import { util } from "../app/entities/entities";
-import { AppLogger } from "../app/logging/AppLogger";
-import { DateStrategy } from "../app/store/DateStrategy";
-import { LocalPersistence } from "../app/store/local/LocalPersistence";
-import { MemStore } from "../app/store/memory/MemStore";
 import { useAuth } from "../auth/AuthProvider";
-import { LoginComponent } from "../auth/LoginComponent";
 import { useDataSync } from "../data-sync/providers/DataSyncProvider";
-import { useTenant } from "../data-sync/providers/TenantProvider";
-import TenantSelectionComponent from "../data-sync/ui/TenantSelectionComponent";
-import Logo from "./common/Logo";
-import { ThemeSwitcher } from "./common/ThemeSwitcher";
 
 export const AppLoader: React.FC = () => {
-    const { currentUser, loading: authLoading, callback, token } = useAuth();
-    const { load: loadDataSync, orchestrator, unload, loading: dataSyncLoading } = useDataSync();
-    const { load: loadTenant, manager, currentTenant, setCurrentTenant, loading: tenantLoading } = useTenant();
+    const { currentUser } = useAuth();
+    const { orchestrator } = useDataSync();
     const { householdId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
 
-    const loading = dataSyncLoading || tenantLoading || authLoading;
+    const goToLogin = useCallback(() => {
+        const params = {
+            returnUrl: location.pathname
+        };
+        navigate('/auth/login?' + new URLSearchParams(params).toString());
+    }, [navigate, location]);
 
-    const cloudService = useMemo(() => {
-        if (!currentUser || !token) return null;
-        return AuthServiceMap[currentUser.type](token);
-    }, [currentUser, token]);
-
-    useEffect(() => {
-        const callbackUrls = Object.values(AuthConfigMap).map(c => c.callbackUrl);
-        if (callbackUrls.some(url => url && url.endsWith(location.pathname))) {
-            callback().then(() => navigate('/'));
+    const goToHouseholdSelection = useCallback(() => {
+        const params: Record<string, string> = {
+            returnUrl: location.pathname
+        };
+        if (householdId) {
+            params.householdId = householdId;
         }
-    }, [location])
+        navigate('/auth/households?' + new URLSearchParams(params).toString());
+    }, [navigate, location, householdId]);
 
     useEffect(() => {
-        if (!householdId || householdId != currentTenant?.id) {
-            setCurrentTenant(null);
-            unload();
+        if (!currentUser) {
+            return goToLogin();
         }
-    }, [householdId, currentTenant]);
 
-    useEffect(() => {
-        if (!householdId || !manager) return;
-        if (!currentTenant) {
-            manager.get(householdId)
-                .then(tenant => setCurrentTenant(tenant))
+        if (!orchestrator || orchestrator.ctx.tenant.id !== householdId) {
+            return goToHouseholdSelection();
         }
-    }, [householdId, currentTenant, manager, setCurrentTenant]);
 
-    useEffect(() => {
-        if (!cloudService) return;
-        loadTenant({
-            util: util,
-            store: MemStore.getInstance(),
-            logger: AppLogger.getInstance(),
-            local: new LocalPersistence(),
-            cloud: cloudService,
-            strategy: new DateStrategy(),
-        });
-    }, [cloudService, loadTenant]);
+    }, [currentUser, orchestrator, householdId, goToLogin, goToHouseholdSelection]);
 
     useEffect(() => {
         const beforeUnload = async (e: Event) => {
             if (!orchestrator) return;
             if (orchestrator.isDirty()) {
+                orchestrator.syncNow();
                 e.preventDefault();
-                unload();
-                if (location.pathname !== '/') {
-                    setCurrentTenant(null);
-                    navigate('/');
-                }
             }
         };
 
@@ -82,30 +52,8 @@ export const AppLoader: React.FC = () => {
         return () => {
             window.removeEventListener('beforeunload', beforeUnload);
         };
-    }, [orchestrator, unload]);
+    }, [orchestrator]);
 
-    useEffect(() => {
-        if (!manager || !cloudService || !currentTenant) return;
-        const newConfig = manager.getDataSyncConfig(currentTenant);
-        loadDataSync(newConfig);
-
-    }, [manager, cloudService, currentTenant, loadDataSync]);
-
-    if (householdId && orchestrator && householdId == currentTenant?.id && orchestrator.ctx.tenant.id == householdId) return <>
-        <Outlet />
-    </>;
-
-    return <div className="flex flex-col items-center h-full w-full">
-        <div className="absolute top-8 right-8">
-            <ThemeSwitcher />
-        </div>
-        <div className="mt-32 mb-8">
-            <Logo size="xl" />
-        </div>
-        {loading ? <Spinner /> :
-            !currentUser ? <LoginComponent /> :
-                !householdId ? <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => navigate('/' + tenant.id)} /> :
-                    <Spinner />
-        }
-    </div>
+    if (currentUser && orchestrator) return <Outlet />;
+    return <></>
 }

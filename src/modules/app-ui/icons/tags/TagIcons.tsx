@@ -1,6 +1,7 @@
 import { AppWindowIcon, ArmchairIcon, ArrowLeftRightIcon, BackpackIcon, BadgeIndianRupeeIcon, BadgeQuestionMarkIcon, BananaIcon, BanknoteArrowDownIcon, BanknoteArrowUpIcon, BedIcon, BeerIcon, BicepsFlexedIcon, BitcoinIcon, BookHeartIcon, BookmarkXIcon, BrickWallShieldIcon, BrushCleaningIcon, BuildingIcon, BusIcon, CableIcon, CalendarDaysIcon, CalendarIcon, CalendarSyncIcon, CameraIcon, CarFrontIcon, CarIcon, CarrotIcon, CarTaxiFrontIcon, ChartCandlestickIcon, ChefHatIcon, CigaretteIcon, CircleDollarSignIcon, CircleDotDashedIcon, CircleParkingIcon, ClapperboardIcon, CoffeeIcon, CoinsIcon, ConstructionIcon, CookieIcon, CornerDownLeftIcon, CreditCardIcon, CroissantIcon, CrossIcon, DiamondPercentIcon, DropletIcon, DrumstickIcon, DumbbellIcon, EyeClosedIcon, FlameIcon, FootprintsIcon, FuelIcon, Gamepad2Icon, GemIcon, GiftIcon, GlassesIcon, GlassWaterIcon, GraduationCapIcon, GrapeIcon, HamburgerIcon, HammerIcon, HandCoinsIcon, HandHelpingIcon, HandPlatterIcon, HandshakeIcon, HeartHandshakeIcon, HeartIcon, HeartPlusIcon, HospitalIcon, HouseHeartIcon, HouseIcon, IceCreamBowlIcon, LandmarkIcon, LaptopIcon, LibraryBigIcon, MicIcon, MilkIcon, MonitorPlayIcon, MotorbikeIcon, NewspaperIcon, PackageIcon, PaintRollerIcon, PaletteIcon, PartyPopperIcon, PawPrintIcon, PencilRulerIcon, PiggyBankIcon, PillBottleIcon, PillIcon, PizzaIcon, PlaneIcon, PrinterIcon, ReceiptIndianRupeeIcon, ReceiptTextIcon, RoseIcon, RotateCcwIcon, SaladIcon, SatelliteDishIcon, ScaleIcon, ScissorsIcon, ShieldUserIcon, ShirtIcon, ShoppingBagIcon, SofaIcon, SoupIcon, SparklesIcon, SproutIcon, StethoscopeIcon, SyringeIcon, TabletSmartphoneIcon, TentIcon, TentTreeIcon, TicketsIcon, ToyBrickIcon, TrainFrontIcon, TrainTrackIcon, TrendingUpDownIcon, TruckIcon, UserIcon, UtensilsIcon, VaultIcon, WalletIcon, WandSparklesIcon, WashingMachineIcon, WheatIcon, WifiIcon, WrenchIcon, ZapIcon } from 'lucide-react';
-import React, { memo } from 'react';
-import { siAirbnb, siApple, siGoogle, siGooglepay, siNetflix, siPaytm, siPhonepe, siSpotify, siSwiggy, siUber, siYoutube, siZomato, type SimpleIcon } from 'simple-icons';
+import React from 'react';
+import { siAirbnb, siApple, siGoogle, siGooglepay, siNetflix, siPaytm, siPhonepe, siSpotify, siSwiggy, siUber, siYoutube, siZomato } from 'simple-icons';
+import { createSimpleIcon } from '../helpers';
 import Amazon from './icons/amazon.svg?react';
 import { AutoIcon } from './icons/auto';
 import { BowlingIcon } from './icons/bowling';
@@ -23,29 +24,6 @@ import Upi from './icons/upi.svg?react';
 import { WhistleIcon } from './icons/whistle';
 import Zepto from './icons/zepto.svg?react';
 
-const createSimpleIcon = (icon: SimpleIcon) => {
-    const IconComponent: React.FC<React.SVGProps<SVGSVGElement>> = memo(({ ...props }) => {
-        return (
-            <svg
-                role="img"
-                viewBox="0 0 24 24" // simple-icons consistently use a 24x24 viewBox
-                width={24}
-                height={24}
-                // fill={`#${icon.hex}`} // Use the icon's primary color
-                fill="currentColor"
-                aria-label={icon.title} // Accessibility title
-                {...props} // Spread standard SVG props (className, onClick, etc.)
-            >
-                <title>{icon.title}</title>
-                <path d={icon.path} />
-            </svg>
-        );
-    });
-
-    IconComponent.displayName = `${icon.title}Icon`;
-    return IconComponent;
-}
-
 type TagIconComponentProps = React.SVGProps<SVGSVGElement> & {
     name: string;
 };
@@ -58,18 +36,18 @@ export const TagIconComponent: React.FC<TagIconComponentProps> = ({ name, ...pro
 const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
 
     // Simple Icons - brand logos
-    "airbnb": createSimpleIcon(siAirbnb),
-    "apple": createSimpleIcon(siApple),
-    "google": createSimpleIcon(siGoogle),
-    "googlepay": createSimpleIcon(siGooglepay),
-    "netflix": createSimpleIcon(siNetflix),
-    "paytm": createSimpleIcon(siPaytm),
-    "phonepe": createSimpleIcon(siPhonepe),
-    "spotify": createSimpleIcon(siSpotify),
-    "swiggy": createSimpleIcon(siSwiggy),
-    "uber": createSimpleIcon(siUber),
-    "youtube": createSimpleIcon(siYoutube),
-    "zomato": createSimpleIcon(siZomato),
+    "airbnb": createSimpleIcon(siAirbnb, 'currentColor'),
+    "apple": createSimpleIcon(siApple, 'currentColor'),
+    "google": createSimpleIcon(siGoogle, 'currentColor'),
+    "googlepay": createSimpleIcon(siGooglepay, 'currentColor'),
+    "netflix": createSimpleIcon(siNetflix, 'currentColor'),
+    "paytm": createSimpleIcon(siPaytm, 'currentColor'),
+    "phonepe": createSimpleIcon(siPhonepe, 'currentColor'),
+    "spotify": createSimpleIcon(siSpotify, 'currentColor'),
+    "swiggy": createSimpleIcon(siSwiggy, 'currentColor'),
+    "uber": createSimpleIcon(siUber, 'currentColor'),
+    "youtube": createSimpleIcon(siYoutube, 'currentColor'),
+    "zomato": createSimpleIcon(siZomato, 'currentColor'),
 
     // Custom brand icons
     "amazon": Amazon,

@@ -11,7 +11,7 @@ export class ImportMatrix {
     public static Adapters: Record<string, IImportAdapter> = {};
     public static AdapterBankData: Record<string, [IBank, IBankOffering]> = {};
 
-    static init() {
+    static {
         const banks: IBank[] = [
             new FederalBank(),
             new HdfcBank(),
@@ -33,6 +33,4 @@ export class ImportMatrix {
             });
         });
     }
-
-    static { ImportMatrix.init(); }
 }

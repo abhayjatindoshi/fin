@@ -1,6 +1,5 @@
 import type React from "react";
 import { useRef } from "react";
-import { AuthConfigMap } from "../app/AuthMap";
 import { AuthProvider } from "../auth/AuthProvider";
 import { ThemeProvider } from "../base-ui/components/theme-provider";
 import { DataSyncProvider } from "../data-sync/providers/DataSyncProvider";
@@ -18,7 +17,7 @@ export const App: React.FC = () => {
         <ThemeProvider defaultTheme='dark' storageKey='fin-ui-theme'>
             <div className="h-full grainy bg-gradient-to-br from-background to-muted/10">
                 <div ref={scrollElementRef} className="overflow-auto h-full">
-                    <AuthProvider config={Object.values(AuthConfigMap)} storageKey='fin-auth'>
+                    <AuthProvider>
                         <TenantProvider>
                             <DataSyncProvider>
                                 <AppProvider scrollElementRef={scrollElementRef}>

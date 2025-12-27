@@ -10,7 +10,7 @@ const BanksComponent: React.FC = () => {
 
     return <div className="rounded-lg flex flex-row items-center justify-center gap-4 overflow-auto">
         {accountMap && Object.values(accountMap).map(account => (
-            <div className="flex flex-row gap-4 items-center">
+            <div key={account.id} className="flex flex-row gap-4 items-center">
                 <ImportIconComponent name={ImportMatrix.Banks[account.bankId]?.display?.icon} className="size-12" />
                 <div className="flex flex-col min-w-36">
                     <span className="uppercase">{ImportMatrix.Banks[account.bankId]?.display?.name}</span>

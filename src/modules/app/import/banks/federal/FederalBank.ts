@@ -1,15 +1,13 @@
 import type { IBank } from "../../interfaces/IBank";
-import type { IBankDisplay } from "../../interfaces/IBankDisplay";
-import type { IBankOffering } from "../../interfaces/IBankOffering";
 import { FederalBankPdfAdapter } from "./FederalBankPdfAdapter";
 
 export class FederalBank implements IBank {
     id = 'federal';
-    display: IBankDisplay = {
+    display = {
         name: 'Federal Bank',
         icon: 'federal',
     }
-    offerings: IBankOffering[] = [
+    offerings = [
         {
             id: 'credit-card',
             display: {

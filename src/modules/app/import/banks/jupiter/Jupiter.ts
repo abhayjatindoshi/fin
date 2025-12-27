@@ -1,15 +1,13 @@
 import type { IBank } from "../../interfaces/IBank";
-import type { IBankDisplay } from "../../interfaces/IBankDisplay";
-import type { IBankOffering } from "../../interfaces/IBankOffering";
 import { JupiterPdfAdapter } from "./JupiterPdfAdapter";
 
 export class Jupiter implements IBank {
     id = 'jupiter';
-    display: IBankDisplay = {
+    display = {
         name: 'Jupiter',
         icon: 'jupiter',
     }
-    offerings: IBankOffering[] = [
+    offerings = [
         {
             id: 'upi-account',
             display: {

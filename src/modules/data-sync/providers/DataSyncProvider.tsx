@@ -11,8 +11,8 @@ type WindowWithOrchestrator = Window & {
 type DataSyncProviderState<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> = {
     orchestrator: DataOrchestrator<U, FilterOptions, T> | null,
     tenant: T | null,
-    load: (config: InputArgs<U, FilterOptions, T>) => void,
-    unload: () => void,
+    load: (config: InputArgs<U, FilterOptions, T>) => Promise<void>,
+    unload: () => Promise<void>,
     loading: boolean,
 }
 
