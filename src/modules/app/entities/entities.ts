@@ -4,6 +4,7 @@ import { BudgetLineSchema, type BudgetLine } from "./BudgetLine";
 import { HouseholdSchema } from "./Household";
 import { MoneyAccountSchema } from "./MoneyAccount";
 import { SettingSchema } from "./Setting";
+import { SyncSettingsSchema } from "./SyncSettings";
 import { TagSchema } from "./Tag";
 import { TransactionSchema, type Transaction } from "./Transaction";
 import { type EntityConfigMap } from "./types";
@@ -13,6 +14,7 @@ export const util = EU
     .register("BudgetLine", BudgetLineSchema)
     .register("MoneyAccount", MoneyAccountSchema)
     .register("Setting", SettingSchema)
+    .register("SyncSettings", SyncSettingsSchema)
     .register("Tag", TagSchema)
     .register("Tenant", HouseholdSchema)
     .register("Transaction", TransactionSchema)
@@ -30,6 +32,7 @@ export const EntityConfig: EntityConfigMap<typeof util> = {
     Metadata: { scope: 'global' },
     MoneyAccount: { scope: 'global' },
     Setting: { scope: 'global' },
+    SyncSettings: { scope: 'global' },
     Tag: { scope: 'global' },
     Tenant: { scope: 'global' },
     Transaction: {

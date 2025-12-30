@@ -62,7 +62,7 @@ export abstract class GoogleHandler implements IAuthHandler {
     private async refreshToken(token: IAuthToken): Promise<IAuthToken> {
         if (!token.refreshToken) throw new Error('No refresh token available');
         const params = new URLSearchParams({
-            Handler: this.id,
+            handler: this.id,
             token: token.refreshToken,
         });
 

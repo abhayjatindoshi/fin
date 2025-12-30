@@ -1,4 +1,5 @@
 import type { IAuthMailHandler } from "../../interfaces/features/IAuthMailHandler";
+import type { IAuthToken } from "../../interfaces/IAuthToken";
 import { GoogleHandler } from "./GoogleHandler";
 
 export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler {
@@ -6,6 +7,8 @@ export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler
     scopes = [
         'openid', 'email', 'profile',
         'https://www.googleapis.com/auth/gmail.readonly',
-        'https://www.googleapis.com/auth/gmail.send',
     ];
+    private API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me/messages';
+
+    async getMailListing(token: IAuthToken,)
 }
