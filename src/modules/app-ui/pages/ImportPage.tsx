@@ -4,6 +4,7 @@ import type { SyncSettings } from "@/modules/app/entities/SyncSettings";
 import { AuthService } from "@/modules/app/services/AuthService";
 import { EmailImportService } from "@/modules/app/services/EmailImportService";
 import { AuthMatrix } from "@/modules/auth/AuthMatrix";
+import type { GoogleMailHandler } from "@/modules/auth/handlers/google/GoogleMailHandler";
 import { Avatar, AvatarFallback, AvatarImage } from "@/modules/base-ui/components/ui/avatar";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
@@ -104,6 +105,13 @@ const ImportPage: React.FC = () => {
         }
     }
 
+    const doStuff = (account: AuthAccount) => {
+        const handler = AuthMatrix.FeatureHandlers['mail'][account.token.handlerId] as GoogleMailHandler;
+        handler.getMailListing(account.token).then(messages => {
+            console.log("Fetched messages: ", messages);
+        });
+    }
+
     return <div className="flex flex-col gap-2 items-start w-full">
         <div className="text-2xl font-semibold">Email Accounts</div>
         {Object.keys(AuthMatrix.FeatureHandlers['mail']).map((providerId) => {
@@ -130,8 +138,9 @@ const ImportPage: React.FC = () => {
                             <div className="text-sm mt-2">Added on {account.createdAt.toLocaleDateString()}</div>
 
                             <div className="flex flex-col items-center mt-4 gap-2 w-full">
+                                <Button variant="outline" onClick={() => doStuff(account)}>Do </Button>
                                 <Button variant="outline" onClick={() => openSettings(account)}>
-                                    {(account.id && syncSettingsMap[account.id]) ? "Edit settings" : "Configure sync"}
+                                    {(account.id && syncSettingsMap[account.id]) ? "Edit settings" : "Configure"}
                                 </Button>
                                 <Button variant="destructive" onClick={() => deleteAccount(account)}>
                                     Remove Account
