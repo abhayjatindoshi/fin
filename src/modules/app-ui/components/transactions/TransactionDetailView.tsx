@@ -4,7 +4,7 @@ import type { Transaction } from "@/modules/app/entities/Transaction";
 import { Separator } from "@/modules/base-ui/components/ui/separator";
 import { Textarea } from "@/modules/base-ui/components/ui/textarea";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
-import { ArrowDownCircle, ArrowLeft, ArrowUpCircle, Calendar, Download, File, NotebookPen, PencilLine, X } from "lucide-react";
+import { ArrowDownCircle, ArrowLeft, ArrowUpCircle, AtSign, Calendar, Download, File, NotebookPen, PencilLine, X } from "lucide-react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import AccountNumber from "../../common/AccountNumber";
@@ -146,8 +146,12 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
                     {transaction.source.type === 'file' ? <>
                         <span>{transaction.source.fileName}</span>
                         <File className="size-7" />
-                    </> : <div className="px-4 w-full text-wrap break-words">
-                        {transaction.source.email}
+                    </> : <div className="px-4 w-full text-wrap break-words flex flex-row gap-4 items-center">
+                        <AtSign className="size-7" />
+                        <div className="flex flex-col">
+                            <span>{transaction.source.emailMessage.from}</span>
+                            <span className="text-sm text-muted-foreground">{moment(transaction.source.emailMessage.date).format("DD MMMM YYYY")}</span>
+                        </div>
                     </div>}
                 </div>
             </>}

@@ -8,10 +8,17 @@ export const TransactionFileSourceSchema = z.object({
     fileName: z.string(),
 });
 
+export const SourceEmailSchema = z.object({
+    id: z.string(),
+    date: z.date(),
+    from: z.string(),
+    subject: z.string(),
+})
+
 export const TransactionEmailSourceSchema = z.object({
     type: z.literal('email'),
-    email: z.email(),
-    emailId: z.string(),
+    authAccountId: z.string(),
+    emailMessage: SourceEmailSchema,
 });
 
 export const TransactionSourceSchema = TransactionFileSourceSchema.or(TransactionEmailSourceSchema);

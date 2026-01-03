@@ -4,13 +4,13 @@ import type { SyncSettings } from "@/modules/app/entities/SyncSettings";
 import { AuthService } from "@/modules/app/services/AuthService";
 import { EmailImportService } from "@/modules/app/services/EmailImportService";
 import { AuthMatrix } from "@/modules/auth/AuthMatrix";
-import type { GoogleMailHandler } from "@/modules/auth/handlers/google/GoogleMailHandler";
 import { Avatar, AvatarFallback, AvatarImage } from "@/modules/base-ui/components/ui/avatar";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { ChevronDownIcon, Plus, TimerIcon } from "lucide-react";
+import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { unsubscribeAll } from "../common/ComponentUtils";
@@ -31,6 +31,7 @@ const ImportPage: React.FC = () => {
     const [interval, setInterval] = useState<number>(1);
     const [period, setPeriod] = useState<IntervalPeriod>('months');
     const [savingSettings, setSavingSettings] = useState<boolean>(false);
+    const [blobs, setBlobs] = useState<Blob[]>([]);
 
     useEffect(() => {
         if (!orchestrator) return;
@@ -105,18 +106,35 @@ const ImportPage: React.FC = () => {
         }
     }
 
-    const doStuff = (account: AuthAccount) => {
-        const handler = AuthMatrix.FeatureHandlers['mail'][account.token.handlerId] as GoogleMailHandler;
-        handler.getMailListing(account.token).then(messages => {
-            console.log("Fetched messages: ", messages);
-        });
+    const doStuff = async (account: AuthAccount) => {
+        // const handler = AuthMatrix.FeatureHandlers['mail'][account.token.handlerId] as IAuthMailHandler;
+        // const token = await service.getValidToken(account.token, householdId);
+        // const messages = await handler.fetchMessages(token, ['19adadd45c21ef71']);
+        // const pdfAttachments = await Promise.all(messages.flatMap(m => m.attachments
+        //     .filter(a => a.mimeType === 'application/pdf')
+        //     .map(a => handler.fetchAttachment(token, m.id, a.id))));
+        // setBlobs(pdfAttachments);
+        if (!account.id) return;
+        await importService.syncNow(account.id);
+    }
+
+    const SyncStatus: React.FC<{ accountId: string }> = ({ accountId }) => {
+        const settings = syncSettingsMap[accountId];
+        if (!settings) return null;
+
+        const status = settings.syncStatus;
+        if (!status) return null;
+
+        return <>
+            {status.lastSyncAt && <div className="text-sm mt-2">Last synced {moment(status.lastSyncAt).fromNow()}</div>}
+        </>;
     }
 
     return <div className="flex flex-col gap-2 items-start w-full">
         <div className="text-2xl font-semibold">Email Accounts</div>
         {Object.keys(AuthMatrix.FeatureHandlers['mail']).map((providerId) => {
             const display = AuthMatrix.HandlerDisplay[providerId];
-            return <>
+            return <div key={providerId}>
                 <div key={`${providerId}-title`} className="flex flex-row gap-2 items-center w-full">
                     <display.icon className="size-6" />
                     <div className="text-xl">{display.name}</div>
@@ -136,9 +154,9 @@ const ImportPage: React.FC = () => {
                             <div className="text-lg">{account.user.name}</div>
                             <div className="text-muted-foreground text-sm">{account.user.email}</div>
                             <div className="text-sm mt-2">Added on {account.createdAt.toLocaleDateString()}</div>
-
+                            {account.id && <SyncStatus accountId={account.id} />}
                             <div className="flex flex-col items-center mt-4 gap-2 w-full">
-                                <Button variant="outline" onClick={() => doStuff(account)}>Do </Button>
+                                <Button variant="outline" onClick={() => doStuff(account)}>Sync Now </Button>
                                 <Button variant="outline" onClick={() => openSettings(account)}>
                                     {(account.id && syncSettingsMap[account.id]) ? "Edit settings" : "Configure"}
                                 </Button>
@@ -149,8 +167,24 @@ const ImportPage: React.FC = () => {
                         </div>
                     ))}
                 </div>}
-            </>
+            </div>
         })}
+
+        {blobs.length > 0 && <div>
+            <div className="text-2xl font-semibold mt-8">Fetched Attachments</div>
+            <div className="flex flex-row flex-wrap gap-4 mt-4">
+                {blobs.map((blob, index) => (
+                    <a
+                        key={index}
+                        href={URL.createObjectURL(blob)}
+                        download={`attachment_${index}.pdf`}
+                        className="block border rounded p-2"
+                    >
+                        Attachment {index + 1}
+                    </a>
+                ))}
+            </div>
+        </div>}
 
         <ResponsiveDialog title="Settings" open={selectedAccount !== null} onOpenChange={() => setSelectedAccount(null)}>
             <div className="flex flex-col items-start gap-2">

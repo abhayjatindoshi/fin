@@ -78,7 +78,7 @@ export class SyncScheduler<U extends EntityUtil<SchemaMap>, T extends Tenant> {
         const item = this.queue.shift();
         if (item) {
             const time = new Date();
-            this.logger.i(this.constructor.name, `Starting sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
+            this.logger.v(this.constructor.name, `Starting sync [${item.source.constructor.name}] -> [${item.target.constructor.name}]`, item);
             try {
                 const sourceVersion = this.dirtyTracker.getVersion(item.source);
                 await SyncHandler.sync({
@@ -91,7 +91,7 @@ export class SyncScheduler<U extends EntityUtil<SchemaMap>, T extends Tenant> {
                 });
                 this.dirtyTracker.setVersion(item.target, sourceVersion);
                 item.resolve();
-                this.logger.i(this.constructor.name, `Completed sync [${item.source.constructor.name}] -> [${item.target.constructor.name}] time: ${new Date().getTime() - time.getTime()}ms`, item);
+                this.logger.v(this.constructor.name, `Completed sync [${item.source.constructor.name}] -> [${item.target.constructor.name}] time: ${new Date().getTime() - time.getTime()}ms`, item);
             } catch (err) {
                 item.reject(err);
                 this.logger.e(this.constructor.name, `Sync failed [${item.source.constructor.name}] -> [${item.target.constructor.name}] time: ${new Date().getTime() - time.getTime()}ms`, { error: err, item });

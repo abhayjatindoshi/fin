@@ -142,7 +142,7 @@ export class ImportService extends BaseService {
         }
     }
 
-    private async findMatchingAccounts(bank: IBank, offering: IBankOffering, importData: ImportData): Promise<MoneyAccount[]> {
+    async findMatchingAccounts(bank: IBank, offering: IBankOffering, importData: ImportData): Promise<MoneyAccount[]> {
         const accountRepo = this.repository(EntityName.MoneyAccount);
         const allAccounts = await accountRepo.getAll() as MoneyAccount[];
         const matchingAccounts = allAccounts
@@ -160,7 +160,7 @@ export class ImportService extends BaseService {
         } as MoneyAccount];
     }
 
-    private async parseTransactions(transactions: ImportedTransaction[]): Promise<ImportedTransaction[]> {
+    async parseTransactions(transactions: ImportedTransaction[]): Promise<ImportedTransaction[]> {
         const years = Array.from(new Set(transactions.map(tx => tx.date.getFullYear())));
         const allTransactions = await this.repository(EntityName.Transaction).getAll({ years: years }) as Transaction[];
         await Promise.all(transactions.map(async tx => {

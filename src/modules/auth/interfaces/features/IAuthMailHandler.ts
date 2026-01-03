@@ -1,4 +1,10 @@
+import type { IAuthToken } from "../IAuthToken";
 import type { IAuthFeatureHandler } from "./IAuthFeatureHandler";
+
+export type MailListing = {
+    messages: MailMessage[];
+    nextPageToken?: string;
+}
 
 export type MailMessage = {
     id: string;
@@ -21,4 +27,7 @@ export type MailAttachment = {
 
 export interface IAuthMailHandler extends IAuthFeatureHandler {
     featureName: 'mail';
+    getMailListing(token: IAuthToken, emailsBefore?: { date: Date, id: string }, nextToken?: string): Promise<MailListing>;
+    fetchMessages(token: IAuthToken, messageIds: string[]): Promise<MailMessage[]>;
+    fetchAttachment(token: IAuthToken, messageId: string, attachment: MailAttachment): Promise<File>;
 }

@@ -51,11 +51,11 @@ export class AuthService extends BaseService {
         return user;
     }
 
-    async getValidToken(token: IAuthToken): Promise<IAuthToken> {
-        const tokenStr = `token-${token.handlerId}-${token.featureName}-${token.refreshToken}-${token.expiry.getTime()}`;
+    async getValidToken(token: IAuthToken, householdId?: string): Promise<IAuthToken> {
+        const tokenStr = `token-${token.handlerId}-${token.featureName}-${token.refreshToken}-${householdId || ''}-${token.expiry.getTime()}`;
         const hash = Utils.generateHash(tokenStr);
         if (!AuthService.validTokenPromises[hash]) {
-            AuthService.validTokenPromises[hash] = this.getValidTokenPromise(token);
+            AuthService.validTokenPromises[hash] = this.getValidTokenPromise(token, householdId);
         }
         return AuthService.validTokenPromises[hash];
     }
@@ -70,11 +70,21 @@ export class AuthService extends BaseService {
         return Utils.parseJson<IAuthToken>(token);
     }
 
-    private async getValidTokenPromise(token: IAuthToken): Promise<IAuthToken> {
+    private async getValidTokenPromise(token: IAuthToken, householdId?: string): Promise<IAuthToken> {
         const handler = AuthMatrix.Handlers[token.handlerId];
         if (!handler) throw new Error('Invalid auth handler');
         const validToken = await handler.getValidToken(token);
-        this.storeLocalItem<IAuthToken>(this.authKey, validToken);
+        if (householdId) {
+            const repo = this.repository(EntityName.AuthAccount);
+            const accounts = await repo.getAll() as Array<AuthAccount>;
+            const account = accounts.find(a => a.token.handlerId === validToken.handlerId && a.token.refreshToken === validToken.refreshToken);
+            if (account) {
+                account.token = validToken;
+                repo.save({ ...account });
+            }
+        } else {
+            this.storeLocalItem<IAuthToken>(this.authKey, validToken);
+        }
         return validToken;
     }
 

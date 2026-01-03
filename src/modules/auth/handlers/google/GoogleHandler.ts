@@ -69,7 +69,9 @@ export abstract class GoogleHandler implements IAuthHandler {
         const response = await fetch(`/api/token?${params.toString()}`, {
             method: 'POST'
         }).then(res => res.json<TokenResponse>());
-        return this.parseToken(response);
+        const newToken = this.parseToken(response);
+        newToken.refreshToken = token.refreshToken;
+        return newToken;
     }
 
     async getUser(token: IAuthToken): Promise<IAuthUser> {

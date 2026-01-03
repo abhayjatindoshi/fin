@@ -24,7 +24,7 @@ export class EntityUtils {
     public static parseTransactionDateFilter(
         key: keyof typeof TransactionDateFilterOptions,
         settings: Record<SettingKeys, string>
-    ): { label: string, startDate: Date, endDate?: Date } {
+    ): { label: string, startDate: Date, endDate?: Date, hint?: string } {
 
         const now = moment();
         const firstDayOfWeek = parseInt(settings["calendar.firstDay"] ?? '0');
@@ -47,21 +47,25 @@ export class EntityUtils {
             }
             case 'this_month': {
                 const startDate = now.clone().startOf('month');
-                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate() };
+                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), hint: `${startDate.format('MMM YYYY')}` };
             }
             case 'last_month': {
                 const startDate = now.clone().subtract(1, 'month').startOf('month');
                 const endDate = startDate.clone().endOf('month');
-                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), endDate: endDate.toDate() };
+                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), endDate: endDate.toDate(), hint: `${startDate.format('MMM YYYY')}` };
             }
             case 'this_year': {
-                const startDate = now.clone().month(firstMonthOfYear).startOf('month');
-                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate() };
+                const startDate = now.month() < firstMonthOfYear ?
+                    now.clone().subtract(1, 'year').month(firstMonthOfYear).startOf('month') :
+                    now.clone().month(firstMonthOfYear).startOf('month');
+                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), hint: `${startDate.format('MMM YYYY')} to Today` };
             }
             case 'last_year': {
-                const startDate = now.clone().subtract(1, 'year').month(firstMonthOfYear).startOf('month');
+                const startDate = now.month() < firstMonthOfYear ?
+                    now.clone().subtract(2, 'year').month(firstMonthOfYear).startOf('month') :
+                    now.clone().subtract(1, 'year').month(firstMonthOfYear).startOf('month');
                 const endDate = startDate.clone().add(11, 'months').endOf('month');
-                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), endDate: endDate.toDate() };
+                return { label: TransactionDateFilterOptions[key], startDate: startDate.toDate(), endDate: endDate.toDate(), hint: `${startDate.format('MMM YYYY')} to ${endDate.format('MMM YYYY')}` };
             }
         }
     }

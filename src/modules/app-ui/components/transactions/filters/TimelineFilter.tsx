@@ -12,6 +12,7 @@ export type Timeline = {
     from: Date;
     to?: Date;
     label: string;
+    hint?: string;
 }
 
 type TimelineFilterProps = {
@@ -35,7 +36,8 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
         setTimeline({
             from: result.startDate,
             to: result.endDate,
-            label: result.label
+            label: result.label,
+            hint: result.hint
         });
         setOpen(false);
     }
@@ -69,7 +71,7 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
     return <Popover open={open} onOpenChange={(open) => { setOpen(open); setMode('date-tag'); }}>
         <PopoverTrigger asChild>
             <Button variant="outline" className={className}>
-                <CalendarIcon />{timeline.label}
+                <CalendarIcon />{timeline.label} {timeline.hint ? ` (${timeline.hint})` : ''}
             </Button>
         </PopoverTrigger>
         <PopoverContent className={`p-0 flex flex-col ${mode == 'date-tag' ? 'w-42' : 'w-64'} ${dropdownClassName}`}>

@@ -9,4 +9,7 @@ export abstract class BaseService {
     public repository<N extends EntityNameOf<typeof util>>(entityName: N): DataRepository<typeof util, N, DateStrategyOptions, Household> {
         return DataOrchestrator.getInstance<typeof util, DateStrategyOptions, Household>().repo<N>(entityName);
     }
+    public currentHouseholdId(): string | null {
+        return DataOrchestrator.getInstance<typeof util, DateStrategyOptions, Household>().ctx.tenant.id || null;
+    }
 }

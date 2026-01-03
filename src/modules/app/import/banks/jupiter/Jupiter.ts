@@ -1,4 +1,5 @@
 import type { IBank } from "../../interfaces/IBank";
+import { JupiterEmailAdapter } from "./JupiterEmailAdapter";
 import { JupiterPdfAdapter } from "./JupiterPdfAdapter";
 
 export class Jupiter implements IBank {
@@ -14,7 +15,8 @@ export class Jupiter implements IBank {
                 name: 'UPI Account',
             },
             adapters: [
-                new JupiterPdfAdapter()
+                new JupiterPdfAdapter(),
+                new JupiterEmailAdapter(),
             ]
         }
     ]
