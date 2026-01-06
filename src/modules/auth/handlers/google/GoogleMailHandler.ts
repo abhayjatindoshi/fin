@@ -52,7 +52,7 @@ export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler
     ];
     private API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me/messages';
 
-    async getMailListing(token: IAuthToken, emailsBefore?: { date: Date, id: string }, nextToken?: string): Promise<MailListing> {
+    async getMailListing(token: IAuthToken, domains: string[], emailsBefore?: { date: Date, id: string }, nextToken?: string): Promise<MailListing> {
         const validToken = await this.getValidToken(token);
         const params = new URLSearchParams();
         params.set('maxResults', '20');
@@ -74,6 +74,13 @@ export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler
                 params.set('pageToken', currentPageToken);
             } else {
                 params.delete('pageToken');
+            }
+
+            const domainFilter = `from:(${domains.join('|')})`;
+            if (params.has('q')) {
+                params.set('q', `${params.get('q')} ${domainFilter}`);
+            } else {
+                params.set('q', domainFilter);
             }
 
             const response = await fetch(`${this.API_BASE}?${params.toString()}`, {

@@ -27,7 +27,7 @@ export type MailAttachment = {
 
 export interface IAuthMailHandler extends IAuthFeatureHandler {
     featureName: 'mail';
-    getMailListing(token: IAuthToken, emailsBefore?: { date: Date, id: string }, nextToken?: string): Promise<MailListing>;
+    getMailListing(token: IAuthToken, domains: string[], emailsBefore?: { date: Date, id: string }, nextToken?: string): Promise<MailListing>;
     fetchMessages(token: IAuthToken, messageIds: string[]): Promise<MailMessage[]>;
     fetchAttachment(token: IAuthToken, messageId: string, attachment: MailAttachment): Promise<File>;
 }
