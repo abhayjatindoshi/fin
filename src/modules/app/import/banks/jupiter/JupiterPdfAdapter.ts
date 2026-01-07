@@ -1,4 +1,4 @@
-import type { ImportData, ImportedTransaction } from "../../interfaces/ImportData";
+import type { ImportData, TransactionDetails } from "../../interfaces/ImportData";
 import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
 export class JupiterPdfAdapter implements IPdfImportAdapter {
@@ -28,7 +28,9 @@ export class JupiterPdfAdapter implements IPdfImportAdapter {
         const transactions = this.extractTransactions(file.pages);
 
         return {
-            identifiers: [accountNumber],
+            account: {
+                accountNumber: [accountNumber]
+            },
             transactions
         }
 
@@ -46,14 +48,14 @@ export class JupiterPdfAdapter implements IPdfImportAdapter {
         return null;
     }
 
-    public extractTransactions(pages: string[][]): ImportedTransaction[] {
+    public extractTransactions(pages: string[][]): TransactionDetails[] {
         const cleanedLines: string[] = this.removeHeaderAndFooterLines(pages);
         const transactions = this.parseTransactions(cleanedLines);
         return transactions;
     }
 
-    private parseTransactions(lines: string[]): ImportedTransaction[] {
-        const transactions: ImportedTransaction[] = [];
+    private parseTransactions(lines: string[]): TransactionDetails[] {
+        const transactions: TransactionDetails[] = [];
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 

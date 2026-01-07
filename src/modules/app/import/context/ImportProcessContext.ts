@@ -1,63 +1,68 @@
 import { nanoid } from "nanoid";
-import { BehaviorSubject, Observable } from "rxjs";
-import type { ImportAdapterType } from "../interfaces/IImportAdapter";
-import { ImportEvent } from "./ImportEvent";
+import { BehaviorSubject, type Observable } from "rxjs";
+import { ImportService } from "../ImportService";
+import type { IImportAdapter, ImportAdapterType } from "../interfaces/IImportAdapter";
+import type { ImportData, ImportSource } from "../interfaces/ImportData";
 
 export type ImportProcessStatus = 'pending' | 'in_progress' | 'prompt_error' | 'error' | 'completed' | 'cancelling' | 'cancelled';
-
-export type PromptErrorType = 'account_authentication' | 'file_password' | 'adapter_selection';
-export class PromptError extends Error {
-    errorType: PromptErrorType;
-    constructor(errorType: PromptErrorType, message: string) {
-        super(message);
-        this.errorType = errorType;
-    }
-}
+export type SelectionName = 'adapter' | 'account' | 'confirmation';
 
 export abstract class ImportProcessContext {
     type: ImportAdapterType;
     identifier: string;
-    status: ImportProcessStatus = "pending"
-    private eventSubject: BehaviorSubject<ImportEvent>;
-    private eventHistory: ImportEvent[] = [];
-    private promise?: Promise<void>;
-    private cancelled: boolean = false;
+    adapter: IImportAdapter | null = null;
+    data: ImportData | null = null;
+    error: Error | null = null;
+    requireConfirmation: boolean;
+    private statusSubject: BehaviorSubject<ImportProcessStatus>;
+    private cancelled: boolean;
+    private selectionMap: Map<SelectionName, any>;
 
-    constructor(type: ImportAdapterType) {
+    constructor(type: ImportAdapterType, requireConfirmation: boolean = true) {
         this.type = type;
+        this.requireConfirmation = requireConfirmation;
         this.identifier = this.generateImportIdentifier();
-        this.eventSubject = new BehaviorSubject<ImportEvent>(new ImportEvent());
+        this.selectionMap = new Map<SelectionName, any>();
+        this.statusSubject = new BehaviorSubject<ImportProcessStatus>('pending');
+        this.cancelled = false;
     }
 
-    emit(event: ImportEvent): void {
-        this.eventHistory.push(event);
-        this.eventSubject.next(event);
+    abstract getSource(): ImportSource;
+
+    get status(): ImportProcessStatus {
+        return this.statusSubject.getValue();
+    }
+    set status(newStatus: ImportProcessStatus) {
+        this.statusSubject.next(newStatus);
     }
 
-    observe(): Observable<ImportEvent> {
-        return this.eventSubject.asObservable();
+    observeStatus(): Observable<ImportProcessStatus> {
+        return this.statusSubject.asObservable();
     }
 
     cancel(): void {
         this.cancelled = true;
+        this.status = 'cancelling';
     }
 
     isCancelled(): boolean {
         return this.cancelled;
     }
 
-    setPromise(promise: Promise<void>): void {
-        this.status = 'in_progress';
-        this.promise = promise;
-        this.promise.then(() => {
-            this.status = 'completed';
-        }).catch((error) => {
-            if (error instanceof PromptError) {
-                this.status = 'prompt_error';
-            } else {
-                this.status = 'error';
-            }
-        });
+    startOrResume(): void {
+        ImportService.getInstance().execute(this);
+    }
+
+    setSelection<T>(name: SelectionName, value: T): void {
+        this.selectionMap.set(name, value);
+    }
+
+    getSelection<T>(name: SelectionName): T | undefined {
+        return this.selectionMap.get(name) as T | undefined;
+    }
+
+    hasSelection(name: SelectionName): boolean {
+        return this.selectionMap.has(name);
     }
 
     private generateImportIdentifier(): string {

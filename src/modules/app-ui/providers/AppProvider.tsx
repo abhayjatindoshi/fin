@@ -1,3 +1,5 @@
+import { ImportService } from '@/modules/app/import/ImportService';
+import { ImportStoreService } from '@/modules/app/services/ImportStoreService';
 import { SettingService, type SettingKeys } from '@/modules/app/services/SettingService';
 import { useDataSync } from '@/modules/data-sync/providers/DataSyncProvider';
 import React, { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
@@ -27,6 +29,8 @@ type AppProviderProps = PropsWithChildren<{
 }>;
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children, scrollElementRef }) => {
+
+    ImportService.initialize(new ImportStoreService());
 
     const { orchestrator } = useDataSync();
     const settingsService = useMemo(() => orchestrator ? new SettingService() : null, [orchestrator]);

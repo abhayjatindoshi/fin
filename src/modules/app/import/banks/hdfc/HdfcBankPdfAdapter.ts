@@ -1,4 +1,4 @@
-import type { ImportData, ImportedTransaction } from "../../interfaces/ImportData";
+import type { ImportData, TransactionDetails } from "../../interfaces/ImportData";
 import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
 export class HdfcBankPdfAdapter implements IPdfImportAdapter {
@@ -33,7 +33,9 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
         const transactions = this.extractTransactions(file.pages);
 
         return {
-            identifiers: [accountNumber],
+            account: {
+                accountNumber: [accountNumber]
+            },
             transactions
         }
     }
@@ -67,7 +69,7 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
         return null;
     }
 
-    public extractTransactions(pages: string[][]): ImportedTransaction[] {
+    public extractTransactions(pages: string[][]): TransactionDetails[] {
         const openingBalance = this.extractOpeningBalance(pages);
         if (openingBalance === null) throw new Error("Could not find opening balance in HDFC statement PDF.");
         const filteredPages = pages
@@ -77,8 +79,8 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
         return transactions;
     }
 
-    private parseTransactions(lines: string[], openingBalance: number): ImportedTransaction[] {
-        const transactions: ImportedTransaction[] = [];
+    private parseTransactions(lines: string[], openingBalance: number): TransactionDetails[] {
+        const transactions: TransactionDetails[] = [];
         let currentBalance = openingBalance;
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];

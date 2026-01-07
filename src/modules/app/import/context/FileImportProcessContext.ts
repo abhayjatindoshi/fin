@@ -1,10 +1,18 @@
+import type { ImportSource } from "../interfaces/ImportData";
 import { ImportProcessContext } from "./ImportProcessContext";
 
 export class FileImportProcessContext extends ImportProcessContext {
-    files: File[];
+    file: File;
 
-    constructor(files: File[]) {
+    constructor(file: File) {
         super('file');
-        this.files = files;
+        this.file = file;
+    }
+
+    getSource(): ImportSource {
+        return {
+            type: 'file',
+            fileName: this.file.name,
+        }
     }
 }

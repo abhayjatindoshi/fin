@@ -1,4 +1,4 @@
-import type { ImportData, ImportedTransaction } from "../../interfaces/ImportData";
+import type { ImportData, TransactionDetails } from "../../interfaces/ImportData";
 import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
 export class FederalBankPdfAdapter implements IPdfImportAdapter {
@@ -23,7 +23,9 @@ export class FederalBankPdfAdapter implements IPdfImportAdapter {
         const transactions = this.extractTransactions(file.pages);
 
         return {
-            identifiers: [cardNumber],
+            account: {
+                accountNumber: [cardNumber],
+            },
             transactions
         }
     }
@@ -41,15 +43,15 @@ export class FederalBankPdfAdapter implements IPdfImportAdapter {
         return null;
     }
 
-    public extractTransactions(pages: string[][]): ImportedTransaction[] {
+    public extractTransactions(pages: string[][]): TransactionDetails[] {
         const cleanedLines: string[] = this.removeHeaderAndFooterLines(pages);
         const transactions = this.parseTransactions(cleanedLines);
         return transactions;
     }
 
-    private parseTransactions(lines: string[]): ImportedTransaction[] {
+    private parseTransactions(lines: string[]): TransactionDetails[] {
 
-        const transactions: ImportedTransaction[] = [];
+        const transactions: TransactionDetails[] = [];
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 
