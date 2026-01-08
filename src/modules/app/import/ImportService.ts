@@ -10,7 +10,7 @@ import type { IBankOffering } from "./interfaces/IBankOffering";
 import type { IFile, IFileImportAdapter } from "./interfaces/IFileImportAdapter";
 import type { IImportAdapter } from "./interfaces/IImportAdapter";
 import type { IImportStore } from "./interfaces/IImportStore";
-import type { AccountDetails, ImportData, ImportTransaction, TransactionDetails } from "./interfaces/ImportData";
+import type { AccountDetails, ImportTransaction } from "./interfaces/ImportData";
 import type { IPdfFile } from "./interfaces/IPdfImportAdapter";
 
 export class ImportService {
@@ -59,9 +59,9 @@ export class ImportService {
         switch (context.type) {
             case 'file': {
                 const fileContext = context as FileImportProcessContext;
-                const [adapter, importData] = await this.processFile(fileContext);
+                await this.processFile(fileContext);
                 this.handleCancellation(context);
-                await this.processImportData(context, adapter, importData);
+                await this.processImportData(context);
                 break;
             }
             case 'email':
@@ -70,35 +70,35 @@ export class ImportService {
 
     }
 
-    private async processFile(context: FileImportProcessContext): Promise<[IImportAdapter, ImportData]> {
+    private async processFile(context: FileImportProcessContext): Promise<void> {
+        if (context.data) return;
+
         const fileData = await this.readFile(context);
         this.handleCancellation(context);
 
-        const adapter = this.getFileAdapter(context, fileData);
+        const fileAdapter = this.getFileAdapter(context, fileData);
+        context.adapter = fileAdapter;
         this.handleCancellation(context);
 
-        const data = await adapter.read(fileData);
+        context.data = await fileAdapter.read(fileData);
         this.handleCancellation(context);
-
-        return [adapter, data];
     }
 
-    private async processImportData(context: ImportProcessContext, adapter: IImportAdapter, importData: ImportData): Promise<void> {
-        context.adapter = adapter;
-        context.data = importData;
+    private async processImportData(context: ImportProcessContext): Promise<void> {
+        if (!context.data) throw new Error("No import data available");
+        if (!context.adapter) throw new Error("No import adapter selected");
+
+        const [bank, offering] = ImportMatrix.AdapterBankData[context.adapter.id];
+        context.selectedAccountId = await this.getAccount(context, bank, offering, context.data.account);
         this.handleCancellation(context);
 
-        const [bank, offering] = ImportMatrix.AdapterBankData[adapter.id];
-        context.selectedAccountId = await this.getAccount(context, bank, offering, importData.account);
-        this.handleCancellation(context);
-
-        context.parsedTransactions = await this.parseTransactions(importData.account, importData.transactions);
+        context.parsedTransactions = await this.parseTransactions(context);
         this.handleCancellation(context);
 
         await this.handleConfirmation(context);
 
         if (!context.selectedAccountId) {
-            context.selectedAccountId = await this.store.createAccount(bank, offering, importData.account);
+            context.selectedAccountId = await this.store.createAccount(bank, offering, context.data.account);
         }
 
         await this.store.addTransactions(context.getSource(), context.selectedAccountId, context.parsedTransactions);
@@ -118,11 +118,14 @@ export class ImportService {
         }
     }
 
-    private async parseTransactions(accountDetails: AccountDetails, transactions: TransactionDetails[]): Promise<ImportTransaction[]> {
+    private async parseTransactions(context: ImportProcessContext): Promise<ImportTransaction[]> {
+        if (context.parsedTransactions) return context.parsedTransactions;
+        if (!context.data) throw new Error("No import data available");
+
         const parsedTransactions: ImportTransaction[] = [];
-        for (const tx of transactions) {
+        for (const tx of context.data.transactions) {
             const hash = EntityUtils.hashTransaction(tx.date, tx.amount, tx.description);
-            const isExisting = await this.store.isExistingTransaction(accountDetails, tx, hash);
+            const isExisting = await this.store.isExistingTransaction(context.data.account, tx, hash);
             parsedTransactions.push({
                 ...tx,
                 isNew: !isExisting,
