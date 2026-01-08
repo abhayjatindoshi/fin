@@ -2,7 +2,7 @@ import { nanoid } from "nanoid";
 import { BehaviorSubject, type Observable } from "rxjs";
 import { ImportService } from "../ImportService";
 import type { IImportAdapter, ImportAdapterType } from "../interfaces/IImportAdapter";
-import type { ImportData, ImportSource } from "../interfaces/ImportData";
+import type { ImportData, ImportSource, ImportTransaction } from "../interfaces/ImportData";
 
 export type ImportProcessStatus = 'pending' | 'in_progress' | 'prompt_error' | 'error' | 'completed' | 'cancelling' | 'cancelled';
 export type SelectionName = 'adapter' | 'account' | 'confirmation';
@@ -14,6 +14,8 @@ export abstract class ImportProcessContext {
     data: ImportData | null = null;
     error: Error | null = null;
     requireConfirmation: boolean;
+    selectedAccountId: string | null = null;
+    parsedTransactions: ImportTransaction[] | null = null;
     private statusSubject: BehaviorSubject<ImportProcessStatus>;
     private cancelled: boolean;
     private selectionMap: Map<SelectionName, any>;

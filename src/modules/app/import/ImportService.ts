@@ -89,19 +89,19 @@ export class ImportService {
         this.handleCancellation(context);
 
         const [bank, offering] = ImportMatrix.AdapterBankData[adapter.id];
-        let accountId = await this.getAccount(context, bank, offering, importData.account);
+        context.selectedAccountId = await this.getAccount(context, bank, offering, importData.account);
         this.handleCancellation(context);
 
-        const transactions = await this.parseTransactions(importData.account, importData.transactions);
+        context.parsedTransactions = await this.parseTransactions(importData.account, importData.transactions);
         this.handleCancellation(context);
 
         await this.handleConfirmation(context);
 
-        if (!accountId) {
-            accountId = await this.store.createAccount(bank, offering, importData.account);
+        if (!context.selectedAccountId) {
+            context.selectedAccountId = await this.store.createAccount(bank, offering, importData.account);
         }
 
-        await this.store.addTransactions(context.getSource(), accountId, transactions);
+        await this.store.addTransactions(context.getSource(), context.selectedAccountId, context.parsedTransactions);
         return;
     }
 
