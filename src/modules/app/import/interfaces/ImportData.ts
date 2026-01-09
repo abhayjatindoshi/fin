@@ -1,7 +1,6 @@
 import type { MailMessage } from "@/modules/auth/interfaces/features/IAuthMailHandler";
 import type { IAuthUser } from "@/modules/auth/interfaces/IAuthUser";
-import type { IBank } from "./IBank";
-import type { IBankOffering } from "./IBankOffering";
+import type { PromptErrorType } from "../errors/PromptError";
 
 export type ImportData = {
     account: AccountDetails;
@@ -43,11 +42,20 @@ export type FileImportSource = {
 
 export type ImportSource = EmailImportSource | FileImportSource;
 
-export type ImportResult = {
-    bank: IBank;
-    offering: IBankOffering;
-    accountDetails: AccountDetails;
-    importSource: ImportSource;
-    transactions: ImportTransaction[]; // ??
-    account: any; // ??
+export type ImportPoint = {
+    id: string;
+    date: Date;
+}
+
+export type EmailImportState = {
+    startPoint?: ImportPoint;
+    currentPoint?: ImportPoint;
+    endPoint?: ImportPoint;
+    readEmailCount?: number;
+    importedEmailCount?: number;
+    lastImportAt?: Date;
+    lastError?: {
+        type?: PromptErrorType;
+        message: string;
+    };
 }

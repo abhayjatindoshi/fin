@@ -1,8 +1,7 @@
 import type { AuthAccount } from "@/modules/app/entities/AuthAccount";
+import type { EmailImportSetting } from "@/modules/app/entities/EmailImportSetting";
 import { EntityName } from "@/modules/app/entities/entities";
-import type { SyncSettings } from "@/modules/app/entities/SyncSettings";
 import { AuthService } from "@/modules/app/services/AuthService";
-import { EmailImportService } from "@/modules/app/services/EmailImportService";
 import { AuthMatrix } from "@/modules/auth/AuthMatrix";
 import { Avatar, AvatarFallback, AvatarImage } from "@/modules/base-ui/components/ui/avatar";
 import { Button } from "@/modules/base-ui/components/ui/button";
@@ -24,9 +23,9 @@ const ImportPage: React.FC = () => {
     const { orchestrator } = useDataSync();
     const { householdId } = useParams();
     const service = useRef(new AuthService()).current;
-    const importService = useRef(new EmailImportService()).current;
+    // const importService = useRef(new EmailImportService()).current;
     const [accountMap, setAccountMap] = useState<Record<string, AuthAccount[]>>({});
-    const [syncSettingsMap, setSyncSettingsMap] = useState<Record<string, SyncSettings>>({});
+    const [syncSettingsMap, setSyncSettingsMap] = useState<Record<string, EmailImportSetting>>({});
     const [selectedAccount, setSelectedAccount] = useState<AuthAccount | null>(null);
     const [interval, setInterval] = useState<number>(1);
     const [period, setPeriod] = useState<IntervalPeriod>('months');
@@ -47,11 +46,11 @@ const ImportPage: React.FC = () => {
                 setAccountMap(map);
             });
 
-        const syncSettingsRepo = orchestrator.repo(EntityName.SyncSettings);
+        const syncSettingsRepo = orchestrator.repo(EntityName.EmailImportSetting);
         const s2 = syncSettingsRepo.observeAll()
             .subscribe(result => {
-                const settings = result as SyncSettings[];
-                const map: Record<string, SyncSettings> = {};
+                const settings = result as EmailImportSetting[];
+                const map: Record<string, EmailImportSetting> = {};
                 settings.forEach(setting => {
                     map[setting.authAccountId] = setting;
                 });
@@ -69,7 +68,7 @@ const ImportPage: React.FC = () => {
     const openSettings = (account: AuthAccount) => {
         const settings = syncSettingsMap[account.id || ''];
         if (settings) {
-            const intervalInMinutes = settings.syncInterval;
+            const intervalInMinutes = settings.importInterval;
             if (intervalInMinutes % 43200 === 0) { // months
                 setPeriod('months');
                 setInterval(intervalInMinutes / 43200);
@@ -99,7 +98,7 @@ const ImportPage: React.FC = () => {
                     period === 'days' ? interval * 1440 :
                         period === 'weeks' ? interval * 10080 :
                             interval * 43200; // months
-            await importService.setConfig({ syncInterval: intervalInMinutes, authAccountId: selectedAccount.id });
+            // await importService.setConfig({ syncInterval: intervalInMinutes, authAccountId: selectedAccount.id });
             setSelectedAccount(null);
         } finally {
             setSavingSettings(false);
@@ -115,18 +114,18 @@ const ImportPage: React.FC = () => {
         //     .map(a => handler.fetchAttachment(token, m.id, a.id))));
         // setBlobs(pdfAttachments);
         if (!account.id) return;
-        await importService.syncNow(account.id);
+        // await importService.syncNow(account.id);
     }
 
     const SyncStatus: React.FC<{ accountId: string }> = ({ accountId }) => {
         const settings = syncSettingsMap[accountId];
         if (!settings) return null;
 
-        const status = settings.syncStatus;
+        const status = settings.importState;
         if (!status) return null;
 
         return <>
-            {status.lastSyncAt && <div className="text-sm mt-2">Last synced {moment(status.lastSyncAt).fromNow()}</div>}
+            {status.lastImportAt && <div className="text-sm mt-2">Last synced {moment(status.lastImportAt).fromNow()}</div>}
         </>;
     }
 

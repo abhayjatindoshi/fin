@@ -4,9 +4,10 @@ import { ImportProcessContext } from "./ImportProcessContext";
 export class FileImportProcessContext extends ImportProcessContext {
     file: File;
 
-    constructor(file: File) {
+    constructor(file: File, requireConfirmation: boolean = true) {
         super('file');
         this.file = file;
+        this.requireConfirmation = requireConfirmation;
     }
 
     getSource(): ImportSource {

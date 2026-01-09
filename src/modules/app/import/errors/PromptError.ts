@@ -4,7 +4,14 @@ import type { ImportProcessContext } from "../context/ImportProcessContext";
 import { ImportService } from "../ImportService";
 import type { IImportAdapter } from "../interfaces/IImportAdapter";
 
-export type PromptErrorType = 'account_authentication' | 'file_password' | 'adapter_selection' | 'account_selection' | 'require_confirmation';
+export const PromptErrorTypes = [
+    'account_authentication',
+    'file_password',
+    'adapter_selection',
+    'account_selection',
+    'require_confirmation',
+] as const;
+export type PromptErrorType = typeof PromptErrorTypes[number];
 
 export abstract class PromptError extends Error {
     errorType: PromptErrorType;
