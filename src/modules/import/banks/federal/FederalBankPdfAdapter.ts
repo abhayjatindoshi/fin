@@ -13,7 +13,7 @@ export class FederalBankPdfAdapter implements IPdfImportAdapter {
     private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
 
     isSupported(file: IPdfFile): boolean {
-        return file.pages.some(page => /support\@federalbank\.co\.in/i.test(page.join(' '))) &&
+        return file.pages.some(page => /\@federalbank\.co\.in/i.test(page.join(' '))) &&
             !file.pages.some(page => /Fintech Partnerships/i.test(page.join(' ')));
     }
 
@@ -38,6 +38,12 @@ export class FederalBankPdfAdapter implements IPdfImportAdapter {
                     const match = page[i].match(this.cardNumberRegex);
                     if (match) return match[1];
                 }
+            }
+        }
+        for (const page of pages) {
+            for (const line of page) {
+                const match = line.match(this.cardNumberRegex);
+                if (match) return match[1];
             }
         }
         return null;

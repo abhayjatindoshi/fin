@@ -8,9 +8,10 @@ export class FederalBankEmailAdapter implements IEmailImportAdapter {
     supportedEmailDomains = ['federal.bank.in', 'federalbank.co.in'];
 
     async isEmailSupported(email: MailMessage): Promise<boolean> {
-        return email.attachments.some(a =>
-            a.mimeType === 'application/pdf' ||
-            a.filename.toLowerCase().endsWith('.pdf'));
+        return email.subject.toLowerCase().includes('statement') &&
+            email.attachments.some(a =>
+                a.mimeType === 'application/pdf' ||
+                a.filename.toLowerCase().endsWith('.pdf'));
     }
 
     async readEmail(email: MailMessage): Promise<ImportData | MailAttachment[] | null> {
