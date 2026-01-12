@@ -1,4 +1,5 @@
 import type { IBank } from "../../interfaces/IBank";
+import { FederalBankEmailAdapter } from "./FederalBankEmailAdapter";
 import { FederalBankPdfAdapter } from "./FederalBankPdfAdapter";
 
 export class FederalBank implements IBank {
@@ -14,7 +15,8 @@ export class FederalBank implements IBank {
                 name: 'Credit Card',
             },
             adapters: [
-                new FederalBankPdfAdapter()
+                new FederalBankPdfAdapter(),
+                new FederalBankEmailAdapter(),
             ]
         }
     ]

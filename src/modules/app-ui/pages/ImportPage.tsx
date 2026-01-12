@@ -84,6 +84,16 @@ const ImportPage: React.FC = () => {
         accountRepo.delete(account.id);
     }
 
+    const resetAccount = async (account: CombinedAccount) => {
+        if (!orchestrator || !account.id) return;
+        const settingsRepo = orchestrator.repo(EntityName.EmailImportSetting);
+        const settings = account.settings;
+        if (settings) {
+            settings.importState = {};
+            settingsRepo.save(EmailImportSettingSchema.parse(settings));
+        }
+    }
+
     const openSettings = (account: CombinedAccount) => {
         const settings = account.settings;
         if (settings) {
@@ -372,12 +382,13 @@ const ImportPage: React.FC = () => {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                {account.context?.status === 'in_progress' && <DropdownMenuItem onClick={() => account.context?.cancel()}>Cancel Import</DropdownMenuItem>}
-                {account.settings && <DropdownMenuItem onClick={() => importNow(account)}>Import Now</DropdownMenuItem>}
+                <DropdownMenuItem disabled={!account.settings} onClick={() => importNow(account)}>Import Now</DropdownMenuItem>
+                <DropdownMenuItem disabled={account.context?.status !== 'in_progress'} onClick={() => account.context?.cancel()}>Cancel Import</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => openSettings(account)}>
                     {account.settings ? "Edit settings" : "Configure"}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => deleteAccount(account)}>Remove Account</DropdownMenuItem>
+                <DropdownMenuItem disabled={account.context !== undefined} onClick={() => resetAccount(account)}>Reset</DropdownMenuItem>
+                <DropdownMenuItem disabled={account.context !== undefined} onClick={() => deleteAccount(account)}>Remove Account</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     }
