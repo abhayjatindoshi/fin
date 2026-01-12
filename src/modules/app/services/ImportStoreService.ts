@@ -1,11 +1,15 @@
+import type { IAuthToken } from "@/modules/auth/interfaces/IAuthToken";
+import type { IAuthUser } from "@/modules/auth/interfaces/IAuthUser";
 import { Utils } from "@/modules/common/Utils";
+import type { IBank } from "@/modules/import/interfaces/IBank";
+import type { IBankOffering } from "@/modules/import/interfaces/IBankOffering";
+import type { IImportStore } from "@/modules/import/interfaces/IImportStore";
+import type { AccountDetails, EmailImportState, ImportSource, ImportTransaction, TransactionDetails } from "@/modules/import/interfaces/ImportData";
+import type { AuthAccount } from "../entities/AuthAccount";
+import type { EmailImportSetting } from "../entities/EmailImportSetting";
 import { EntityName } from "../entities/entities";
 import type { MoneyAccount } from "../entities/MoneyAccount";
 import { TransactionSchema, type Transaction, type TransactionSource } from "../entities/Transaction";
-import type { IBank } from "../import/interfaces/IBank";
-import type { IBankOffering } from "../import/interfaces/IBankOffering";
-import type { IImportStore } from "../import/interfaces/IImportStore";
-import type { AccountDetails, ImportSource, ImportTransaction, TransactionDetails } from "../import/interfaces/ImportData";
 import { BaseService } from "./BaseService";
 import { SettingService } from "./SettingService";
 
@@ -76,12 +80,50 @@ export class ImportStoreService extends BaseService implements IImportStore {
         return Promise.resolve();
     }
 
+    async updateToken(account: IAuthUser, token: IAuthToken): Promise<void> {
+        const authAccount = await this.getAuthAccountByUserId(account.id);
+        if (!authAccount) return;
+        authAccount.token = token;
+        const authAccountRepo = this.repository(EntityName.AuthAccount);
+        authAccountRepo.save(authAccount);
+    }
+
+    async updateSyncState(userId: string, state: EmailImportState): Promise<void> {
+        const authAccount = await this.getAuthAccountByUserId(userId);
+        if (!authAccount) return;
+        const importRepo = this.repository(EntityName.EmailImportSetting);
+        const filteredSettings = await importRepo.getAll({ where: { authAccountId: authAccount.id } }) as EmailImportSetting[];
+        if (filteredSettings.length === 0) return;
+        const settings = filteredSettings[0];
+        settings.importState = state;
+        importRepo.save(settings);
+    }
+
+    private async getAuthAccountByUserId(userId: string): Promise<AuthAccount | null> {
+        const authAccountRepo = this.repository(EntityName.AuthAccount);
+        const accounts = await authAccountRepo.getAll() as AuthAccount[];
+        return accounts.find(a => a.user.id === userId) || null;
+    }
+
     private toTransactionSource(source: ImportSource): TransactionSource {
         switch (source.type) {
             case 'email':
-                return { type: 'email', authAccountId: source.account.id, emailMessage: source.email };
+                return {
+                    type: 'email',
+                    authAccountId: source.user.id,
+                    emailId: source.email.id,
+                    date: source.email.date,
+                    from: source.email.from,
+                    to: source.user.email,
+                    subject: source.email.subject,
+                };
+
             case 'file':
-                return { type: 'file', fileName: source.fileName };
+                return {
+                    type: 'file',
+                    fileName: source.file.name,
+                    fileType: source.file.type
+                };
         }
     }
 

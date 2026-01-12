@@ -1,15 +1,15 @@
 import FileSize from "@/modules/app-ui/common/FileSize";
 import { useImport } from "@/modules/app-ui/components/import/ImportProvider";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
-import { FileImportProcessContext } from "@/modules/app/import/context/FileImportProcessContext";
-import type { ImportProcessStatus } from "@/modules/app/import/context/ImportProcessContext";
-import { AdapterSelectionError, FilePasswordError, PromptError, type PromptErrorType } from "@/modules/app/import/errors/PromptError";
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
-import type { IImportAdapter } from "@/modules/app/import/interfaces/IImportAdapter";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
 import { Label } from "@/modules/base-ui/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/base-ui/components/ui/table";
+import { FileImportProcessContext } from "@/modules/import/context/FileImportProcessContext";
+import type { ImportProcessStatus } from "@/modules/import/context/ImportProcessContext";
+import { AdapterSelectionError, FilePasswordError, PromptError, type PromptErrorType } from "@/modules/import/errors/PromptError";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
+import type { IImportAdapter } from "@/modules/import/interfaces/IImportAdapter";
 import { Asterisk, FileText, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -134,7 +134,7 @@ const DevImportPage: React.FC = () => {
             {context.current.error.errorType === 'adapter_selection' && <>
                 <div className="mt-4">Click on the adapter icon to import</div>
                 <div className="flex flex-row flex-wrap gap-2 mb-4">
-                    {(context.current.error as AdapterSelectionError).adapters.map(adapter => <Button
+                    {(context.current.error as AdapterSelectionError).adapterIds.map(id => ImportMatrix.Adapters[id]).map(adapter => <Button
                         key={adapter.id} size="lg" className="h-14"
                         onClick={() => resolveAdapterSelection(adapter)}>
                         <div className="flex flex-row gap-2 items-center">

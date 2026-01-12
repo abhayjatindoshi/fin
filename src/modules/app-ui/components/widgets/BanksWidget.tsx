@@ -1,4 +1,4 @@
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
 import AccountNumber from "../../common/AccountNumber";
 import { ImportIconComponent } from "../../icons/import/ImportIcon";
 import { useEntity } from "../../providers/EntityProvider";

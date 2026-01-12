@@ -1,13 +1,16 @@
 import { AuthMatrix } from "@/modules/auth/AuthMatrix";
 import type { IAuthMailHandler, MailAttachment, MailMessage } from "@/modules/auth/interfaces/features/IAuthMailHandler";
-import { EntityUtils } from "../common/EntityUtils";
-import { FileUtils } from "../common/FileUtils";
-import type { AuthToken } from "../entities/AuthAccount";
-import type { EmailImportProcessContext } from "./context/EmailImportProcessContext";
+import type { IAuthToken } from "@/modules/auth/interfaces/IAuthToken";
+import type { IAuthUser } from "@/modules/auth/interfaces/IAuthUser";
+import { BehaviorSubject, Observable } from "rxjs";
+import { EntityUtils } from "../app/common/EntityUtils";
+import type { AuthToken } from "../app/entities/AuthAccount";
+import { EmailImportProcessContext } from "./context/EmailImportProcessContext";
 import { FileImportProcessContext } from "./context/FileImportProcessContext";
 import type { ImportProcessContext } from "./context/ImportProcessContext";
 import { CancelledError } from "./errors/CancelledError";
-import { AccountSelectionError, AdapterSelectionError, FilePasswordError, PromptError, RequireConfirmation } from "./errors/PromptError";
+import { AccountSelectionError, AdapterSelectionError, FilePasswordError, RequireConfirmation } from "./errors/PromptError";
+import { FileUtils } from "./FileUtils";
 import { ImportMatrix } from "./ImportMatrix";
 import type { IBank } from "./interfaces/IBank";
 import type { IBankOffering } from "./interfaces/IBankOffering";
@@ -21,9 +24,12 @@ import type { IPdfFile } from "./interfaces/IPdfImportAdapter";
 export class ImportService {
 
     private static instance: ImportService | null = null;
+    private static contextMap: Record<string, ImportProcessContext> = {};
+    private static contextMapSubject: BehaviorSubject<Record<string, ImportProcessContext>> = new BehaviorSubject<Record<string, ImportProcessContext>>({});
 
-    static initialize(store: IImportStore): void {
+    static initialize(store: IImportStore): ImportService {
         ImportService.instance = new ImportService(store);
+        return ImportService.instance;
     }
 
     static getInstance(): ImportService {
@@ -39,25 +45,43 @@ export class ImportService {
         this.store = store;
     }
 
+    newFileContext(file: File, requireConfirmation: boolean = true): FileImportProcessContext {
+        return new FileImportProcessContext(file, requireConfirmation);
+    }
+
+    newEmailContext(token: IAuthToken, user: IAuthUser, state: Record<string, any> = {}): EmailImportProcessContext {
+        if (ImportService.contextMap[user.id]) return ImportService.contextMap[user.id] as EmailImportProcessContext;
+        return new EmailImportProcessContext(token, user, state);
+    }
+
+    observe(): Observable<Record<string, ImportProcessContext>> {
+        return ImportService.contextMapSubject.asObservable();
+    }
+
     async execute(context: ImportProcessContext): Promise<void> {
         try {
+            this.addToContextMap(context);
             await this.runSync(context);
             context.status = 'completed';
+            this.removeFromContextMap(context);
         } catch (error) {
             if (!(error instanceof Error)) throw error;
-            context.error = error;
-            if (error instanceof PromptError) {
-                context.status = 'prompt_error';
-            } else if (error instanceof CancelledError) {
-                context.status = 'cancelled';
-            } else {
-                context.status = 'error';
-            }
+            context.handleError(error);
         }
     }
 
+    private addToContextMap(context: ImportProcessContext): void {
+        ImportService.contextMap[context.identifier] = context;
+        ImportService.contextMapSubject.next(ImportService.contextMap);
+    }
+
+    private removeFromContextMap(context: ImportProcessContext): void {
+        delete ImportService.contextMap[context.identifier];
+        ImportService.contextMapSubject.next(ImportService.contextMap);
+    }
+
     private async runSync(context: ImportProcessContext): Promise<void> {
-        if (context.status === 'completed') return;
+        if (context.status !== 'pending') return;
         context.status = 'in_progress';
 
         this.handleCancellation(context);
@@ -78,67 +102,89 @@ export class ImportService {
     }
 
     private async processEmails(context: EmailImportProcessContext): Promise<void> {
+        await context.setState({
+            lastError: undefined,
+        })
+
         const handler = AuthMatrix.FeatureHandlers['mail'][context.token.handlerId] as IAuthMailHandler;
-        const supportedDomains = Object.values(ImportMatrix.Adapters).filter(a => a.type === 'email').map(a => (a as IEmailImportAdapter).supportedEmailDomains).flat();
+        const supportedDomains = Object.values(ImportMatrix.Adapters)
+            .filter(a => a.type === 'email')
+            .map(a => (a as IEmailImportAdapter).supportedEmailDomains)
+            .flat();
+
         let nextToken: string | undefined = undefined;
-        const state = context.state;
         do {
+            this.handleCancellation(context);
             const token = await this.getToken(context);
             const mailList = await handler.getMailListing(
                 token, supportedDomains,
-                state.currentPoint, nextToken
+                context.state.currentPoint, nextToken
             );
             nextToken = mailList.nextPageToken;
 
             if (mailList.messages.length === 0) break;
 
-            if (state.startPoint === undefined) {
+            if (context.state.startPoint === undefined) {
                 const firstMessage = mailList.messages[0];
-                state.startPoint = {
-                    id: firstMessage.id,
-                    date: firstMessage.date,
-                };
-                await this.store.updateSyncState(context.user.id, state);
+                await context.setState({
+                    startPoint: { id: firstMessage.id, date: firstMessage.date },
+                    currentPoint: { id: firstMessage.id, date: firstMessage.date },
+                });
+            }
+
+            if (context.state.endPoint) {
+                const endPointIndex = mailList.messages.findIndex(m => m.id === context.state.endPoint?.id);
+                if (endPointIndex >= 0) {
+                    mailList.messages = mailList.messages.slice(0, endPointIndex);
+                    nextToken = undefined;
+                }
             }
 
             for (const mail of mailList.messages) {
 
-                if (state.endPoint && mail.id === state.endPoint.id) {
-                    nextToken = undefined;
-                    break;
-                }
-
                 context.adapter = await this.getMailAdapter(context, mail);
-                if (!context.adapter) continue;
+                if (!context.adapter) {
+                    await context.setState({
+                        currentPoint: { id: mail.id, date: mail.date },
+                    });
+                    continue;
+                }
 
                 const result = await context.adapter.readEmail(mail);
                 if (result === null) {
+                    await context.setState({
+                        currentPoint: { id: mail.id, date: mail.date },
+                    });
                     continue;
                 } else if (result instanceof Array) {
                     await this.processEmailAttachments(context, mail, result);
                 } else {
                     context.data = result;
+                    context.email = mail;
                     await this.processImportData(context);
                 }
 
-                state.currentPoint = {
-                    id: mail.id,
-                    date: mail.date,
-                };
-                state.importedEmailCount = (state.importedEmailCount || 0) + 1;
-                await this.store.updateSyncState(context.user.id, state);
+                await context.setState({
+                    currentPoint: { id: mail.id, date: mail.date },
+                    importedEmailCount: (context.state.importedEmailCount || 0) + 1,
+                })
             }
 
-            state.lastImportAt = new Date();
-            state.readEmailCount = (state.readEmailCount || 0) + mailList.messages.length;
-            await this.store.updateSyncState(context.user.id, state);
-            await new Promise(resolve => setTimeout(resolve, 1 * 60 * 1000)); // wait for a minute
+            await context.setState({
+                lastImportAt: new Date(),
+                readEmailCount: (context.state.readEmailCount || 0) + mailList.messages.length,
+            });
+
+            if (!nextToken) break;
+
+            await new Promise(resolve => setTimeout(resolve, handler.timeoutInMs)); // wait for timeout
         } while (true);
 
-        state.endPoint = state.startPoint;
-        state.startPoint = undefined;
-        state.currentPoint = undefined;
-        await this.store.updateSyncState(context.user.id, state);
+        await context.setState({
+            endPoint: context.state.startPoint,
+            startPoint: undefined,
+            currentPoint: undefined,
+        });
     }
 
     private async processEmailAttachments(context: EmailImportProcessContext, mail: MailMessage, attachments: MailAttachment[]): Promise<void> {
@@ -148,6 +194,8 @@ export class ImportService {
             const token = await this.getToken(context);
             const file = await handler.fetchAttachment(token, mail.id, attachment);
             const fileContext = new FileImportProcessContext(file, false);
+            context.email = mail;
+            context.attachment = attachment;
             await this.processFile(fileContext);
             context.data = fileContext.data;
             await this.processImportData(context);
@@ -193,8 +241,9 @@ export class ImportService {
             context.selectedAccountId = await this.store.createAccount(bank, offering, context.data.account);
         }
 
-        await this.store.addTransactions(context.getSource(), context.selectedAccountId, context.parsedTransactions);
-        return;
+        const newTransactions = context.parsedTransactions.filter(tx => tx.isNew);
+        if (newTransactions.length === 0) return;
+        await this.store.addTransactions(context.getSource(), context.selectedAccountId, newTransactions);
     }
 
     private async handleConfirmation(context: ImportProcessContext): Promise<void> {
@@ -211,7 +260,6 @@ export class ImportService {
     }
 
     private async parseTransactions(context: ImportProcessContext): Promise<ImportTransaction[]> {
-        if (context.parsedTransactions) return context.parsedTransactions;
         if (!context.data) throw new Error("No import data available");
 
         const parsedTransactions: ImportTransaction[] = [];
@@ -243,7 +291,7 @@ export class ImportService {
         if (supportedAdapters.length === 0) {
             throw new Error("No supported adapter found for this file");
         } else if (supportedAdapters.length > 1) {
-            throw new AdapterSelectionError(context, supportedAdapters);
+            throw new AdapterSelectionError(context, supportedAdapters.map(a => a.id));
         } else {
             return supportedAdapters[0];
         }
@@ -271,7 +319,7 @@ export class ImportService {
         if (supportedAdapters.length === 0) {
             return null;
         } else if (supportedAdapters.length > 1) {
-            throw new AdapterSelectionError(context, supportedAdapters);
+            throw new AdapterSelectionError(context, supportedAdapters.map(a => a.id));
         } else {
             return supportedAdapters[0];
         }

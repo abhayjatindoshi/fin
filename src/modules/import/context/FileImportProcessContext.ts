@@ -1,4 +1,4 @@
-import type { ImportSource } from "../interfaces/ImportData";
+import type { FileImportSource } from "../interfaces/ImportData";
 import { ImportProcessContext } from "./ImportProcessContext";
 
 export class FileImportProcessContext extends ImportProcessContext {
@@ -10,10 +10,10 @@ export class FileImportProcessContext extends ImportProcessContext {
         this.requireConfirmation = requireConfirmation;
     }
 
-    getSource(): ImportSource {
+    getSource(): FileImportSource {
         return {
             type: 'file',
-            fileName: this.file.name,
+            file: this.file,
         }
     }
 }

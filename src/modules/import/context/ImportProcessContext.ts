@@ -1,5 +1,7 @@
 import { nanoid } from "nanoid";
 import { BehaviorSubject, type Observable } from "rxjs";
+import { CancelledError } from "../errors/CancelledError";
+import { PromptError } from "../errors/PromptError";
 import { ImportService } from "../ImportService";
 import type { IImportAdapter, ImportAdapterType } from "../interfaces/IImportAdapter";
 import type { ImportData, ImportSource, ImportTransaction } from "../interfaces/ImportData";
@@ -65,6 +67,19 @@ export abstract class ImportProcessContext {
 
     hasSelection(name: SelectionName): boolean {
         return this.selectionMap.has(name);
+    }
+
+    handleError(error: Error): void {
+        if (!(error instanceof Error)) throw error;
+        this.error = error;
+        if (error instanceof PromptError) {
+            error.context = this;
+            this.status = 'prompt_error';
+        } else if (error instanceof CancelledError) {
+            this.status = 'cancelled';
+        } else {
+            this.status = 'error';
+        }
     }
 
     private generateImportIdentifier(): string {

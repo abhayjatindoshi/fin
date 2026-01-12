@@ -1,4 +1,4 @@
-import type { MailMessage } from "@/modules/auth/interfaces/features/IAuthMailHandler";
+import type { MailAttachment, MailMessage } from "@/modules/auth/interfaces/features/IAuthMailHandler";
 import type { IAuthUser } from "@/modules/auth/interfaces/IAuthUser";
 import type { PromptErrorType } from "../errors/PromptError";
 
@@ -31,13 +31,14 @@ export type AccountDetails = Record<IdentifierKeys, string[]>;
 
 export type EmailImportSource = {
     type: 'email';
-    account: IAuthUser,
+    user: IAuthUser;
     email: MailMessage;
+    attachment?: MailAttachment;
 }
 
 export type FileImportSource = {
     type: 'file';
-    fileName: string;
+    file: File;
 }
 
 export type ImportSource = EmailImportSource | FileImportSource;
@@ -47,6 +48,12 @@ export type ImportPoint = {
     date: Date;
 }
 
+export interface ImportError {
+    type: PromptErrorType;
+    message: string;
+    promptErrorData: Record<string, any>;
+}
+
 export type EmailImportState = {
     startPoint?: ImportPoint;
     currentPoint?: ImportPoint;
@@ -54,8 +61,5 @@ export type EmailImportState = {
     readEmailCount?: number;
     importedEmailCount?: number;
     lastImportAt?: Date;
-    lastError?: {
-        type?: PromptErrorType;
-        message: string;
-    };
+    lastError?: ImportError;
 }

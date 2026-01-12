@@ -50,6 +50,8 @@ export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler
         'openid', 'email', 'profile',
         'https://www.googleapis.com/auth/gmail.readonly',
     ];
+    timeoutInMs = 1 * 60 * 1000; // 1 minute
+
     private API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me/messages';
 
     async getMailListing(token: IAuthToken, domains: string[], emailsBefore?: { date: Date, id: string }, nextToken?: string): Promise<MailListing> {
@@ -94,7 +96,7 @@ export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler
             if (emailsBefore) {
                 const messageIndex = pageData.messages.findIndex(m => m.id === emailsBefore.id);
                 if (messageIndex !== -1) {
-                    data.messages = pageData.messages.slice(messageIndex + 1);
+                    data.messages = pageData.messages.slice(messageIndex);
                     data.nextPageToken = pageData.nextPageToken;
                     foundMessage = true;
                     break;
@@ -111,6 +113,9 @@ export class GoogleMailHandler extends GoogleHandler implements IAuthMailHandler
             return { messages: [], nextPageToken: undefined };
         }
 
+        if (!data.messages || data.messages.length === 0) {
+            return { messages: [], nextPageToken: data.nextPageToken };
+        }
         const messageIds = data.messages.map(m => m.id);
         const messages = await this.fetchMessages(validToken, messageIds);
         return { messages, nextPageToken: data.nextPageToken };

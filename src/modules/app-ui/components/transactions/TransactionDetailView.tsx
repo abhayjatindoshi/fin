@@ -149,8 +149,8 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
                     </> : <div className="px-4 w-full text-wrap break-words flex flex-row gap-4 items-center">
                         <AtSign className="size-7" />
                         <div className="flex flex-col">
-                            <span>{transaction.source.emailMessage.from}</span>
-                            <span className="text-sm text-muted-foreground">{moment(transaction.source.emailMessage.date).format("DD MMMM YYYY")}</span>
+                            <span>{transaction.source.from}</span>
+                            <span className="text-sm text-muted-foreground">{moment(transaction.source.date).format("DD MMMM YYYY")}</span>
                         </div>
                     </div>}
                 </div>

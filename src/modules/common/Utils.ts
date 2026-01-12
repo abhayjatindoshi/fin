@@ -30,6 +30,15 @@ export class Utils {
         return 4294967296 * (2097151 & h2) + (h1 >>> 0);
     }
 
+    static toRecord<T>(arr: T[], keyFn: (item: T) => string | undefined): Record<string, T> {
+        return arr.reduce((acc, item) => {
+            const key = keyFn(item);
+            if (key === undefined) return acc;
+            acc[key] = item;
+            return acc;
+        }, {} as Record<string, T>);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private static dateReviver(_key: string, value: any): any {
         if (typeof value === "string") {

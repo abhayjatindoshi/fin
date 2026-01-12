@@ -1,5 +1,5 @@
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
 import { Item, ItemContent, ItemMedia } from "@/modules/base-ui/components/ui/item";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
 import { ImportIconComponent } from "../icons/import/ImportIcon";
 
 const AboutPage: React.FC = () => {

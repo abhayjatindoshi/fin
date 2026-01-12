@@ -1,17 +1,17 @@
 import { EntityName } from "@/modules/app/entities/entities";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
-import { FileImportProcessContext } from "@/modules/app/import/context/FileImportProcessContext";
-import type { ImportProcessStatus } from "@/modules/app/import/context/ImportProcessContext";
-import { AccountSelectionError, AdapterSelectionError, FilePasswordError, PromptError, RequireConfirmation } from "@/modules/app/import/errors/PromptError";
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
-import type { IBank } from "@/modules/app/import/interfaces/IBank";
-import type { IBankOffering } from "@/modules/app/import/interfaces/IBankOffering";
-import type { IImportAdapter } from "@/modules/app/import/interfaces/IImportAdapter";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { Input } from "@/modules/base-ui/components/ui/input";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/modules/base-ui/components/ui/item";
 import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
+import { FileImportProcessContext } from "@/modules/import/context/FileImportProcessContext";
+import type { ImportProcessStatus } from "@/modules/import/context/ImportProcessContext";
+import { AccountSelectionError, AdapterSelectionError, FilePasswordError, PromptError, RequireConfirmation } from "@/modules/import/errors/PromptError";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
+import type { IBank } from "@/modules/import/interfaces/IBank";
+import type { IBankOffering } from "@/modules/import/interfaces/IBankOffering";
+import type { IImportAdapter } from "@/modules/import/interfaces/IImportAdapter";
 import { Clock, FileIcon, FileText, Hourglass, SquareCheck, SquareX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import AccountNumber from "../../common/AccountNumber";
@@ -96,10 +96,10 @@ const ImportComponent: React.FC<ImportPageProps> = ({ files, close }) => {
 
     const AdapterPrompt = ({ error }: { error: AdapterSelectionError }) => {
 
-        const supportedBanks = error.adapters.map(a => ({
-            bank: ImportMatrix.AdapterBankData[a.id]?.[0] ?? undefined,
-            offering: ImportMatrix.AdapterBankData[a.id]?.[1] ?? undefined,
-            adapter: a
+        const supportedBanks = error.adapterIds.map(id => ({
+            bank: ImportMatrix.AdapterBankData[id]?.[0] ?? undefined,
+            offering: ImportMatrix.AdapterBankData[id]?.[1] ?? undefined,
+            adapter: ImportMatrix.Adapters[id],
         }));
 
         const selectAdapter = (adapter: IImportAdapter) => {

@@ -1,7 +1,7 @@
 import { EntitySchema } from "@/modules/data-sync/entities/Entity";
+import { PromptErrorTypes, type PromptErrorType } from "@/modules/import/errors/PromptError";
+import type { EmailImportState, ImportError, ImportPoint } from "@/modules/import/interfaces/ImportData";
 import z from "zod";
-import { PromptErrorTypes, type PromptErrorType } from "../import/errors/PromptError";
-import type { EmailImportState, ImportPoint } from "../import/interfaces/ImportData";
 
 export const ImportPointSchema = z.object({
     id: z.string(),
@@ -11,9 +11,10 @@ export const ImportPointSchema = z.object({
 export const ErrorTypeSchema = z.enum(PromptErrorTypes) satisfies z.ZodType<PromptErrorType>;
 
 export const ImportErrorSchema = z.object({
-    type: ErrorTypeSchema.optional(),
+    type: ErrorTypeSchema,
     message: z.string(),
-}) satisfies z.ZodType<EmailImportState["lastError"]>;
+    promptErrorData: z.record(z.string(), z.any()),
+}) satisfies z.ZodType<ImportError>;
 
 export const EmailImportStateSchema = z.object({
     startPoint: ImportPointSchema.optional(),
@@ -23,7 +24,7 @@ export const EmailImportStateSchema = z.object({
     importedEmailCount: z.number().optional(),
     lastImportAt: z.date().optional(),
     lastError: ImportErrorSchema.optional(),
-}) satisfies z.ZodType<EmailImportState>; ``
+}) satisfies z.ZodType<EmailImportState>;
 
 export const EmailImportSettingSchema = EntitySchema.extend({
     authAccountId: z.string(),

@@ -27,7 +27,7 @@ const LoginPage: React.FC = () => {
             const display = AuthMatrix.HandlerDisplay[handler.id];
             if (!display) return null;
 
-            return <div key={handler.id} className="m-4">
+            return <div key={handler.id} className="m-4 flex flex-col items-stretch">
                 {createElement(display.button, {
                     onClick: () => login(handler.id),
                     loading: loading,
