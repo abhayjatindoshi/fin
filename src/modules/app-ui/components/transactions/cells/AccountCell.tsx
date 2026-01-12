@@ -1,8 +1,8 @@
 import AccountNumber from "@/modules/app-ui/common/AccountNumber";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
 import { Popover, PopoverContent, PopoverTrigger } from "@/modules/base-ui/components/ui/popover";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
 
 type AccountCellProps = {
     account: MoneyAccount;

@@ -1,5 +1,7 @@
+import { ImportStoreService } from '@/modules/app/services/ImportStoreService';
 import { SettingService, type SettingKeys } from '@/modules/app/services/SettingService';
 import { useDataSync } from '@/modules/data-sync/providers/DataSyncProvider';
+import { ImportService } from '@/modules/import/ImportService';
 import React, { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 
 type WindowWithDevMode = Window & {
@@ -18,6 +20,7 @@ interface AppContextProps {
     setDevModeEnabled: (enabled: boolean) => void;
 
     scrollElementRef?: React.RefObject<HTMLElement | null>;
+    importService: ImportService | null;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -33,6 +36,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, scrollElemen
     const [width, setWidth] = useState<number>(window.innerWidth);
     const [devModeEnabled, setDevModeEnabled] = useState<boolean>(false);
     const [settings, setSettings] = useState<Record<SettingKeys, string> | null>(null);
+    const importService = useMemo(() => orchestrator ? ImportService.initialize(new ImportStoreService()) : null, [orchestrator]);
 
     useEffect(() => {
         const handleResize = () => setWidth(window.innerWidth);
@@ -63,6 +67,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, scrollElemen
             settings, updateSetting,
             devModeEnabled, setDevModeEnabled,
             scrollElementRef,
+            importService,
         }}>
             {children}
         </AppContext.Provider>

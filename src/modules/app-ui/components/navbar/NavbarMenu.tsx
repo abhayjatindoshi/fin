@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@/modules/base-ui/components/ui/tabs";
 import { useTenant } from "@/modules/data-sync/providers/TenantProvider";
-import { ArrowRightLeft, Cog, FlaskConical, Home, PieChart } from "lucide-react";
+import { ArrowRightLeft, Cog, Download, FlaskConical, Home, PieChart } from "lucide-react";
 import type { ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../../providers/AppProvider";
@@ -21,6 +21,7 @@ const menu: MenuItem[] = [
     { key: 'home', label: 'Home', url: '/home', icon: Home },
     { key: 'transactions', label: 'Transactions', url: '/transactions', icon: ArrowRightLeft },
     { key: 'spends', label: 'Spends', url: '/spends', icon: PieChart },
+    { key: 'import', label: 'Import', url: '/import', icon: Download },
     { key: 'settings', label: 'Settings', url: '/settings', icon: Cog },
 ];
 

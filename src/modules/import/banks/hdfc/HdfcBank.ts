@@ -1,4 +1,5 @@
 import type { IBank } from "../../interfaces/IBank";
+import { HdfcBankEmailAdapter } from "./HdfcBankEmailAdapter";
 import { HdfcBankPdfAdapter } from "./HdfcBankPdfAdapter";
 
 export class HdfcBank implements IBank {
@@ -14,7 +15,8 @@ export class HdfcBank implements IBank {
                 name: 'Savings Account',
             },
             adapters: [
-                new HdfcBankPdfAdapter()
+                new HdfcBankPdfAdapter(),
+                new HdfcBankEmailAdapter(),
             ]
         }
     ]

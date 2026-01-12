@@ -1,4 +1,5 @@
 import { Google } from "./handlers/google/Google";
+import { Microsoft } from "./handlers/microsoft/Microsoft";
 import { AuthFeatureNames, type IAuthFeatureHandler, type IAuthFeatureName } from "./interfaces/features/IAuthFeatureHandler";
 import type { IAuthDisplay } from "./interfaces/IAuth";
 
@@ -10,6 +11,7 @@ export class AuthMatrix {
     static {
         const auths = [
             new Google(),
+            new Microsoft(),
         ];
 
         auths.forEach(auth => {

@@ -17,19 +17,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 const HouseholdPage: React.FC = () => {
 
     const navigate = useNavigate();
-    const [params] = useSearchParams();
+    const [params, setParams] = useSearchParams();
     const { currentUser, token } = useAuth();
     const { orchestrator, load: loadDataSync, unload: unloadDataSync } = useDataSync();
     const { setCurrentTenant, load: loadTenantManager, manager: tenantManager } = useTenant();
     const [loading, setLoading] = useState(false);
 
-    const backToHome = useCallback(() => {
+    const returnBack = useCallback(() => {
         const returnUrl = params.get('returnUrl') || '/';
         navigate(returnUrl);
         return null;
     }, [navigate, params]);
 
-    const loadHousehold = useCallback(async (householdId?: string) => {
+    const loadHousehold = useCallback(async (householdId: string, returnUrl: string) => {
         if (!householdId || !tenantManager) return;
         setLoading(true);
         try {
@@ -37,29 +37,33 @@ const HouseholdPage: React.FC = () => {
             if (!tenant) return;
             setCurrentTenant(tenant);
             const config = tenantManager.getDataSyncConfig(tenant);
+            setParams({
+                householdId,
+                returnUrl,
+            })
             await loadDataSync(config);
-
-            const currentHouseholdId = params.get('householdId');
-            if (currentHouseholdId !== householdId) {
-                navigate('/' + householdId);
-            } else {
-                backToHome();
-            }
         } finally {
             setLoading(false);
         }
-    }, [tenantManager, setCurrentTenant, loadDataSync, navigate, params, backToHome]);
+    }, [tenantManager, setCurrentTenant, loadDataSync, params, setParams]);
 
     useEffect(() => {
+        if (loading) return;
+
         const householdId = params.get('householdId');
         if (!householdId) {
             unloadDataSync();
-        } else if (orchestrator && orchestrator.ctx.tenant.id === householdId) {
-            backToHome();
-        } else {
-            loadHousehold(householdId);
+            return;
         }
-    }, [loadHousehold, unloadDataSync, orchestrator, params, backToHome]);
+
+        const returnUrl = params.get('returnUrl');
+        if (orchestrator && orchestrator.ctx.tenant.id === householdId) {
+            returnBack();
+        } else {
+            loadHousehold(householdId, returnUrl || `/${householdId}`);
+        }
+
+    }, [loading, loadHousehold, unloadDataSync, orchestrator, params, returnBack]);
 
     useEffect(() => {
         if (orchestrator) return;
@@ -89,7 +93,7 @@ const HouseholdPage: React.FC = () => {
     }, [currentUser, loadTenantManager, orchestrator]);
 
     if (loading) return <Spinner />;
-    return <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => loadHousehold(tenant.id)} />
+    return <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => tenant.id && loadHousehold(tenant.id, `/${tenant.id}`)} />
 }
 
 export default HouseholdPage;

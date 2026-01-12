@@ -12,6 +12,7 @@ import AboutPage from './pages/AboutPage';
 import AuthHandlerPage from './pages/AuthHandlerPage';
 import HomePage from './pages/HomePage';
 import HouseholdPage from './pages/HouseholdPage';
+import ImportPage from './pages/ImportPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { RedirectTo } from './pages/RedirectTo';
@@ -36,6 +37,7 @@ export default function AppRouter() {
                         <Route path="home" element={<HomePage />} />
                         <Route path="transactions" element={<TransactionsPage />} />
                         <Route path="spends" element={<SpendsPage />} />
+                        <Route path="import" element={<ImportPage />} />
                         <Route path="settings" element={<SettingsPage />} />
                         <Route path="about" element={<AboutPage />} />
                         <Route path="dev">

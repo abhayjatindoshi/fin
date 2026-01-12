@@ -1,31 +1,28 @@
 import FileSize from "@/modules/app-ui/common/FileSize";
 import { useImport } from "@/modules/app-ui/components/import/ImportProvider";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
-import type { IFile, IFileImportAdapter } from "@/modules/app/import/interfaces/IFileImportAdapter";
-import type { ImportData } from "@/modules/app/import/interfaces/ImportData";
-import { ImportService } from "@/modules/app/services/ImportService";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/modules/base-ui/components/ui/input-group";
-import { Spinner } from "@/modules/base-ui/components/ui/spinner";
+import { Label } from "@/modules/base-ui/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/base-ui/components/ui/table";
-import { Asterisk, Check, FileText, Trash, X } from "lucide-react";
+import { FileImportProcessContext } from "@/modules/import/context/FileImportProcessContext";
+import type { ImportProcessStatus } from "@/modules/import/context/ImportProcessContext";
+import { AdapterSelectionError, FilePasswordError, PromptError, type PromptErrorType } from "@/modules/import/errors/PromptError";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
+import type { IImportAdapter } from "@/modules/import/interfaces/IImportAdapter";
+import { Asterisk, FileText, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const DevImportPage: React.FC = () => {
 
     const { enabled, setEnabled } = useImport();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const service = useRef(new ImportService());
+    const context = useRef<FileImportProcessContext | null>(null);
+    const [status, setStatus] = useState<ImportProcessStatus>('pending');
     const [file, setFile] = useState<File | null>(null);
-    const [openFile, setOpenFile] = useState<IFile | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
-    const [supportedAdapters, setSupportedAdapters] = useState<IFileImportAdapter<any>[]>([]);
-    const [selectedAdapter, setSelectedAdapter] = useState<IFileImportAdapter<any> | null>(null);
     const [password, setPassword] = useState<string>('');
-    const [supported, setSupported] = useState<boolean | null>(null);
-    const [importData, setImportData] = useState<ImportData | null>(null);
-    const [importError, setImportError] = useState<Error | null>(null);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
     useEffect(() => {
         setEnabled(false);
@@ -43,41 +40,54 @@ const DevImportPage: React.FC = () => {
 
     useEffect(() => {
         if (!file) return;
-        (async () => {
-            const openFile = await service.current.readFile(file, password);
-            if (!openFile) {
-                setImportError(new Error('Unable to open file'));
-            } else if ('message' in openFile) {
-                setImportError(new Error(openFile.message));
-            } else {
-                setOpenFile(openFile);
-                const adapters = service.current.getSupportedFileAdapters(openFile);
-                setSupportedAdapters(adapters);
-            }
-        })();
-    }, [file, password]);
+        if (context.current) {
+            if (context.current.file === file) return;
+            else context.current.cancel();
+        }
 
-    useEffect(() => {
-        if (!openFile || !selectedAdapter) return;
-        setSupported(selectedAdapter.isSupported(openFile));
-    }, [openFile, selectedAdapter]);
+        const newContext = new FileImportProcessContext(file);
+        context.current = newContext;
+        const subscription = context.current.observeStatus().subscribe(setStatus);
+        newContext.startOrResume();
 
-    useEffect(() => {
-        if (!selectedAdapter || !openFile || !supported) return;
+        return () => subscription.unsubscribe();
 
-        setImportData(null);
-        setImportError(null);
+    }, [file]);
 
-        selectedAdapter.read(openFile)
-            .then(result => setImportData(result))
-            .catch(err => setImportError(err));
+    const getPromptError = <T extends PromptError>(type: PromptErrorType): T | null => {
+        if (!context.current) return null;
+        const error = context.current.error;
+        if (!error || !(error instanceof PromptError) || error.errorType !== type) return null;
+        return error as T;
+    }
 
-    }, [selectedAdapter, openFile, supported]);
+    const resolvePasswordPrompt = async (password: string) => {
+        const error = getPromptError<FilePasswordError>('file_password');
+        if (!error) return;
+        const valid = await error.tryAndStorePassword(password);
+        if (!valid) {
+            setPasswordError("Incorrect password, please try again.");
+            return;
+        }
+    }
 
-    const supportedAdapterMeta = supportedAdapters.map(adapter => {
-        const [bank, offering] = ImportMatrix.AdapterBankData[adapter.id]
-        return { adapter, bank, offering };
-    })
+    const resolveAdapterSelection = (adapter: IImportAdapter) => {
+        const error = getPromptError<AdapterSelectionError>('adapter_selection');
+        if (!error) return;
+        error.selectAdapter(adapter);
+    }
+
+    const bank = (adapter: IImportAdapter | null) => {
+        if (!adapter) return null;
+        const [bank,] = ImportMatrix.AdapterBankData[adapter.id];
+        return bank;
+    }
+
+    const offering = (adapter: IImportAdapter | null) => {
+        if (!adapter) return null;
+        const [, offering] = ImportMatrix.AdapterBankData[adapter.id];
+        return offering;
+    }
 
     return <div className="flex flex-col items-center gap-2 m-4 min-w-0">
         <div className="self-end">Global import handler: {enabled ? "Enabled" : "Disabled"}</div>
@@ -96,52 +106,61 @@ const DevImportPage: React.FC = () => {
             </label>
         </div>}
 
-        {file && <>
-            <div className="flex flex-row gap-4 items-center max-w-[calc(100%-2rem)] border p-4 rounded-md">
-                <FileText className="size-12" />
-                <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-semibold truncate">{file.name}</span>
-                    <span className="text-sm text-muted-foreground">{file.type || 'N/A'}</span>
-                    <span className="text-sm text-muted-foreground"><FileSize file={file} /></span>
-                </div>
-                <Button variant="outline" size="icon" onClick={() => setFile(null)}>
-                    <Trash />
-                </Button>
+        {file && <div className="flex flex-row gap-4 items-center max-w-[calc(100%-2rem)] border p-4 rounded-md">
+            <FileText className="size-12" />
+            <div className="flex flex-col flex-1 min-w-0">
+                <span className="font-semibold truncate">{file.name}</span>
+                <span className="text-sm text-muted-foreground">{file.type || 'N/A'}</span>
+                <span className="text-sm text-muted-foreground"><FileSize file={file} /></span>
+                <span className="">{status}</span>
             </div>
-            <InputGroup className="max-w-96">
-                <InputGroupAddon><Asterisk /></InputGroupAddon>
-                <InputGroupInput placeholder="Password (if any)" value={password} onChange={(e) => setPassword(e.target.value)} />
-            </InputGroup>
-            <div className="mt-4">Click on the adapter icon to import</div>
-            <div className="flex flex-row flex-wrap gap-2 mb-4">
-                {Object.values(supportedAdapterMeta).map(({ adapter, bank, offering }) => <Button
-                    key={adapter.id} size="lg" className="h-14"
-                    variant={selectedAdapter?.id === adapter.id ? 'secondary' : 'outline'}
-                    onClick={() => selectedAdapter ? setSelectedAdapter(null) : setSelectedAdapter(adapter)}>
-                    <div className="flex flex-row gap-2 items-center">
-                        <ImportIconComponent name={bank?.display?.icon ?? ''} className="size-7" />
-                        <div className="flex flex-col items-start">
-                            <span className="font-semibold uppercase">{bank?.display?.name}</span>
-                            <span className="text-sm">{offering?.display?.name}</span>
+            <Button variant="outline" size="icon" onClick={() => setFile(null)}>
+                <Trash />
+            </Button>
+        </div>
+        }
+
+        {context.current && context.current.error && context.current.error instanceof PromptError && <>
+
+            {context.current.error.errorType === 'file_password' && <>
+                <InputGroup className="max-w-96">
+                    <InputGroupAddon><Asterisk /></InputGroupAddon>
+                    <InputGroupInput placeholder="Enter password to continue" value={password} onChange={(e) => setPassword(e.target.value)} />
+                </InputGroup>
+                {passwordError && <Label className="text-sm text-destructive mt-1">{passwordError}</Label>}
+                <Button variant="outline" onClick={() => resolvePasswordPrompt(password)}>Submit</Button>
+            </>}
+
+            {context.current.error.errorType === 'adapter_selection' && <>
+                <div className="mt-4">Click on the adapter icon to import</div>
+                <div className="flex flex-row flex-wrap gap-2 mb-4">
+                    {(context.current.error as AdapterSelectionError).adapterIds.map(id => ImportMatrix.Adapters[id]).map(adapter => <Button
+                        key={adapter.id} size="lg" className="h-14"
+                        onClick={() => resolveAdapterSelection(adapter)}>
+                        <div className="flex flex-row gap-2 items-center">
+                            <ImportIconComponent name={bank(adapter)?.display?.icon ?? ''} className="size-7" />
+                            <div className="flex flex-col items-start">
+                                <span className="font-semibold uppercase">{bank(adapter)?.display?.name}</span>
+                                <span className="text-sm">{offering(adapter)?.display?.name}</span>
+                            </div>
                         </div>
-                    </div>
-                </Button>)}
-            </div>
-        </>}
-
-        {selectedAdapter && <>
-            {supported === null ?
-                <Spinner /> :
-                <div className="flex flex-row items-center gap-2">
-                    <span className="text-xl">Supported: </span>
-                    {supported ? <Check className="size-8" /> : <X className="text-destructive size-8" />}
+                    </Button>)}
                 </div>
-            }
+            </>}
 
-            {importData && <>
+            {context.current.error.errorType === 'require_confirmation' && <>
                 <div className="mt-4 self-start">Import Data:</div>
                 <div className="flex flex-col gap-2 items-start w-full">
-                    <span className="text-xl">Account no: {importData.identifiers.join(', ')}</span>
+                    <table className="w-full max-w-md">
+                        <tbody>
+                            {Object.entries(context.current.data?.account ?? {}).map(([key, values]) => (
+                                <tr key={key}>
+                                    <td className="font-semibold pr-4 align-top">{key}:</td>
+                                    <td>{values.join(', ')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                     <div className="w-full overflow-auto">
                         <Table>
                             <TableHeader>
@@ -152,7 +171,7 @@ const DevImportPage: React.FC = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {importData.transactions.map((tx, index) => (
+                                {context.current.data?.transactions.map((tx, index) => (
                                     <TableRow key={index}>
                                         <TableCell>{tx.date.toDateString()}</TableCell>
                                         <TableCell className="whitespace-normal">{tx.description}</TableCell>
@@ -165,12 +184,6 @@ const DevImportPage: React.FC = () => {
                 </div>
             </>}
 
-            {importError && <>
-                <div className="mt-4 self-start">Import Error:</div>
-                <pre className="p-4 self-start border rounded-md bg-muted/50 text-destructive">
-                    {String(importError)}
-                </pre>
-            </>}
         </>}
     </div>
 }

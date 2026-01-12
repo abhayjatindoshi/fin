@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/modules/base-ui/components
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from "react";
 import Dropzone from "./Dropzone";
-import ImportPage from "./ImportPage";
+import ImportComponent from "./ImportComponent";
 
 interface ImportContextProps {
     importFiles: (file: File[]) => Promise<void>;
@@ -44,7 +44,7 @@ export const ImportProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
             <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
                 <DialogContent>
                     <DialogTitle>Import Files</DialogTitle>
-                    <ImportPage files={files} close={() => setShowImportModal(false)} />
+                    <ImportComponent files={files} close={() => setShowImportModal(false)} />
                 </DialogContent>
             </Dialog>
         </ImportContext.Provider >

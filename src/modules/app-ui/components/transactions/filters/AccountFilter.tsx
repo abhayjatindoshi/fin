@@ -2,9 +2,9 @@ import AccountNumber from "@/modules/app-ui/common/AccountNumber";
 import { toRecord } from "@/modules/app-ui/common/ComponentUtils";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
 import { useEntity } from "@/modules/app-ui/providers/EntityProvider";
-import { ImportMatrix } from "@/modules/app/import/ImportMatrix";
 import { Button } from "@/modules/base-ui/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/modules/base-ui/components/ui/dropdown-menu";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
 import { Landmark } from "lucide-react";
 
 type AccountFilterProps = {

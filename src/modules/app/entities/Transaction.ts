@@ -6,12 +6,17 @@ export const TransactionSourceTypeSchema = z.enum(['file', 'email']);
 export const TransactionFileSourceSchema = z.object({
     type: z.literal('file'),
     fileName: z.string(),
+    fileType: z.string().optional(),
 });
 
 export const TransactionEmailSourceSchema = z.object({
     type: z.literal('email'),
-    email: z.email(),
+    authAccountId: z.string(),
     emailId: z.string(),
+    date: z.date(),
+    from: z.string(),
+    to: z.string(),
+    subject: z.string(),
 });
 
 export const TransactionSourceSchema = TransactionFileSourceSchema.or(TransactionEmailSourceSchema);
