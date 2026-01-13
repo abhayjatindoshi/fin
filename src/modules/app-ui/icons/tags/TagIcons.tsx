@@ -1,18 +1,24 @@
-import { AppWindowIcon, ArmchairIcon, ArrowLeftRightIcon, BackpackIcon, BadgeIndianRupeeIcon, BadgeQuestionMarkIcon, BananaIcon, BanknoteArrowDownIcon, BanknoteArrowUpIcon, BedIcon, BeerIcon, BicepsFlexedIcon, BitcoinIcon, BookHeartIcon, BookmarkXIcon, BrickWallShieldIcon, BrushCleaningIcon, BuildingIcon, BusIcon, CableIcon, CalendarDaysIcon, CalendarIcon, CalendarSyncIcon, CameraIcon, CarFrontIcon, CarIcon, CarrotIcon, CarTaxiFrontIcon, ChartCandlestickIcon, ChefHatIcon, CigaretteIcon, CircleDollarSignIcon, CircleDotDashedIcon, CircleParkingIcon, ClapperboardIcon, CoffeeIcon, CoinsIcon, ConstructionIcon, CookieIcon, CornerDownLeftIcon, CreditCardIcon, CroissantIcon, CrossIcon, DiamondPercentIcon, DropletIcon, DrumstickIcon, DumbbellIcon, EyeClosedIcon, FlameIcon, FootprintsIcon, FuelIcon, Gamepad2Icon, GemIcon, GiftIcon, GlassesIcon, GlassWaterIcon, GraduationCapIcon, GrapeIcon, HamburgerIcon, HammerIcon, HandCoinsIcon, HandHelpingIcon, HandPlatterIcon, HandshakeIcon, HeartHandshakeIcon, HeartIcon, HeartPlusIcon, HospitalIcon, HouseHeartIcon, HouseIcon, IceCreamBowlIcon, LandmarkIcon, LaptopIcon, LibraryBigIcon, MicIcon, MilkIcon, MonitorPlayIcon, MotorbikeIcon, NewspaperIcon, PackageIcon, PaintRollerIcon, PaletteIcon, PartyPopperIcon, PawPrintIcon, PencilRulerIcon, PiggyBankIcon, PillBottleIcon, PillIcon, PizzaIcon, PlaneIcon, PrinterIcon, ReceiptIndianRupeeIcon, ReceiptTextIcon, RoseIcon, RotateCcwIcon, SaladIcon, SatelliteDishIcon, ScaleIcon, ScissorsIcon, ShieldUserIcon, ShirtIcon, ShoppingBagIcon, SofaIcon, SoupIcon, SparklesIcon, SproutIcon, StethoscopeIcon, SyringeIcon, TabletSmartphoneIcon, TentIcon, TentTreeIcon, TicketsIcon, ToyBrickIcon, TrainFrontIcon, TrainTrackIcon, TrendingUpDownIcon, TruckIcon, UserIcon, UtensilsIcon, VaultIcon, WalletIcon, WandSparklesIcon, WashingMachineIcon, WheatIcon, WifiIcon, WrenchIcon, ZapIcon } from 'lucide-react';
+import { AppWindowIcon, ArmchairIcon, ArrowLeftRightIcon, BackpackIcon, BadgeIndianRupeeIcon, BadgeQuestionMarkIcon, BananaIcon, BanknoteArrowDownIcon, BanknoteArrowUpIcon, BatteryChargingIcon, BedIcon, BeerIcon, BicepsFlexedIcon, BikeIcon, BitcoinIcon, BookHeartIcon, BookmarkXIcon, BrickWallShieldIcon, BrushCleaningIcon, BuildingIcon, BusIcon, CableIcon, CalendarDaysIcon, CalendarIcon, CalendarSyncIcon, CameraIcon, CarFrontIcon, CarIcon, CarrotIcon, CarTaxiFrontIcon, ChartCandlestickIcon, ChefHatIcon, CigaretteIcon, CircleDollarSignIcon, CircleDotDashedIcon, CircleParkingIcon, ClapperboardIcon, CoffeeIcon, CoinsIcon, ConstructionIcon, CookieIcon, CornerDownLeftIcon, CreditCardIcon, CroissantIcon, CrossIcon, DiamondPercentIcon, DropletIcon, DrumstickIcon, DumbbellIcon, EyeClosedIcon, FlameIcon, FootprintsIcon, FuelIcon, Gamepad2Icon, GemIcon, GiftIcon, GlassesIcon, GlassWaterIcon, GraduationCapIcon, GrapeIcon, HamburgerIcon, HammerIcon, HandCoinsIcon, HandHelpingIcon, HandPlatterIcon, HandshakeIcon, HeartHandshakeIcon, HeartIcon, HeartPlusIcon, HospitalIcon, HouseHeartIcon, HouseIcon, IceCreamBowlIcon, LandmarkIcon, LaptopIcon, LibraryBigIcon, MicIcon, MilkIcon, MonitorPlayIcon, MotorbikeIcon, NewspaperIcon, PackageIcon, PaintRollerIcon, PaletteIcon, PartyPopperIcon, PawPrintIcon, PencilRulerIcon, PiggyBankIcon, PillBottleIcon, PillIcon, PizzaIcon, PlaneIcon, PrinterIcon, ReceiptIndianRupeeIcon, ReceiptTextIcon, RoseIcon, RotateCcwIcon, SaladIcon, SatelliteDishIcon, ScaleIcon, ScissorsIcon, ShieldUserIcon, ShirtIcon, ShoppingBagIcon, ShoppingBasketIcon, ShoppingCartIcon, SofaIcon, SoupIcon, SparklesIcon, SproutIcon, StampIcon, StethoscopeIcon, SyringeIcon, TabletSmartphoneIcon, TentIcon, TentTreeIcon, TicketsIcon, ToyBrickIcon, TrainFrontIcon, TrainTrackIcon, TrendingUpDownIcon, TruckIcon, UserIcon, UtensilsIcon, VaultIcon, WalletIcon, WandSparklesIcon, WashingMachineIcon, WheatIcon, WifiIcon, WrenchIcon, ZapIcon } from 'lucide-react';
 import React from 'react';
 import { siAirbnb, siApple, siGoogle, siGooglepay, siNetflix, siPaytm, siPhonepe, siSpotify, siSwiggy, siUber, siYoutube, siZomato } from 'simple-icons';
 import { createSimpleIcon } from '../helpers';
-import Amazon from './icons/amazon.svg?react';
+import AmazonPay from './icons/amazon-pay.svg?react';
+import AmazonPrimeVideo from './icons/amazon-prime-video.svg?react';
 import { AutoIcon } from './icons/auto';
+import Blinkit from './icons/blinkit.svg?react';
 import { BowlingIcon } from './icons/bowling';
 import { BrownBagIcon } from './icons/brownbag';
 import Bumble from './icons/bumble.svg?react';
+import Cred from './icons/cred.svg?react';
+import District from './icons/district.svg?react';
 import Fastag from './icons/fastag.svg?react';
 import { GasIcon } from './icons/gas';
 import { GoldbarIcon } from './icons/goldbar';
 import Lazypay from './icons/lazypay.svg?react';
 import { MakeupIcon } from './icons/makeup';
+import NammaYatri from './icons/namma-yatri.svg?react';
 import Nps from './icons/nps.svg?react';
+import Ola from './icons/ola.svg?react';
 import Ppf from './icons/ppf.svg?react';
 import Rapido from './icons/rapido.svg?react';
 import { ShuttlecockIcon } from './icons/shuttlecock';
@@ -50,11 +56,17 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "zomato": createSimpleIcon(siZomato, 'currentColor'),
 
     // Custom brand icons
-    "amazon": Amazon,
+    "amazon-pay": AmazonPay,
+    "amazon-prime-video": AmazonPrimeVideo,
+    "blinkit": Blinkit,
     "bumble": Bumble,
+    "cred": Cred,
+    "district": District,
     "fastag": Fastag,
     "lazypay": Lazypay,
+    "namma-yatri": NammaYatri,
     "nps": Nps,
+    "ola": Ola,
     "ppf": Ppf,
     "rapido": Rapido,
     "simpl": Simpl,
@@ -83,9 +95,11 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "banana": BananaIcon,
     "banknote-arrow-down": BanknoteArrowDownIcon,
     "banknote-arrow-up": BanknoteArrowUpIcon,
+    "battery-charging": BatteryChargingIcon,
     "bed": BedIcon,
     "beer": BeerIcon,
     "biceps-flexed": BicepsFlexedIcon,
+    "bike-fast": BikeIcon,
     "bitcoin": BitcoinIcon,
     "book-heart": BookHeartIcon,
     "bookmark-x": BookmarkXIcon,
@@ -176,10 +190,13 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "shield-user": ShieldUserIcon,
     "shirt": ShirtIcon,
     "shopping-bag": ShoppingBagIcon,
+    "shopping-basket": ShoppingBasketIcon,
+    "shopping-cart": ShoppingCartIcon,
     "sofa": SofaIcon,
     "soup": SoupIcon,
     "sparkles": SparklesIcon,
     "sprout": SproutIcon,
+    "stamp": StampIcon,
     "stethoscope": StethoscopeIcon,
     "syringe": SyringeIcon,
     "tablet-smartphone": TabletSmartphoneIcon,
