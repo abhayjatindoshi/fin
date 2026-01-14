@@ -63,9 +63,9 @@ const tags: SystemTags = {
 		children: {
 			"Dineout": { icon: "swiggy" },
 			"District": { icon: "district" },
-			"EazyDiner": {},
-			"Restaurant": { icon: "utensils" },
-			"Street Food": {},
+			"EazyDiner": { icon: "eazydiner" },
+			"Restaurant": { icon: "hand-platter" },
+			"Street Food": { icon: "sandwich" },
 			"Breakfast": { icon: "croissant" },
 		}
 	},
@@ -117,9 +117,9 @@ const tags: SystemTags = {
 		children: {
 			"Badminton": { icon: "shuttlecock" },
 			"Classes": { icon: "calendar-days" },
-			"Cricket": { icon: "fitness-cricket" },
+			"Cricket": { icon: "cricket" },
 			"Equipment": { icon: "dumbbell" },
-			"Football": { icon: "fitness-football" },
+			"Football": { icon: "football" },
 			"Gym": { icon: "biceps-flexed" },
 			"Nutrition": { icon: "pill-bottle" },
 		}
@@ -213,7 +213,7 @@ const tags: SystemTags = {
 		}
 	},
 	"Professional": {
-		icon: "briefcase",
+		icon: "briefcase-business",
 		children: {
 			"CA": { icon: "glasses" },
 			"Legal": { icon: "scale" },
@@ -221,7 +221,7 @@ const tags: SystemTags = {
 	},
 	"Self Transfer": { icon: "arrow-left-right" },
 	"Services": {
-		icon: "hand-platter",
+		icon: "user-star",
 		children: {
 			"Painting": { icon: "paint-roller" },
 			"Maid": { icon: "brush-cleaning" },
@@ -233,7 +233,7 @@ const tags: SystemTags = {
 			"Carpenter": { icon: "hammer" },
 			"Driver": { icon: "car" },
 			"Photographer": { icon: "camera" },
-			"Tailor": {},
+			"Tailor": { icon: "sewing" },
 		}
 	},
 	"Shopping": {
@@ -244,11 +244,11 @@ const tags: SystemTags = {
 			"Mobile & Accessories": { icon: "tablet-smartphone" },
 			"Furniture": { icon: "sofa" },
 			"Electronics": { icon: "laptop" },
-			"Appliances": { icon: "shopping-appliance" },
+			"Appliances": { icon: "lamp" },
 			"Plants": { icon: "sprout" },
 			"Footwear": { icon: "footprints" },
 			"Jewellery": { icon: "gem" },
-			"Devotional": { icon: "shopping-devotional" },
+			"Devotional": { icon: "flame" },
 			"Wedding": { icon: "gem" },
 		}
 	},
