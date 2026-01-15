@@ -112,7 +112,7 @@ const DevImportPage: React.FC = () => {
                 <span className="font-semibold truncate">{file.name}</span>
                 <span className="text-sm text-muted-foreground">{file.type || 'N/A'}</span>
                 <span className="text-sm text-muted-foreground"><FileSize file={file} /></span>
-                <span className="">{status}</span>
+                <span className="">{status}: {context.current?.error && context.current.error.message}</span>
             </div>
             <Button variant="outline" size="icon" onClick={() => setFile(null)}>
                 <Trash />
