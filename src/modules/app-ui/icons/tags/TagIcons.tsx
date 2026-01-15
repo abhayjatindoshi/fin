@@ -14,11 +14,13 @@ import CricketIcon from './icons/cricket.svg?react';
 import District from './icons/district.svg?react';
 import EazyDiner from './icons/eazydiner.svg?react';
 import Fastag from './icons/fastag.svg?react';
+import FatherIcon from './icons/father.svg?react';
 import FootballIcon from './icons/football.svg?react';
 import { GasIcon } from './icons/gas';
 import { GoldbarIcon } from './icons/goldbar';
 import Lazypay from './icons/lazypay.svg?react';
 import { MakeupIcon } from './icons/makeup';
+import MotherIcon from './icons/mother.svg?react';
 import NammaYatri from './icons/namma-yatri.svg?react';
 import Nps from './icons/nps.svg?react';
 import Ola from './icons/ola.svg?react';
@@ -96,6 +98,8 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "shuttlecock": ShuttlecockIcon,
     "tiffin": TiffinIcon,
     "tooth": ToothIcon,
+    "father": FatherIcon,
+    "mother": MotherIcon,
     "whistle": WhistleIcon,
 
     "app-window": AppWindowIcon,
