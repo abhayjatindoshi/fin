@@ -6,9 +6,9 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
     type: 'file' = 'file';
     fileType: 'pdf' = 'pdf';
 
-    private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
     private accountNumberLabelRegex = /Account[\s]+Number|Account[\s]+No/i;
     private accountNumberRegex = /(\d{10,})/;
+    private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
     private openingBalanceLabelRegex = /Opening[\s]+Balance/i;
     private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
     private dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
@@ -29,12 +29,11 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
 
         const accountNumber = this.extractAccountNumber(file.pages);
         if (!accountNumber) throw new Error('Unable to extract account number from HDFC PDF file.');
-
         const transactions = this.extractTransactions(file.pages);
 
         return {
             account: {
-                accountNumber: [accountNumber]
+                accountNumber: [accountNumber],
             },
             transactions
         }

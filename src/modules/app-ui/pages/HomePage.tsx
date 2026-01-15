@@ -1,6 +1,7 @@
 import BanksWidget from "../components/widgets/BanksWidget";
 import ImportWidget from "../components/widgets/ImportWidget";
 import MoneyFlowWidget from "../components/widgets/MoneyFlowWidget";
+import TransactionCountWidget from "../components/widgets/TransactionCountWidget";
 import { useApp } from "../providers/AppProvider";
 
 const HomePage: React.FC = () => {
@@ -12,6 +13,7 @@ const HomePage: React.FC = () => {
             <ImportWidget />
             <BanksWidget />
             <MoneyFlowWidget />
+            <TransactionCountWidget />
         </div>
         <div className={`-z-10 fixed text-right text-muted-foreground font-black opacity-30 ${isMobile ? 'text-8xl bottom-10 right-10' : 'w-1/2 text-9xl bottom-0 right-2'}`}>
             More widgets coming soon...

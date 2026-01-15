@@ -21,8 +21,10 @@ export type ImportTransaction = TransactionDetails & {
 const identifiers = [
     "accountHolderName",
     "accountNumber",
+    "customerId",
     "ifscCode",
     "swiftCode",
+    "micrCode",
 ];
 
 type IdentifierKeys = typeof identifiers[number];
