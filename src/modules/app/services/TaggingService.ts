@@ -1,6 +1,8 @@
-import { map, type Observable } from "rxjs";
+import { ImportMatrix } from "@/modules/import/ImportMatrix";
+import { combineLatest, map, type Observable } from "rxjs";
 import { SystemTags } from "../common/SystemTags";
 import { EntityName } from "../entities/entities";
+import type { MoneyAccount } from "../entities/MoneyAccount";
 import type { Tag } from "../entities/Tag";
 import { BaseService } from "./BaseService";
 
@@ -37,17 +39,49 @@ export class TaggingService extends BaseService {
             }
         });
 
-        return { ...enhancedTagMap, ...refMap };
+        const tagMap = { ...enhancedTagMap, ...refMap };
+        Object.values(tagMap).forEach(tag => {
+            tag.children = Object.values(tag.children.reduce((acc, child) => {
+                acc[child.id!] = child;
+                return acc;
+            }, {} as Record<string, EnhancedTag>));
+        });
+        return tagMap;
     }
 
     private static systemTagMap: Record<string, EnhancedTag> = TaggingService.convertToEnhancedTagMap(Object.values(SystemTags));
 
     observeTagMap(): Observable<Record<string, EnhancedTag>> {
         const tagRepo = this.repository(EntityName.Tag);
+        const accountRepo = this.repository(EntityName.MoneyAccount);
 
-        return tagRepo.observeAll().pipe(
-            map((tags) => TaggingService.convertToEnhancedTagMap(tags as Tag[], TaggingService.systemTagMap))
+        return combineLatest([
+            tagRepo.observeAll(),
+            accountRepo.observeAll()
+        ]).pipe(
+            map(([tags, accounts]) => {
+                if (!tags || !accounts) return {};
+                const allTags = [
+                    ...tags as Tag[],
+                    ...(accounts as MoneyAccount[]).map(account => {
+                        const accountNumber = account.accountNumber.slice(-4);
+                        const name = `****${accountNumber}`;
+                        const bank = ImportMatrix.Banks[account.bankId];
+                        const offering = bank?.offerings.find(o => o.id === account.offeringId);
+                        const id = `account-${bank.id}-${offering?.id}-${accountNumber}`;
+                        const icon = offering?.display.icon || bank.display?.icon;
+                        return {
+                            id: id,
+                            name: name,
+                            icon: icon ? 'account-' + icon : 'landmark',
+                            parent: 'system-tag-selftransfer',
+                        } as Tag
+                    })
+                ]
+                return TaggingService.convertToEnhancedTagMap(allTags, TaggingService.systemTagMap);
+            })
         );
+
     }
 
     async getTagsWithHierarchy(): Promise<Record<string, EnhancedTag>> {

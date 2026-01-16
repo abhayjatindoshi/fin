@@ -1,7 +1,8 @@
-import { AppWindowIcon, ArmchairIcon, ArrowLeftRightIcon, BackpackIcon, BadgeIndianRupeeIcon, BadgeQuestionMarkIcon, BananaIcon, BanknoteArrowDownIcon, BanknoteArrowUpIcon, BatteryChargingIcon, BedIcon, BeerIcon, BicepsFlexedIcon, BikeIcon, BitcoinIcon, BookHeartIcon, BookmarkXIcon, BrickWallShieldIcon, BriefcaseBusinessIcon, BrushCleaningIcon, BuildingIcon, BusIcon, CableIcon, CalendarDaysIcon, CalendarIcon, CalendarSyncIcon, CameraIcon, CarFrontIcon, CarIcon, CarrotIcon, CarTaxiFrontIcon, ChartCandlestickIcon, ChefHatIcon, CigaretteIcon, CircleDollarSignIcon, CircleDotDashedIcon, CircleParkingIcon, ClapperboardIcon, CoffeeIcon, CoinsIcon, ConstructionIcon, CookieIcon, CornerDownLeftIcon, CreditCardIcon, CroissantIcon, CrossIcon, DiamondPercentIcon, DropletIcon, DrumstickIcon, DumbbellIcon, EyeClosedIcon, FlameIcon, FootprintsIcon, FuelIcon, Gamepad2Icon, GemIcon, GiftIcon, GlassesIcon, GlassWaterIcon, GraduationCapIcon, GrapeIcon, HamburgerIcon, HammerIcon, HandCoinsIcon, HandHelpingIcon, HandPlatterIcon, HandshakeIcon, HeartHandshakeIcon, HeartIcon, HeartPlusIcon, HospitalIcon, HouseHeartIcon, HouseIcon, IceCreamBowlIcon, LampIcon, LandmarkIcon, LaptopIcon, LibraryBigIcon, MicIcon, MilkIcon, MonitorPlayIcon, MotorbikeIcon, NewspaperIcon, PackageIcon, PaintRollerIcon, PaletteIcon, PartyPopperIcon, PawPrintIcon, PencilRulerIcon, PiggyBankIcon, PillBottleIcon, PillIcon, PizzaIcon, PlaneIcon, PrinterIcon, ReceiptIndianRupeeIcon, ReceiptTextIcon, RoseIcon, RotateCcwIcon, SaladIcon, SandwichIcon, SatelliteDishIcon, ScaleIcon, ScissorsIcon, ShieldUserIcon, ShirtIcon, ShoppingBagIcon, ShoppingBasketIcon, ShoppingCartIcon, SofaIcon, SoupIcon, SparklesIcon, SproutIcon, StampIcon, StethoscopeIcon, SyringeIcon, TabletSmartphoneIcon, TentIcon, TentTreeIcon, TicketsIcon, ToyBrickIcon, TrainFrontIcon, TrainTrackIcon, TrendingUpDownIcon, TruckIcon, UserIcon, UserStarIcon, UtensilsIcon, VaultIcon, WalletIcon, WandSparklesIcon, WashingMachineIcon, WheatIcon, WifiIcon, WrenchIcon, ZapIcon } from 'lucide-react';
+import { AppWindowIcon, ArmchairIcon, ArrowLeftRightIcon, BackpackIcon, BadgeIndianRupeeIcon, BadgeQuestionMarkIcon, BananaIcon, BanknoteArrowDownIcon, BanknoteArrowUpIcon, BatteryChargingIcon, BedIcon, BeerIcon, BicepsFlexedIcon, BikeIcon, BitcoinIcon, BookHeartIcon, BookmarkXIcon, BrickWallShieldIcon, BriefcaseBusinessIcon, BrushCleaningIcon, BuildingIcon, BusIcon, CableIcon, CalendarDaysIcon, CalendarIcon, CalendarSyncIcon, CameraIcon, CarFrontIcon, CarIcon, CarrotIcon, CarTaxiFrontIcon, ChartCandlestickIcon, ChefHatIcon, CigaretteIcon, CircleDollarSignIcon, CircleDotDashedIcon, CircleParkingIcon, ClapperboardIcon, CoffeeIcon, CoinsIcon, ConstructionIcon, CookieIcon, CornerDownLeftIcon, CreditCardIcon, CroissantIcon, CrossIcon, DiamondPercentIcon, DropletIcon, DrumstickIcon, DumbbellIcon, EyeClosedIcon, FlameIcon, FootprintsIcon, FuelIcon, Gamepad2Icon, GemIcon, GiftIcon, GlassesIcon, GlassWaterIcon, GraduationCapIcon, GrapeIcon, HamburgerIcon, HammerIcon, HandCoinsIcon, HandHelpingIcon, HandPlatterIcon, HandshakeIcon, HeartHandshakeIcon, HeartIcon, HeartPlusIcon, HospitalIcon, HouseHeartIcon, HouseIcon, IceCreamBowlIcon, IceCreamConeIcon, LampIcon, LandmarkIcon, LaptopIcon, LibraryBigIcon, MicIcon, MilkIcon, MonitorPlayIcon, MotorbikeIcon, NewspaperIcon, PackageIcon, PaintRollerIcon, PaletteIcon, PartyPopperIcon, PawPrintIcon, PencilRulerIcon, PiggyBankIcon, PillBottleIcon, PillIcon, PizzaIcon, PlaneIcon, PrinterIcon, ReceiptIndianRupeeIcon, ReceiptTextIcon, RoseIcon, RotateCcwIcon, SaladIcon, SandwichIcon, SatelliteDishIcon, ScaleIcon, ScissorsIcon, ShieldUserIcon, ShirtIcon, ShoppingBagIcon, ShoppingBasketIcon, ShoppingCartIcon, SofaIcon, SoupIcon, SparklesIcon, SproutIcon, StampIcon, StethoscopeIcon, SyringeIcon, TabletSmartphoneIcon, TentIcon, TentTreeIcon, TicketsIcon, ToyBrickIcon, TrainFrontIcon, TrainTrackIcon, TrendingUpDownIcon, TruckIcon, UserIcon, UserStarIcon, UtensilsIcon, VaultIcon, WalletIcon, WandSparklesIcon, WashingMachineIcon, WheatIcon, WifiIcon, WineIcon, WrenchIcon, ZapIcon } from 'lucide-react';
 import React from 'react';
 import { siAirbnb, siApple, siGoogle, siGooglepay, siNetflix, siPaytm, siPhonepe, siSpotify, siSwiggy, siUber, siYoutube, siZomato } from 'simple-icons';
 import { createSimpleIcon } from '../helpers';
+import { ImportIconComponent } from '../import/ImportIcon';
 import AmazonPay from './icons/amazon-pay.svg?react';
 import AmazonPrimeVideo from './icons/amazon-prime-video.svg?react';
 import { AutoIcon } from './icons/auto';
@@ -41,6 +42,7 @@ type TagIconComponentProps = React.SVGProps<SVGSVGElement> & {
 };
 
 export const TagIconComponent: React.FC<TagIconComponentProps> = ({ name, ...props }) => {
+    if (name.startsWith('account-')) return <ImportIconComponent name={name.split('account-')[1]} {...props} />;
     let Icon = TagIcons[name];
     if (!Icon) {
         Icon = TagIcons['badge-question-mark'];
@@ -176,6 +178,7 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "house-heart": HouseHeartIcon,
     "house": HouseIcon,
     "ice-cream-bowl": IceCreamBowlIcon,
+    "ice-cream-cone": IceCreamConeIcon,
     "lamp": LampIcon,
     "landmark": LandmarkIcon,
     "laptop": LaptopIcon,
@@ -237,6 +240,7 @@ const TagIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "washing-machine": WashingMachineIcon,
     "wheat": WheatIcon,
     "wifi": WifiIcon,
+    "wine": WineIcon,
     "wrench": WrenchIcon,
     "zap": ZapIcon,
 };

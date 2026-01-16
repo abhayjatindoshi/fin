@@ -8,6 +8,10 @@ type SystemTags = Record<string, {
 }>;
 
 const tags: SystemTags = {
+    "Bank Charges": {
+        icon: "eye-closed",
+        description: "Fees, penalties, or service charges applied by banks for account, ATM, or card usage.",
+    },
     "Bills": {
         icon: "receipt-text",
         children: {
@@ -71,6 +75,8 @@ const tags: SystemTags = {
             "Restaurant": { icon: "hand-platter" },
             "Street Food": { icon: "sandwich" },
             "Breakfast": { icon: "croissant" },
+            "Juice": { icon: "wine" },
+            "Icecream": { icon: "ice-cream-cone" },
         }
     },
     "Donation": { icon: "heart-plus" },

@@ -147,7 +147,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
                         hover:bg-muted rounded-3xl cursor-pointer
                         ${selectedTagId === childTag.id ? 'bg-accent/20 border' : ''}`}
                     >
-                        <TagIconComponent name={childTag.icon} />
+                        <TagIconComponent name={childTag.icon} className="size-6" />
                         <span className="text-nowrap">{childTag.name}</span>
                     </div>
                 ))}
