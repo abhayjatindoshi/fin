@@ -133,7 +133,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
             ${selectedTagId === tag.id ? 'bg-accent/20 border' : ''}`}
         >
             <div className="flex flex-row gap-2 items-center" onClick={(e) => selectTag(e, tag)}>
-                <TagIconComponent name={tag.icon} className="size-8" />
+                <TagIconComponent name={tag.icon} className="size-6 min-w-6 m-1" />
                 <div className="flex flex-col">
                     <span className="font-medium">{tag.name}</span>
                     <span className="text-sm text-muted-foreground">{tag.description}</span>
@@ -166,7 +166,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({ variant, open, onOpenChang
         const virtualizer = useVirtualizer({
             count: filteredTags.length + (showRemoveTag ? 1 : 0),
             getScrollElement: () => scrollElementRef.current,
-            estimateSize: () => 20,
+            estimateSize: () => 1000,
         });
 
         const items = virtualizer.getVirtualItems();

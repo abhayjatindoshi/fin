@@ -6,9 +6,9 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
     type: 'file' = 'file';
     fileType: 'pdf' = 'pdf';
 
-    private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
     private accountNumberLabelRegex = /Account[\s]+Number|Account[\s]+No/i;
     private accountNumberRegex = /(\d{10,})/;
+    private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
     private openingBalanceLabelRegex = /Opening[\s]+Balance/i;
     private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
     private dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
@@ -29,12 +29,11 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
 
         const accountNumber = this.extractAccountNumber(file.pages);
         if (!accountNumber) throw new Error('Unable to extract account number from HDFC PDF file.');
-
         const transactions = this.extractTransactions(file.pages);
 
         return {
             account: {
-                accountNumber: [accountNumber]
+                accountNumber: [accountNumber],
             },
             transactions
         }
@@ -191,8 +190,7 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
         if (pages.length === 0) return [];
 
         const cleanedLines: string[] = [];
-        if (pages.length === 1) {
-            const page = pages[0];
+        for (const page of pages) {
             const headerLineIndex = page.findIndex(line => this.dateStartRegex.test(line));
             if (headerLineIndex === -1) return [];
             let footerLineIndex = page.length;
@@ -204,38 +202,7 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
             }
             const contentLines = page.slice(headerLineIndex, footerLineIndex);
             cleanedLines.push(...contentLines);
-        } else {
-
-            // using centermost page as reference for header/footer lines
-            const referencePage = Math.floor(pages.length / 2);
-            for (const page of pages) {
-                const headerLineIndex = this.countMatchingLines(page, pages[referencePage], 'start');
-                let footerLineIndex = page.length - this.countMatchingLines(page, pages[referencePage], 'end');
-                for (let i = headerLineIndex; i < footerLineIndex; i++) {
-                    if (this.skipLinesAfter.some(regex => regex.test(page[i]))) {
-                        footerLineIndex = i;
-                        break;
-                    }
-                }
-                const contentLines = page.slice(headerLineIndex, footerLineIndex);
-                cleanedLines.push(...contentLines);
-            }
         }
         return cleanedLines;
-    }
-
-    private countMatchingLines(page: string[], referencePage: string[], from: 'start' | 'end'): number {
-        let count = 0;
-        const minLines = Math.min(page.length, referencePage.length);
-        for (let i = 0; i < minLines; i++) {
-            const pageLine = from === 'start' ? page[i] : page[page.length - 1 - i];
-            const referenceLine = from === 'start' ? referencePage[i] : referencePage[referencePage.length - 1 - i];
-            if (pageLine === referenceLine) {
-                count++;
-            } else {
-                break;
-            }
-        }
-        return count;
     }
 }

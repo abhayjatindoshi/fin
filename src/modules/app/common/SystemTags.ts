@@ -8,51 +8,92 @@ type SystemTags = Record<string, {
 }>;
 
 const tags: SystemTags = {
-    "Bill": {
-        icon: "receipt-text", description: "Rent, Wi-fi, electricity and other bills", children: {
-            "Cook": { icon: "chef-hat" },
-            "DTH": { icon: "satellite-dish" },
-            "Education": { icon: "graduation-cap" },
+    "Bills": {
+        icon: "receipt-text",
+        children: {
             "Electricity": { icon: "zap" },
             "Gas": { icon: "gas" },
-            "House help": { icon: "brush-cleaning" },
             "Internet": { icon: "wifi" },
-            "Maintenance": { icon: "building" },
-            "Phone": { icon: "tablet-smartphone" },
-            "Rent": { icon: "house" },
+            "Mobile": { icon: "tablet-smartphone" },
+            "DTH": { icon: "satellite-dish" },
             "Water": { icon: "droplet" },
         }
     },
-    "Borrowed": { icon: "hand-helping", description: "Money borrowed, to be returned" },
-    "Cash Deposit": { icon: "banknote-arrow-up", description: "Cash deposited at a physical branch" },
-    "Cash Withdrawal": { icon: "banknote-arrow-down", description: "Cash taken out from ATM or Bank" },
+    "Borrowed": { icon: "hand-helping", description: "Money borrowed or loan taken from someone." },
+    "Cash Deposit": { icon: "banknote-arrow-up", description: "Cash deposited into a bank account." },
+    "Cash Withdrawal": { icon: "banknote-arrow-down", description: "Cash withdrawn from an ATM or bank." },
     "Cashback": {
-        icon: "coins", description: "Rewards from GPay, PhonePe etc.", children: {
+        icon: "coins",
+        description: "Cashback or rewards received from payments or wallets.",
+        children: {
             "Google Pay": { icon: "googlepay" },
             "Paytm": { icon: "paytm" },
             "PhonePe": { icon: "phonepe" },
         }
     },
-    "Credit Bill": {
-        icon: "credit-card", description: "Credit Card & BNPL services settlement", children: {
-            "Amazon Pay": { icon: "amazon" },
-            "Credit card": { icon: "credit-card" },
-            "Lazypay": { icon: "lazypay" },
+    "Commute": {
+        icon: "car-front",
+        children: {
+            "Auto": { icon: "auto" },
+            "Bus": { icon: "bus" },
+            "Ola": { icon: "ola" },
+            "Uber": { icon: "uber" },
+            "Rapido": { icon: "rapido" },
+            "Namma Yatri": { icon: "namma-yatri" },
+            "Cab": { icon: "car-taxi-front" },
+            "Train": { icon: "train-track" },
+            "Metro": { icon: "train-front" },
+            "Fuel": { icon: "fuel" },
+            "Fine": { icon: "whistle" },
+            "EV Charge": { icon: "battery-charging" },
+            "Local Rental": { icon: "car", description: "Short-term local vehicle rentals like bikes or cars." },
+        }
+    },
+    "Credit & Pay Later": {
+        icon: "credit-card",
+        description: "Buy now pay later, credit card, or pay-later app transactions.",
+        children: {
+            "Amazon Pay": { icon: "amazon-pay" },
+            "CRED": { icon: "cred" },
+            "Credit Card": { icon: "credit-card" },
+            "LazyPay": { icon: "lazypay" },
             "Simpl": { icon: "simpl" },
             "Slice": { icon: "slice" },
         }
     },
-    "Dividends": { icon: "diamond-percent", description: "Returns on stock investment" },
-    "Donation": { icon: "heart-plus", description: "Contributions to charities and NGOs" },
-    "Earnings": {
-        icon: "hand-coins", description: "Income from sources other than salary", children: {
-            "Freelance": { icon: "laptop" },
-            "Rent": { icon: "house" },
-            "Various": { icon: "wand-sparkles" },
+    "Dining Out": {
+        icon: "utensils",
+        description: "Eating at restaurants, cafes, street food, or dining apps.",
+        children: {
+            "Dineout": { icon: "swiggy" },
+            "District": { icon: "district" },
+            "EazyDiner": { icon: "eazydiner" },
+            "Restaurant": { icon: "hand-platter" },
+            "Street Food": { icon: "sandwich" },
+            "Breakfast": { icon: "croissant" },
+        }
+    },
+    "Donation": { icon: "heart-plus" },
+    "Eating In": {
+        icon: "salad",
+        description: "Food ordered at home or prepared meals like Swiggy, Zomato, or takeaway.",
+        children: {
+            "Tea & Coffee": { icon: "coffee" },
+            "Tiffin": { icon: "tiffin" },
+            "Swiggy": { icon: "swiggy" },
+            "Zomato": { icon: "zomato" },
+            "Delivery": { icon: "bike-fast" },
+            "Pizza": { icon: "pizza" },
+            "Burger": { icon: "hamburger" },
+            "Fast Food": { icon: "hamburger" },
+            "Dessert": { icon: "ice-cream-bowl" },
+            "Takeaway": { icon: "brownbag" },
         }
     },
     "EMI": {
-        icon: "landmark", description: "Repayment of Loan", children: {
+        icon: "landmark",
+        description: "Monthly instalments for loans, education, house, vehicle, or electronics.",
+        children: {
             "Education": { icon: "graduation-cap" },
             "Electronics": { icon: "laptop" },
             "House": { icon: "house" },
@@ -60,231 +101,226 @@ const tags: SystemTags = {
         }
     },
     "Entertainment": {
-        icon: "monitor-play", description: "Movies, Concerts and other recreations", children: {
+        icon: "monitor-play",
+        children: {
             "Bowling": { icon: "bowling" },
             "Movies": { icon: "clapperboard" },
-            "Others": { icon: "tickets" },
+            "Concerts": { icon: "mic" },
             "Shows": { icon: "mic" },
+            "Leisure": { icon: "tickets" },
         }
     },
     "Events": {
-        icon: "calendar", description: "Being social while putting a dent in your bank account", children: {
+        icon: "calendar",
+        children: {
             "Party": { icon: "party-popper" },
             "Spiritual": { icon: "flame" },
             "Wedding": { icon: "gem" },
         }
     },
     "Fitness": {
-        icon: "dumbbell", description: "Things to keep your biological machinery in tune", children: {
+        icon: "dumbbell",
+        children: {
             "Badminton": { icon: "shuttlecock" },
             "Classes": { icon: "calendar-days" },
-            "Cricket": { icon: "fitness-cricket" },
+            "Cricket": { icon: "cricket" },
             "Equipment": { icon: "dumbbell" },
-            "Football": { icon: "fitness-football" },
+            "Football": { icon: "football" },
             "Gym": { icon: "biceps-flexed" },
             "Nutrition": { icon: "pill-bottle" },
         }
     },
-    "Food & Drinks": {
-        icon: "salad", description: "Eating food outside", children: {
-            "Beverages": { icon: "glass-water" },
-            "Date": { icon: "rose" },
-            "Dessert": { icon: "ice-cream-bowl" },
-            "Eating out": { icon: "utensils" },
-            "Fast Food": { icon: "hamburger" },
-            "Liquor": { icon: "beer" },
-            "Pizza": { icon: "pizza" },
-            "Snacks": { icon: "cookie" },
-            "Swiggy": { icon: "swiggy" },
-            "Take Away": { icon: "brownbag" },
-            "Tea & Coffee": { icon: "coffee" },
-            "Tiffin": { icon: "tiffin" },
-            "Zomato": { icon: "zomato" },
-        }
-    },
-    "Gift": { icon: "gift", description: "Money received as gift, not to return" },
+    "Gift": { icon: "gift" },
     "Groceries": {
-        icon: "grape", description: "Kitchen and other household supplies", children: {
-            "Bakery": { icon: "croissant" },
+        icon: "grape",
+        children: {
             "Dairy": { icon: "milk" },
-            "Fruits": { icon: "banana" },
-            "Meat": { icon: "drumstick" },
-            "Staples": { icon: "wheat" },
-            "Vegetables": { icon: "carrot" },
+            "Bakery": { icon: "croissant" },
+            "Chips": { icon: "cookie" },
+            "Supermarket": { icon: "shopping-cart" },
             "Zepto": { icon: "zepto" },
+            "Instamart": { icon: "swiggy" },
+            "Blinkit": { icon: "blinkit" },
         }
     },
-    "Hidden Charges": { icon: "eye-closed", description: "Banks’ hidden subscription charges" },
+    "House": {
+        icon: "house",
+        children: {
+            "Rent": { icon: "house" },
+            "Maintenance": { icon: "building", description: "House or society maintenance, repairs, or service charges." },
+        }
+    },
+    "Income": {
+        icon: "hand-coins",
+        description: "Income from salary, freelance work, rent, interest, or dividends.",
+        children: {
+            "Interest": { icon: "sparkles", description: "Interest earned from savings accounts, fixed deposits, or investments." },
+            "Dividends": { icon: "diamond-percent", description: "Dividend income received from stocks or mutual funds." },
+            "Salary": { icon: "banknote-arrow-down" },
+            "Freelance": { icon: "laptop", description: "Income earned from freelance, consulting, or contract work." },
+            "Rent": { icon: "house" },
+        }
+    },
     "Insurance": {
-        icon: "shield-user", description: "Payment towards insurance premiums", children: {
-            "Electronics": { icon: "laptop" },
+        icon: "shield-user",
+        children: {
             "Health": { icon: "cross" },
             "Life": { icon: "house-heart" },
             "Vehicle": { icon: "car" },
         }
     },
-    "Interest": {
-        icon: "sparkles", description: "Interest earned on savings account"
-    },
-    "Investment": {
-        icon: "chart-candlestick", description: "Money put towards investment", children: {
-            "Assets": { icon: "piggy-bank" },
-            "Crypto": { icon: "bitcoin" },
-            "Fixed Deposit": { icon: "vault" },
+    "Investments": {
+        icon: "chart-candlestick",
+        children: {
+            "Fixed Deposits": { icon: "vault" },
             "Gold": { icon: "goldbar" },
+            "Silver": { icon: "goldbar" },
             "Mutual Funds": { icon: "sprout" },
             "NPS": { icon: "nps" },
             "PPF": { icon: "ppf" },
             "Recurring Deposit": { icon: "vault" },
             "Stocks": { icon: "chart-candlestick" },
+            "ULIP": { icon: "shield-user" },
         }
     },
-    "Lent": { icon: "handshake", description: "Money lent with expectation of return" },
+    "Lent": { icon: "handshake", description: "Money given or loaned to someone else." },
+    "Logistics": {
+        icon: "truck",
+        description: "Courier, delivery, packers and movers, or shipping services.",
+        children: {
+            "Packers & Movers": { icon: "truck" },
+            "Courier": { icon: "package" },
+        }
+    },
     "Medical": {
-        icon: "pill", description: "Medicines, Doctor consulation etc.", children: {
+        icon: "pill",
+        children: {
             "Clinic": { icon: "stethoscope" },
             "Dentist": { icon: "tooth" },
             "Hospital": { icon: "hospital" },
             "Hygiene": { icon: "sparkles" },
-            "Lab test": { icon: "syringe" },
+            "Lab Tests": { icon: "syringe" },
             "Medicines": { icon: "pill" },
         }
     },
-    "Misc.": {
-        icon: "circle-dot-dashed", description: "Everything else", children: {
-            "Forex": { icon: "circle-dollar-sign" },
-            "Tip": { icon: "receipt-indian-rupee" },
-            "Verification": { icon: "brick-wall-shield" },
-        }
-    },
     "Personal": {
-        icon: "user", description: "Money spent on & for yourself", children: {
+        icon: "user",
+        children: {
             "Grooming": { icon: "scissors" },
-            "Hobbies": { icon: "palette" },
-            "Self-care": { icon: "heart" },
-            "Therapy": { icon: "book-heart" },
-            "Vices": { icon: "cigarette" },
+            "Parlour": { icon: "scissors" },
+            "Spa": { icon: "heart" },
         }
     },
     "Pet Care": {
-        icon: "paw-print", description: "Money spent taking care of your snugglebug", children: {
+        icon: "paw-print",
+        children: {
             "Food": { icon: "soup" },
             "Grooming": { icon: "scissors" },
             "Toys": { icon: "toy-brick" },
             "Vet": { icon: "stethoscope" },
         }
     },
-    "Pocket Money": { icon: "wallet", description: "Support from loved ones" },
-    "Redemption": { icon: "trending-up-down", description: "Money redeemed from investments" },
-    "Refund": { icon: "rotate-ccw", description: "Refunds & Reimbursements" },
-    "Return": { icon: "corner-down-left", description: "Borrowed money is returned" },
-    "Salary": { icon: "banknote-arrow-down", description: "Monthly, regular income" },
-    "Savings": { icon: "piggy-bank", description: "For goals and dreams" },
-    "Self Transfer": { icon: "arrow-left-right", description: "Transfer between personal Bank accounts" },
-    "Services": {
-        icon: "hand-platter", description: "Professional tasks provided for a fee", children: {
-            "Advisor": { icon: "glasses" },
-            "Courier": { icon: "package" },
-            "Driver": { icon: "car" },
-            "Electrician": { icon: "cable" },
-            "Laundry": { icon: "washing-machine" },
+    "Professional": {
+        icon: "briefcase-business",
+        description: "Fees paid to professionals like CA, lawyer, or consultants.",
+        children: {
+            "CA": { icon: "glasses" },
             "Legal": { icon: "scale" },
-            "Logistics": { icon: "truck" },
-            "Mechanic": { icon: "car" },
+        }
+    },
+    "Self Transfer": { icon: "arrow-left-right", description: "Transfers between your own bank accounts or wallets." },
+    "Services": {
+        icon: "user-star",
+        description: "Payments for household and personal services like maid, plumber, or driver.",
+        children: {
             "Painting": { icon: "paint-roller" },
-            "Photographer": { icon: "camera" },
+            "Maid": { icon: "brush-cleaning", description: "Domestic help, cleaning staff, or house help payments." },
+            "Cook": { icon: "chef-hat" },
+            "Laundry": { icon: "washing-machine", description: "Laundry, dry cleaning, washing, or ironing services." },
+            "Electrician": { icon: "cable" },
             "Plumber": { icon: "wrench" },
-            "Repair": { icon: "hammer" },
-            "Vehicle Wash": { icon: "car" },
-            "Xerox": { icon: "printer" },
+            "Mechanic": { icon: "car", description: "Vehicle repair, servicing, or garage charges." },
+            "Carpenter": { icon: "hammer", description: "Woodwork, furniture repair, or carpentry services." },
+            "Driver": { icon: "car", description: "Payments to a personal or hired driver." },
+            "Photographer": { icon: "camera" },
+            "Tailor": { icon: "sewing", description: "Clothing stitching, alteration, or repair services." },
         }
     },
     "Shopping": {
-        icon: "shopping-bag", description: "Clothes, shoes, furniture etc.", children: {
-            "Appliances": { icon: "shopping-appliance" },
-            "Books": { icon: "library-big" },
+        icon: "shopping-bag",
+        children: {
             "Clothes": { icon: "shirt" },
             "Cosmetics": { icon: "makeup" },
-            "Devotional": { icon: "shopping-devotional" },
-            "Electronics": { icon: "laptop" },
+            "Mobile & Accessories": { icon: "tablet-smartphone" },
             "Furniture": { icon: "sofa" },
-            "Glasses": { icon: "glasses" },
-            "Jewellery": { icon: "gem" },
+            "Electronics": { icon: "laptop" },
+            "Appliances": { icon: "lamp" },
             "Plants": { icon: "sprout" },
-            "Shoes": { icon: "footprints" },
-            "Stationery": { icon: "pencil-ruler" },
-            "Toys": { icon: "toy-brick" },
-            "Vehicle": { icon: "car" },
-            "Video games": { icon: "gamepad-2" },
+            "Footwear": { icon: "footprints" },
+            "Jewellery": { icon: "gem" },
+            "Devotional": { icon: "flame" },
+            "Wedding": { icon: "gem" },
+        }
+    },
+    "Support": {
+        icon: "heart-plus",
+        description: "Financial support or allowance given to family members.",
+        children: {
+            "Dad": { icon: "father" },
+            "Mom": { icon: "mother" },
+            "Pocket Money": { icon: "wallet" },
+            "Spouse": { icon: "heart-handshake" },
+        }
+    },
+    "Tax": {
+        icon: "badge-indian-rupee",
+        children: {
+            "Water Tax": { icon: "badge-indian-rupee" },
+            "Property Tax": { icon: "badge-indian-rupee" },
+            "Income Tax": { icon: "badge-indian-rupee" },
+            "GST": { icon: "badge-indian-rupee" },
+        }
+    },
+    "Travel": {
+        icon: "car-front",
+        children: {
+            "Car": { icon: "car" },
+            "Bus": { icon: "bus" },
+            "Train": { icon: "train-track" },
+            "Flights": { icon: "plane" },
+            "FASTag": { icon: "fastag" },
+            "Tolls": { icon: "construction" },
+            "Lounge": { icon: "armchair" },
+            "Car Rental": { icon: "car", description: "Car or bike rentals during local travel." },
+        }
+    },
+    "Trips": {
+        icon: "plane",
+        children: {
+            "Hotel": { icon: "bed" },
+            "Hostel": { icon: "backpack" },
+            "Meals": { icon: "utensils" },
+            "Activities": { icon: "tent-tree" },
+            "Airbnb": { icon: "airbnb" },
+            "Camping": { icon: "tent" },
+            "Visa": { icon: "stamp" },
         }
     },
     "Subscription": {
-        icon: "calendar-sync", description: "Recurring payment to online services", children: {
+        icon: "calendar-sync",
+        children: {
             "Apple": { icon: "apple" },
             "Bumble": { icon: "bumble" },
             "Google": { icon: "google" },
             "Learning": { icon: "graduation-cap" },
             "Netflix": { icon: "netflix" },
             "News": { icon: "newspaper" },
-            "Prime": { icon: "amazon" },
+            "Prime": { icon: "amazon-prime-video" },
             "Software": { icon: "app-window" },
             "Spotify": { icon: "spotify" },
             "YouTube": { icon: "youtube" },
         }
-    },
-    "Support": {
-        icon: "heart-plus", description: "Financial support for loved ones", children: {
-            "Dad": { icon: "aid-father" },
-            "Mom": { icon: "aid-mother" },
-            "Parents": { icon: "aid-walking-stick" },
-            "Pocket Money": { icon: "wallet" },
-            "Spouse": { icon: "heart-handshake" },
-        }
-    },
-    "Tax": {
-        icon: "badge-indian-rupee", description: "Income tax, property tax, e.t.c", children: {
-            "GST": { icon: "badge-indian-rupee" },
-            "Income Tax": { icon: "badge-indian-rupee" },
-            "Property Tax": { icon: "badge-indian-rupee" },
-        }
-    },
-    "Top-up": {
-        icon: "arrow-left-right", description: "Money added to online wallets", children: {
-            "Amazon": { icon: "amazon" },
-            "Others": { icon: "wallet" },
-            "Paytm": { icon: "paytm" },
-            "PhonePe": { icon: "phonepe" },
-            "UPI Lite": { icon: "upi" },
-        }
-    },
-    "Transport": {
-        icon: "car-front", description: "Uber, Ola and other modes of transport", children: {
-            "Auto": { icon: "auto" },
-            "Bike": { icon: "motorbike" },
-            "Bus": { icon: "bus" },
-            "Cab": { icon: "car-taxi-front" },
-            "FASTag": { icon: "fastag" },
-            "Fine": { icon: "whistle" },
-            "Flights": { icon: "plane" },
-            "Lounge": { icon: "armchair" },
-            "Metro": { icon: "train-front" },
-            "Parking": { icon: "circle-parking" },
-            "Petrol": { icon: "fuel" },
-            "Rapido": { icon: "rapido" },
-            "Tolls": { icon: "construction" },
-            "Train": { icon: "train-track" },
-            "Uber": { icon: "uber" },
-        }
-    },
-    "Travel": {
-        icon: "plane", description: "Exploration, fun and vacations!", children: {
-            "Activities": { icon: "tent-tree" },
-            "Airbnb": { icon: "airbnb" },
-            "Camping": { icon: "tent" },
-            "Hostel": { icon: "backpack" },
-            "Hotel": { icon: "bed" },
-        }
-    },
+    }
 };
 
 const cleanForId = (name: string): string => {
