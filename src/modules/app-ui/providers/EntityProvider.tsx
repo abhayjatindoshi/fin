@@ -5,6 +5,7 @@ import { TaggingService } from "@/modules/app/services/TaggingService";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
 import { toRecord, unsubscribeAll } from "../common/ComponentUtils";
+import { setupWindow } from "../import";
 
 export type EnhancedTag = Tag & {
     searchWords: string[];
@@ -14,6 +15,10 @@ export type EnhancedTag = Tag & {
 interface EntityContextProps {
     accountMap?: Record<string, MoneyAccount>;
     tagMap?: Record<string, EnhancedTag>;
+}
+
+export type WindowTags = Window & {
+    tags: Record<string, Tag>;
 }
 
 const EntityContext = createContext<EntityContextProps>({});
@@ -35,7 +40,11 @@ export const EntityProvider: React.FC<PropsWithChildren> = ({ children }: PropsW
             accountRepo.observeAll().subscribe(accounts => {
                 setAccountMap(toRecord(accounts as MoneyAccount[], 'id'));
             }),
-            taggingService.current.observeTagMap().subscribe(setTagMap),
+            taggingService.current.observeTagMap().subscribe((tags) => {
+                setupWindow();
+                (window as WindowTags).tags = tags;
+                setTagMap(tags);
+            })
         ]
 
         return unsubscribeAll(...subscriptions);
