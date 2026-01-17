@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useApp } from "../../providers/AppProvider";
 import AccountFilter from "./filters/AccountFilter";
 import DateSort from "./filters/DateSort";
+import TagToggle, { type TagToggleOptions } from "./filters/TagToggle";
 import type { Timeline } from "./filters/TimelineFilter";
 import TimelineFilter from "./filters/TimelineFilter";
 
@@ -17,6 +18,7 @@ export type TransactionFilterOptions = {
     accountIds?: string[];
     sort: 'asc' | 'desc';
     searchQuery?: string;
+    tags?: TagToggleOptions;
 }
 
 type TransactionsFilterProps = {
@@ -50,6 +52,10 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
         const endYear = timeline.to ? moment(timeline.to).year() : currentYear;
         const years = Array.from({ length: endYear - currentYear + 1 }, (_, i) => currentYear + i);
         setFilter({ ...filter, startDate: timeline.from, endDate: timeline.to, years });
+    }
+
+    const setTagToggle = (tags: TagToggleOptions | undefined) => {
+        setFilter({ ...filter, tags });
     }
 
     const setSearchFilter = (term: string) => {
@@ -93,6 +99,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
                 <DateSort sort={overlayFilter.sort} setSort={sort => setOverlayFilter({ ...overlayFilter, sort })} />
                 <AccountFilter accountId={overlayFilter.accountIds?.[0] ?? null}
                     setAccountId={accountId => { setOverlayFilter({ ...overlayFilter, accountIds: accountId ? [accountId] : [] }) }} />
+                <TagToggle toggle={filter.tags} setToggle={setTagToggle} />
             </div>
         </div>
     }
@@ -111,6 +118,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
         <DateSort sort={filter.sort} setSort={setSort} className={blurClasses} />
         <AccountFilter accountId={filter.accountIds?.[0] ?? null} setAccountId={setAccountId} className={blurClasses} dropdownClassName={blurClasses} />
         <TimelineFilter timeline={timeline} setTimeline={setTimelineFilter} className={blurClasses} dropdownClassName={blurClasses} />
+        <TagToggle toggle={filter.tags} setToggle={setTagToggle} className={blurClasses} />
         <div className="flex-1" />
         <SearchBar search={filter.searchQuery} setSearch={setSearchFilter} />
     </div>;

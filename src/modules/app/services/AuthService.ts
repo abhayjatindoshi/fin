@@ -62,6 +62,7 @@ export class AuthService extends BaseService {
 
     logout(): void {
         this.clearAndGetLocalItem<IAuthToken>(this.authKey);
+        localStorage.clear();
     }
 
     getTokenIfExists(): IAuthToken | null {

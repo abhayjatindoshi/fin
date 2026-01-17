@@ -23,7 +23,6 @@ const tags: SystemTags = {
             "Water": { icon: "droplet" },
         }
     },
-    "Borrowed": { icon: "hand-helping", description: "Money borrowed or loan taken from someone." },
     "Cash Deposit": { icon: "banknote-arrow-up", description: "Cash deposited into a bank account." },
     "Cash Withdrawal": { icon: "banknote-arrow-down", description: "Cash withdrawn from an ATM or bank." },
     "Cashback": {
@@ -114,6 +113,7 @@ const tags: SystemTags = {
             "Concerts": { icon: "mic" },
             "Shows": { icon: "mic" },
             "Leisure": { icon: "tickets" },
+            "Friends": { icon: "handshake" },
         }
     },
     "Events": {
@@ -189,7 +189,6 @@ const tags: SystemTags = {
             "ULIP": { icon: "shield-user" },
         }
     },
-    "Lent": { icon: "handshake", description: "Money given or loaned to someone else." },
     "Logistics": {
         icon: "truck",
         description: "Courier, delivery, packers and movers, or shipping services.",
@@ -252,6 +251,7 @@ const tags: SystemTags = {
             "Tailor": { icon: "sewing", description: "Clothing stitching, alteration, or repair services." },
         }
     },
+    "Shared": { icon: "handshake", description: "Shared expenses or money borrowed, lent, split, or exchanged with friends or family that needs to be settled." },
     "Shopping": {
         icon: "shopping-bag",
         children: {

@@ -41,6 +41,7 @@ const TransactionsPage: React.FC = () => {
             ).subscribe((data) => {
                 const transactions = data as Array<Transaction>;
                 const result = transactions
+                    .filter(t => !filter.tags || filter.tags === 'tagged' && t.tagId || filter.tags === 'untagged' && !t.tagId)
                     .filter(t => !filter.accountIds || filter.accountIds.length == 0 || filter.accountIds.includes(t.accountId))
                     .filter(t => !filter.startDate || t.transactionAt >= filter.startDate!)
                     .filter(t => !filter.endDate || t.transactionAt <= filter.endDate!)
