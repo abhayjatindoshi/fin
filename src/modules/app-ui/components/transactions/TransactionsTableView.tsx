@@ -47,11 +47,12 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
         setShowTagPicker(false);
 
         const transactionYear = selectedTransaction.transactionAt.getFullYear();
-        const similarTransactions = await new TransactionService()
+        let similarTransactions = await new TransactionService()
             .getSimilarTransactions<typeof util, 'Transaction'>(
                 selectedTransaction,
                 { years: [transactionYear - 1, transactionYear, transactionYear + 1] }
             );
+        similarTransactions = similarTransactions.filter(t => t.tagId !== tag?.id);
 
         if (similarTransactions.length > 0) {
             setSelectedTransactions(similarTransactions);
@@ -89,8 +90,8 @@ const TransactionsTableView: React.FC<TransactionsTableViewProps> = ({ transacti
                 <div className="w-40 text-xl"><AmountCell amount={transaction.amount} /></div>
                 <div className="flex-1 truncate"><DescriptionCell transaction={transaction} /></div>
                 <div className="w-48"><TagCell tagId={transaction.tagId ?? null} onClick={(e) => openTagPicker(e, transaction)} /></div>
-                <div className="w-24 flex flex-row justify-between items-center">
-                    {accountMap && <AccountCell account={accountMap[transaction.accountId]} />}
+                <div className="w-36 flex flex-row justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                    {accountMap && <AccountCell variant="detailed" account={accountMap[transaction.accountId]} />}
                     {detailedTransactionId === transaction.id && <ChevronRight className="text-muted-foreground mr-4" />}
                 </div>
             </div>

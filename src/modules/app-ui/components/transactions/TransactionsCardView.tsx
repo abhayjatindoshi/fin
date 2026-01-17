@@ -46,11 +46,12 @@ const TransactionsCardView: React.FC<TransactionsCardViewProps> = ({ transaction
         setShowTagPicker(false);
 
         const transactionYear = selectedTransaction.transactionAt.getFullYear();
-        const similarTransactions = await new TransactionService()
+        let similarTransactions = await new TransactionService()
             .getSimilarTransactions<typeof util, 'Transaction'>(
                 selectedTransaction,
                 { years: [transactionYear - 1, transactionYear, transactionYear + 1] }
             );
+        similarTransactions = similarTransactions.filter(t => t.tagId !== tag?.id);
 
         if (similarTransactions.length > 0) {
             setSelectedTransactions(similarTransactions);

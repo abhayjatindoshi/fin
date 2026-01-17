@@ -1,14 +1,16 @@
 import AccountNumber from "@/modules/app-ui/common/AccountNumber";
 import { ImportIconComponent } from "@/modules/app-ui/icons/import/ImportIcon";
 import type { MoneyAccount } from "@/modules/app/entities/MoneyAccount";
+import { Button } from "@/modules/base-ui/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/modules/base-ui/components/ui/popover";
 import { ImportMatrix } from "@/modules/import/ImportMatrix";
 
 type AccountCellProps = {
     account: MoneyAccount;
+    variant?: 'icon' | 'detailed';
 }
 
-const AccountCell: React.FC<AccountCellProps> = ({ account }) => {
+const AccountCell: React.FC<AccountCellProps> = ({ account, variant = 'icon' }) => {
 
     const bank = ImportMatrix.Banks[account.bankId];
     const offering = bank?.offerings.find(o => o.id === account.offeringId);
@@ -17,7 +19,10 @@ const AccountCell: React.FC<AccountCellProps> = ({ account }) => {
 
     return <Popover>
         <PopoverTrigger asChild>
-            <ImportIconComponent name={icon} className="size-5 text-muted-foreground" />
+            <Button variant="ghost" className="flex flex-row items-center gap-2 p-0">
+                <ImportIconComponent name={icon} className="size-5 text-muted-foreground" />
+                {variant === 'detailed' && <div className="text-sm font-light"><AccountNumber accountNumber={account.accountNumber} /></div>}
+            </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="flex flex-row items-center gap-4 py-2 px-3 justify-between w-fit">
             <ImportIconComponent name={icon} className="size-12" />

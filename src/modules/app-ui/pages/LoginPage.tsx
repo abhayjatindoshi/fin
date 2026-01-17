@@ -15,8 +15,6 @@ const LoginPage: React.FC = () => {
         if (currentUser) {
             const returnUrl = params.get('returnUrl') || '/';
             navigate(returnUrl);
-        } else {
-            service.logout();
         }
     }, [currentUser, navigate]);
 

@@ -65,7 +65,7 @@ const SpendData: React.FC<SpendDataProps> = ({ block, className, onClick, showEd
                 <MiniSpendData
                     key={childBlock.tag.id ?? 'untagged'}
                     block={childBlock}
-                    className="min-w-20 max-w-20"
+                    className="px-2 max-w-24"
                     showEditBudgetDialog={showEditBudgetDialog} />
             ))}
         </div>
@@ -92,7 +92,7 @@ const MiniSpendData: React.FC<SpendDataProps> = ({ block, className, onClick }) 
             <TagIconComponent className="size-8" name={block.tag.icon} />
         }
         <Money amount={Math.abs(block.totalSum)} sign={false} />
-        <span className="truncate">{block.tag.name}</span>
+        <span className="max-w-20 truncate">{block.tag.name}</span>
     </div>;
 }
 export default SpendData;
