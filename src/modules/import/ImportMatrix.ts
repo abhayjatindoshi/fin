@@ -1,6 +1,7 @@
 import { FederalBank } from "./banks/federal/FederalBank";
 import { HdfcBank } from "./banks/hdfc/HdfcBank";
 import { Jupiter } from "./banks/jupiter/Jupiter";
+import { PaytmBank } from "./banks/paytm/PaytmBank";
 import type { IBank } from "./interfaces/IBank";
 import type { IBankOffering } from "./interfaces/IBankOffering";
 import type { IImportAdapter } from "./interfaces/IImportAdapter";
@@ -16,6 +17,7 @@ export class ImportMatrix {
             new FederalBank(),
             new HdfcBank(),
             new Jupiter(),
+            new PaytmBank(),
         ]
 
         banks.forEach(bank => {

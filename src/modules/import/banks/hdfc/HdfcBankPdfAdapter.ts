@@ -9,6 +9,7 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
     private accountNumberLabelRegex = /Account[\s]+Number|Account[\s]+No/i;
     private accountNumberRegex = /(\d{10,})/;
     private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
+    private hdfcIfscCodeLabelRegex = /RTGS\/NEFT[\s]+IFSC/i;
     private openingBalanceLabelRegex = /Opening[\s]+Balance/i;
     private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
     private dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
@@ -22,7 +23,7 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
     private referenceNumberRegex = /^[\w]{12,25}$/i
 
     isSupported(file: IPdfFile): boolean {
-        return file.pages.some(page => this.hdfcIfscCodeRegex.test(page.join(' ')));
+        return file.pages.some(page => this.hdfcIfscCodeRegex.test(page.join(' ')) && this.hdfcIfscCodeLabelRegex.test(page.join(' ')));
     }
 
     async read(file: IPdfFile): Promise<ImportData> {

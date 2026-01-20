@@ -5,12 +5,13 @@ import { Calendar } from "@/modules/base-ui/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/modules/base-ui/components/ui/popover";
 import { CalendarIcon, ChevronRight } from "lucide-react";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { type DateRange } from "react-day-picker";
 
 export type Timeline = {
     from: Date;
     to?: Date;
+    key?: keyof typeof TransactionDateFilterOptions;
     label: string;
     hint?: string;
 }
@@ -18,11 +19,12 @@ export type Timeline = {
 type TimelineFilterProps = {
     timeline: Timeline | null;
     setTimeline: (timeline: Timeline) => void;
+    loadMoreRef?: React.RefObject<(() => void) | null>;
     className?: string;
     dropdownClassName?: string;
 }
 
-const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, className, dropdownClassName }) => {
+const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, loadMoreRef, className, dropdownClassName }) => {
 
     const { settings } = useApp();
     const [open, setOpen] = useState<boolean>(false);
@@ -36,6 +38,7 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
         setTimeline({
             from: result.startDate,
             to: result.endDate,
+            key,
             label: result.label,
             hint: result.hint
         });
@@ -57,6 +60,19 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
         setMode('date-tag');
     }
 
+    const loadMore = useCallback(() => {
+        if (!timeline) return;
+        const option = TransactionDateFilterOptions[timeline.key ?? 'this_month'] ?? TransactionDateFilterOptions['this_month'];
+        const addUnits = option.addUnit;
+        const addUnitDuration = option.addUnitDuration;
+        timeline.from = moment(timeline.from).subtract(addUnits, addUnitDuration).toDate();
+        setTimeline({ ...timeline });
+    }, [timeline])
+
+    if (loadMoreRef) {
+        loadMoreRef.current = loadMore;
+    }
+
     useEffect(() => {
         if (!settings) return;
         if (timeline == null) {
@@ -76,12 +92,12 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
         </PopoverTrigger>
         <PopoverContent className={`p-0 flex flex-col ${mode == 'date-tag' ? 'w-42' : 'w-64'} ${dropdownClassName}`}>
             {mode === 'date-tag' ? <>
-                {Object.entries(TransactionDateFilterOptions).map(([key, label]) => (
+                {Object.entries(TransactionDateFilterOptions).map(([key, option]) => (
                     <Button key={key}
                         variant="ghost"
                         className="flex flex-row justify-start uppercase"
                         onClick={() => setDateTag(key as keyof typeof TransactionDateFilterOptions)}>
-                        {label}
+                        {option.label}
                     </Button>
                 ))}
                 <Button variant="ghost" className="flex flex-row justify-start uppercase" onClick={() => setMode('custom-range')}>

@@ -25,9 +25,10 @@ type TransactionsFilterProps = {
     accounts?: Array<MoneyAccount>;
     filter: TransactionFilterOptions;
     setFilter: (props: TransactionFilterOptions) => void;
+    loadMoreRef?: React.RefObject<(() => void) | null>;
 }
 
-const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilter }: TransactionsFilterProps) => {
+const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilter, loadMoreRef }: TransactionsFilterProps) => {
 
     const { isMobile } = useApp();
     const [showSearchOverlay, setShowSearchOverlay] = useState<boolean>(false);
@@ -108,7 +109,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
         return <>
             <div className="flex flex-row items-center gap-2 sticky z-10 p-4 top-0">
                 <SearchBar search={filter.searchQuery} onClick={() => enableSearchOverlay(filter)} />
-                <TimelineFilter timeline={timeline} setTimeline={setTimelineFilter} className={blurClasses} dropdownClassName={blurClasses} />
+                <TimelineFilter timeline={timeline} setTimeline={setTimelineFilter} loadMoreRef={loadMoreRef} className={blurClasses} dropdownClassName={blurClasses} />
             </div>
             <SearchOverlay />
         </>;
@@ -117,7 +118,7 @@ const TransactionsFilter: React.FC<TransactionsFilterProps> = ({ filter, setFilt
     return <div className="flex flex-row flex-wrap items-center gap-2 sticky z-10 top-20">
         <DateSort sort={filter.sort} setSort={setSort} className={blurClasses} />
         <AccountFilter accountId={filter.accountIds?.[0] ?? null} setAccountId={setAccountId} className={blurClasses} dropdownClassName={blurClasses} />
-        <TimelineFilter timeline={timeline} setTimeline={setTimelineFilter} className={blurClasses} dropdownClassName={blurClasses} />
+        <TimelineFilter timeline={timeline} setTimeline={setTimelineFilter} loadMoreRef={loadMoreRef} className={blurClasses} dropdownClassName={blurClasses} />
         <TagToggle toggle={filter.tags} setToggle={setTagToggle} className={blurClasses} />
         <div className="flex-1" />
         <SearchBar search={filter.searchQuery} setSearch={setSearchFilter} />
