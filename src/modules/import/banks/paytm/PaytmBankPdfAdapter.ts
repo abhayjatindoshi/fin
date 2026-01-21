@@ -6,18 +6,21 @@ export class PaytmBankPdfAdapter implements IPdfImportAdapter {
     fileType: "pdf" = "pdf";
     type: "file" = "file";
 
-    // Account details patterns
-    private accountNumberLabelRegex = /ACCOUNT[\s]+NUMBER[\s]+ACCOUNT[\s]+TYPE[\s]+IFSC/i;
+    // Account details patterns - supports both table format and vertical list format
+    private accountNumberTableHeaderRegex = /^ACCOUNT[\s]+NUMBER[\s]+ACCOUNT[\s]+TYPE[\s]+IFSC/i;
+    private accountNumberLabelRegex = /^ACCOUNT[\s]+NUMBER$/i;
     private accountNumberRegex = /(\d{9,})/;
 
     // Transaction patterns
     private dateRegex = /^(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})$/i;
     private timeRegex = /^(\d{1,2}:\d{2})\s*(AM|PM)$/i;
-    private transactionAmountRegex = /^([+-])\s+Rs\.(\d{1,3}(?:,\d{2,3})*(?:\.\d{2})?)\s+Rs\.(\d{1,3}(?:,\d{2,3})*(?:\.\d{2})?)$/;
+    // Supports both "Rs." and "₹" currency symbols, with or without spaces
+    private transactionAmountRegex = /^([+-])\s*(?:Rs\.|₹)\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{2})?)\s+(?:Rs\.|₹)\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{2})?)$/;
 
     // Skip patterns for footer lines
     private skipLinesAfter = [
-        /^\*[\s]+Visit[\s]+Bank/i,
+        /^\*[\s]*Visit[\s]+Bank/i,
+        /^\*[\s]*PPBL[\s]+Savings/i,
         /^This[\s]+statement[\s]+contains/i,
         /^To[\s]+view[\s]+terms/i,
         /^PPBL[\s]+Savings/i,
@@ -50,9 +53,8 @@ export class PaytmBankPdfAdapter implements IPdfImportAdapter {
     extractAccountDetails(pages: string[][]): AccountDetails {
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
-                if (this.accountNumberLabelRegex.test(page[i])) {
-                    // The next line contains the account details
-                    // Format: "919150154443   SAVINGS   PYTM0123456   110766001   2.0% p.a.   Not Registered"
+                // Check for table format: "ACCOUNT NUMBER   ACCOUNT TYPE   IFSC   MICR..."
+                if (this.accountNumberTableHeaderRegex.test(page[i])) {
                     if (i + 1 < page.length) {
                         const detailsLine = page[i + 1];
                         const parts = detailsLine.split(/\s{2,}/); // Split by 2+ spaces
@@ -64,6 +66,35 @@ export class PaytmBankPdfAdapter implements IPdfImportAdapter {
 
                             return {
                                 accountNumber: accountNumber ? [accountNumber] : [],
+                                ifscCode: ifscCode ? [ifscCode] : [],
+                                micrCode: micrCode ? [micrCode] : [],
+                            };
+                        }
+                    }
+                }
+
+                // Check for vertical list format: "ACCOUNT NUMBER" on its own line
+                if (this.accountNumberLabelRegex.test(page[i])) {
+                    // Look for account number on next line
+                    if (i + 1 < page.length) {
+                        const accountNumberMatch = page[i + 1].match(this.accountNumberRegex);
+                        if (accountNumberMatch) {
+                            const accountNumber = accountNumberMatch[1];
+                            let ifscCode: string | undefined;
+                            let micrCode: string | undefined;
+
+                            // Look for IFSC and MICR in subsequent lines
+                            for (let j = i + 2; j < Math.min(i + 12, page.length); j++) {
+                                if (/^IFSC$/i.test(page[j]) && j + 1 < page.length) {
+                                    ifscCode = page[j + 1];
+                                }
+                                if (/^MICR$/i.test(page[j]) && j + 1 < page.length) {
+                                    micrCode = page[j + 1];
+                                }
+                            }
+
+                            return {
+                                accountNumber: [accountNumber],
                                 ifscCode: ifscCode ? [ifscCode] : [],
                                 micrCode: micrCode ? [micrCode] : [],
                             };
