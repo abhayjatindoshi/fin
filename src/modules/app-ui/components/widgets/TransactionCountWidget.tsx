@@ -76,7 +76,7 @@ const TransactionCountComponent: React.FC = () => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-secondary/50 backdrop-blur-xs">
-                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(y => (
                         <DropdownMenuCheckboxItem key={y} checked={year === y} onSelect={() => setYear(y)}>{y}</DropdownMenuCheckboxItem>
                     ))}
                 </DropdownMenuContent>

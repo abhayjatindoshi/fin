@@ -76,4 +76,15 @@ export class EntityUtils {
             default: throw new Error(`Unknown TransactionDateFilterOption key: ${key}`);
         }
     }
+
+    public static parseTransactionYear(
+        year: number,
+        settings: Record<SettingKeys, string>,
+    ): { label: string, startDate: Date, endDate?: Date, hint?: string } {
+        const firstMonthOfYear = parseInt(settings["calendar.firstMonth"] ?? '0');
+
+        const startDate = moment().year(year).month(firstMonthOfYear).startOf('month');
+        const endDate = startDate.clone().add(11, 'months').endOf('month');
+        return { label: `${year}`, startDate: startDate.toDate(), endDate: endDate.toDate(), hint: `${startDate.format('MMM YYYY')} to ${endDate.format('MMM YYYY')}` };
+    }
 }

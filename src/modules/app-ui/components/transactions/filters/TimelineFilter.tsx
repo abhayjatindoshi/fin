@@ -28,7 +28,7 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
 
     const { settings } = useApp();
     const [open, setOpen] = useState<boolean>(false);
-    const [mode, setMode] = useState<'date-tag' | 'custom-range'>('date-tag');
+    const [mode, setMode] = useState<'date-tag' | 'year' | 'custom-range'>('date-tag');
     const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>(undefined);
 
     const setDateTag = (key: keyof typeof TransactionDateFilterOptions) => {
@@ -39,6 +39,19 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
             from: result.startDate,
             to: result.endDate,
             key,
+            label: result.label,
+            hint: result.hint
+        });
+        setOpen(false);
+    }
+
+    const setYear = (year: number) => {
+        if (!settings) return;
+        const result = EntityUtils.parseTransactionYear(year, settings);
+
+        setTimeline({
+            from: result.startDate,
+            to: result.endDate,
             label: result.label,
             hint: result.hint
         });
@@ -91,7 +104,7 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
             </Button>
         </PopoverTrigger>
         <PopoverContent className={`p-0 flex flex-col ${mode == 'date-tag' ? 'w-42' : 'w-64'} ${dropdownClassName}`}>
-            {mode === 'date-tag' ? <>
+            {mode === 'date-tag' && <>
                 {Object.entries(TransactionDateFilterOptions).map(([key, option]) => (
                     <Button key={key}
                         variant="ghost"
@@ -100,11 +113,31 @@ const TimelineFilter: React.FC<TimelineFilterProps> = ({ timeline, setTimeline, 
                         {option.label}
                     </Button>
                 ))}
-                <Button variant="ghost" className="flex flex-row justify-start uppercase" onClick={() => setMode('custom-range')}>
-                    <span>Custom Range</span>
+                <Button variant="ghost" className="flex flex-row justify-start uppercase w-full" onClick={() => setMode('year')}>
+                    <span>Select year</span>
+                    <div className="flex-1" />
                     <ChevronRight />
                 </Button>
-            </> : <>
+                <Button variant="ghost" className="flex flex-row justify-start uppercase w-full" onClick={() => setMode('custom-range')}>
+                    <span>Custom Range</span>
+                    <div className="flex-1" />
+                    <ChevronRight />
+                </Button>
+            </>}
+            {mode === 'year' && <>
+                <div className="flex flex-row flex-wrap">
+                    {Array.from({ length: 10 }, (_, i) => {
+                        const year = moment().year() - i;
+                        return (<Button key={year}
+                            variant="ghost"
+                            className="flex-grow m-1"
+                            onClick={() => setYear(year)}>
+                            {year}
+                        </Button>);
+                    })}
+                </div>
+            </>}
+            {mode == 'custom-range' && <>
                 <Calendar mode="range"
                     selected={selectedDateRange}
                     onSelect={setSelectedDateRange} />
