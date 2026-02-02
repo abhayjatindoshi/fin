@@ -34,11 +34,15 @@ export class ImportStoreService extends BaseService implements IImportStore {
         }
     }
 
-    async findMatchingAccounts(_b: IBank, _o: IBankOffering, details: AccountDetails): Promise<string[]> {
+    async findMatchingAccounts(bank: IBank, offering: IBankOffering, details: AccountDetails): Promise<string[]> {
         const accountRepo = this.repository(EntityName.MoneyAccount);
         const allAccounts = await accountRepo.getAll() as MoneyAccount[];
         return allAccounts
-            .filter(a => a.identifiers.some(id => details['accountNumber'].includes(id)))
+            .filter(a =>
+                a.bankId === bank.id &&
+                a.offeringId === offering.id &&
+                a.identifiers.some(id => details['accountNumber'].includes(id))
+            )
             .map(a => a.id!);
     }
 

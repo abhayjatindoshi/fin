@@ -7,11 +7,25 @@ export class PaytmBankEmailAdapter implements IEmailImportAdapter {
     type: "email" = "email"
     supportedEmailDomains = ['paytmbank.com'];
 
+    private isWallet: boolean = false;
+
+    constructor(offering: 'savings-account' | 'wallet') {
+        this.isWallet = offering === 'wallet';
+    }
+
     async isEmailSupported(email: MailMessage): Promise<boolean> {
-        return email.subject.toLowerCase().includes('paytm payments bank statement') &&
-            email.attachments.some(a =>
-                a.mimeType === 'application/pdf' ||
-                a.filename.toLowerCase().endsWith('.pdf'));
+        if (!email.attachments.some(a =>
+            a.mimeType === 'application/pdf' ||
+            a.filename.toLowerCase().endsWith('.pdf')
+        )) return false;
+
+
+        if (this.isWallet) {
+            return email.subject.toLowerCase().includes('paytm wallet statement') ||
+                email.subject.toLowerCase().includes('paytm payments bank wallet statement');
+        } else {
+            return email.subject.toLowerCase().includes('paytm payments bank statement')
+        }
     }
 
     async readEmail(email: MailMessage): Promise<ImportData | MailAttachment[] | null> {

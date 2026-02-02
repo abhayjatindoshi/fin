@@ -9,6 +9,7 @@ import { EmailImportProcessContext } from "./context/EmailImportProcessContext";
 import { FileImportProcessContext } from "./context/FileImportProcessContext";
 import type { ImportProcessContext } from "./context/ImportProcessContext";
 import { CancelledError } from "./errors/CancelledError";
+import { FailedError } from "./errors/FailedError";
 import { AccountSelectionError, AdapterSelectionError, FilePasswordError, RequireConfirmation } from "./errors/PromptError";
 import { FileUtils } from "./FileUtils";
 import { ImportMatrix } from "./ImportMatrix";
@@ -196,9 +197,14 @@ export class ImportService {
             const fileContext = new FileImportProcessContext(file, false);
             context.email = mail;
             context.attachment = attachment;
-            await this.processFile(fileContext);
-            context.data = fileContext.data;
-            await this.processImportData(context);
+            try {
+                await this.processFile(fileContext);
+                context.data = fileContext.data;
+                await this.processImportData(context);
+            } catch (error) {
+                if (error instanceof FailedError) continue;
+                else throw error;
+            }
         }
     }
 
@@ -289,7 +295,7 @@ export class ImportService {
             .filter(a => a.isSupported(file))
 
         if (supportedAdapters.length === 0) {
-            throw new Error("No supported adapter found for this file");
+            throw new FailedError('NO_SUPPORTED_ADAPTER', "No supported adapter found for this file");
         } else if (supportedAdapters.length > 1) {
             throw new AdapterSelectionError(context, supportedAdapters.map(a => a.id));
         } else {
@@ -346,7 +352,7 @@ export class ImportService {
         if (context.file.type === 'application/pdf' || context.file.name.toLowerCase().endsWith('.pdf')) {
             return this.readPdfFile(context);
         }
-        throw new Error("Unsupported file type");
+        throw new FailedError('UNSUPPORTED_FILE_TYPE', "Unsupported file type");
     }
 
     private async readPdfFile(context: FileImportProcessContext): Promise<IFile> {

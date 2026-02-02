@@ -10,7 +10,7 @@ import type { ImportProcessStatus } from "@/modules/import/context/ImportProcess
 import { AdapterSelectionError, FilePasswordError, PromptError, type PromptErrorType } from "@/modules/import/errors/PromptError";
 import { ImportMatrix } from "@/modules/import/ImportMatrix";
 import type { IImportAdapter } from "@/modules/import/interfaces/IImportAdapter";
-import { Asterisk, FileText, Trash } from "lucide-react";
+import { Asterisk, FileText, RefreshCcw, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const DevImportPage: React.FC = () => {
@@ -89,6 +89,14 @@ const DevImportPage: React.FC = () => {
         return offering;
     }
 
+    const retry = () => {
+        const fileCopy = file;
+        context.current?.cancel();
+        context.current = null;
+        setFile(null);
+        setTimeout(() => setFile(fileCopy), 1000);
+    }
+
     return <div className="flex flex-col items-center gap-2 m-4 min-w-0">
         <div className="self-end">Global import handler: {enabled ? "Enabled" : "Disabled"}</div>
 
@@ -114,6 +122,9 @@ const DevImportPage: React.FC = () => {
                 <span className="text-sm text-muted-foreground"><FileSize file={file} /></span>
                 <span className="">{status}: {context.current?.error && context.current.error.message}</span>
             </div>
+            <Button variant="outline" size="icon" onClick={retry}>
+                <RefreshCcw />
+            </Button>
             <Button variant="outline" size="icon" onClick={() => setFile(null)}>
                 <Trash />
             </Button>
@@ -151,6 +162,13 @@ const DevImportPage: React.FC = () => {
             {context.current.error.errorType === 'require_confirmation' && <>
                 <div className="mt-4 self-start">Import Data:</div>
                 <div className="flex flex-col gap-2 items-start w-full">
+                    <div className="flex flex-row gap-2 items-center">
+                        <ImportIconComponent name={bank(context.current.adapter)?.display?.icon ?? ''} className="size-7" />
+                        <div className="flex flex-col items-start">
+                            <span className="font-semibold uppercase">{bank(context.current.adapter)?.display?.name}</span>
+                            <span className="text-sm">{offering(context.current.adapter)?.display?.name}</span>
+                        </div>
+                    </div>
                     <table className="w-full max-w-md">
                         <tbody>
                             {Object.entries(context.current.data?.account ?? {}).map(([key, values]) => (

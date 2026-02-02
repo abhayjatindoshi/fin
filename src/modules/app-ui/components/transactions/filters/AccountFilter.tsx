@@ -36,20 +36,21 @@ const AccountFilter: React.FC<AccountFilterProps> = ({ accountId = null, setAcco
                 }
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className={`w-64 ${dropdownClassName}`}>
+        <DropdownMenuContent align="start" className={`${dropdownClassName}`}>
             <DropdownMenuItem key={'all-accounts'} onClick={() => setAccountId(null)}>
                 <div className="flex flex-row gap-4 items-center">
                     <Landmark className="size-4 mx-1" /> All accounts
                 </div>
             </DropdownMenuItem>
-            {Object.values(accountsMetaMap).map(({ account, bank }) => (
+            {Object.values(accountsMetaMap).map(({ account, bank, offering }) => (
                 <DropdownMenuItem key={account.id} onClick={() => setAccountId(account.id ?? null)}>
-                    <div className="flex flex-row gap-4 items-center">
+                    <div className="flex flex-row gap-4 items-center w-full">
                         <ImportIconComponent name={bank?.display?.icon ?? ''} className="size-6" />
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 flex-1">
                             <span className="uppercase">{bank?.display?.name ?? ''}</span>
-                            <span className="text-sm text-muted-foreground"><AccountNumber accountNumber={account.accountNumber} /></span>
+                            <span className="text-sm text-muted-foreground">{offering?.display?.name ?? ''}</span>
                         </div>
+                        <span className="text-xl"><AccountNumber accountNumber={account.accountNumber} /></span>
                     </div>
                 </DropdownMenuItem>
             ))}

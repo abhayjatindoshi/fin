@@ -2,7 +2,7 @@ import { ImportStoreService } from '@/modules/app/services/ImportStoreService';
 import { SettingService, type SettingKeys } from '@/modules/app/services/SettingService';
 import { useDataSync } from '@/modules/data-sync/providers/DataSyncProvider';
 import { ImportService } from '@/modules/import/ImportService';
-import React, { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 
 type WindowWithDevMode = Window & {
     enableDevMode?: () => void;
@@ -32,7 +32,7 @@ type AppProviderProps = PropsWithChildren<{
 export const AppProvider: React.FC<AppProviderProps> = ({ children, scrollElementRef }) => {
 
     const { orchestrator } = useDataSync();
-    const settingsService = useMemo(() => orchestrator ? new SettingService() : null, [orchestrator]);
+    const settingsService = useRef(new SettingService()).current;
     const [width, setWidth] = useState<number>(window.innerWidth);
     const [devModeEnabled, setDevModeEnabled] = useState<boolean>(false);
     const [settings, setSettings] = useState<Record<SettingKeys, string> | null>(null);
@@ -49,10 +49,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, scrollElemen
     }, []);
 
     useEffect(() => {
-        if (!settingsService) return;
+        if (!orchestrator) return;
         const subscription = settingsService.observe().subscribe(setSettings);
         return () => subscription.unsubscribe();
-    }, [settingsService]);
+    }, [orchestrator]);
 
     const isMobile = width <= 768;
 

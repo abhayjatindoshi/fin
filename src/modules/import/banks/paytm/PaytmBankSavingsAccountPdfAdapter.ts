@@ -1,7 +1,7 @@
 import type { AccountDetails, ImportData, TransactionDetails } from "../../interfaces/ImportData";
 import type { IPdfFile, IPdfImportAdapter } from "../../interfaces/IPdfImportAdapter";
 
-export class PaytmBankPdfAdapter implements IPdfImportAdapter {
+export class PaytmBankSavingsAccountPdfAdapter implements IPdfImportAdapter {
     id = '';
     fileType: "pdf" = "pdf";
     type: "file" = "file";
@@ -30,11 +30,22 @@ export class PaytmBankPdfAdapter implements IPdfImportAdapter {
         /^Page[\s]+\d+/i,
     ];
 
+    private skipDescriptionTexts = [
+        /Money (?:Sent|Received) using UPI/i,
+        /Paid using your Bank Account From/i,
+        /Paid using your Bank Account/i,
+        /Money (?:Sent|Received) using IMPS Bank account linked to/i,
+        /Money (?:Sent|Received) using IMPS/i,
+        /Money (?:Sent|Received) via UPI/i,
+        /Interest Received/i,
+    ]
+
     // Header pattern to skip
     private headerRegex = /^DATE[\s]+&[\s]+TIME[\s]+TRANSACTION[\s]+DETAILS/i;
 
     isSupported(file: IPdfFile): boolean {
-        return file.pages.some(page => page.some(line => line.includes('PPBL')));
+        return file.pages.some(page => page.some(line => line.includes('PPBL'))) &&
+            file.pages.some(page => page.some(line => line.toLowerCase().includes('account statement')));
     }
 
     async read(file: IPdfFile): Promise<ImportData> {
@@ -188,7 +199,14 @@ export class PaytmBankPdfAdapter implements IPdfImportAdapter {
             }
 
             // Build description by joining all parts
-            const description = descriptionParts.join(' ');
+            let description = descriptionParts
+                .join(' ')
+                .replaceAll(/\s+/g, ' ')
+                .trim();
+
+            for (const skipRegex of this.skipDescriptionTexts) {
+                description = description.replace(skipRegex, '')
+            }
 
             transactions.push({
                 date,
@@ -237,13 +255,14 @@ export class PaytmBankPdfAdapter implements IPdfImportAdapter {
 
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
+
+                // Skip header lines
+                while (i < page.length && this.headerRegex.test(page[i])) i++; // Skip header lines
+
                 const line = page[i];
 
-                // Skip header line
-                if (this.headerRegex.test(line)) continue;
-
                 // Skip footer lines
-                if (this.skipLinesAfter.some(regex => regex.test(line))) continue;
+                if (this.skipLinesAfter.some(regex => regex.test(line))) break;
 
                 // Skip empty lines
                 if (line.trim() === '') continue;

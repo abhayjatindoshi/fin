@@ -1,6 +1,7 @@
 import type { IBank } from "../../interfaces/IBank";
 import { PaytmBankEmailAdapter } from "./PaytmBankEmailAdapter";
-import { PaytmBankPdfAdapter } from "./PaytmBankPdfAdapter";
+import { PaytmBankSavingsAccountPdfAdapter } from "./PaytmBankSavingsAccountPdfAdapter";
+import { PaytmBankWalletPdfAdapter } from "./PaytmBankWalletPdfAdapter";
 
 export class PaytmBank implements IBank {
     id = 'paytm';
@@ -15,9 +16,19 @@ export class PaytmBank implements IBank {
                 name: 'Savings Account',
             },
             adapters: [
-                new PaytmBankPdfAdapter(),
-                new PaytmBankEmailAdapter(),
+                new PaytmBankEmailAdapter('savings-account'),
+                new PaytmBankSavingsAccountPdfAdapter(),
             ]
+        },
+        {
+            id: 'wallet',
+            display: {
+                name: 'Paytm Wallet',
+            },
+            adapters: [
+                new PaytmBankEmailAdapter('wallet'),
+                new PaytmBankWalletPdfAdapter(),
+            ],
         }
     ]
 }
