@@ -7,11 +7,26 @@ export class HdfcBankEmailAdapter implements IEmailImportAdapter {
     type: "email" = "email"
     supportedEmailDomains = ['hdfcbank.bank.in', 'hdfcbank.net'];
 
+    private isCreditCard: boolean = false;
+
+    constructor(offering: 'savings-account' | 'credit-card') {
+        this.isCreditCard = offering === 'credit-card';
+    }
+
     async isEmailSupported(email: MailMessage): Promise<boolean> {
-        return email.from.includes('statement') &&
-            email.attachments.some(a =>
-                a.mimeType === 'application/pdf' ||
-                a.filename.toLowerCase().endsWith('.pdf'));
+        if (!email.attachments.some(a =>
+            a.mimeType === 'application/pdf' ||
+            a.filename.toLowerCase().endsWith('.pdf')
+        )) return false;
+
+        const subject = email.subject.toLowerCase();
+        if (this.isCreditCard) {
+            return subject.includes('credit card statement') ||
+                (email.from.includes('statement') && subject.includes('credit card'));
+        } else {
+            return email.from.includes('statement') &&
+                !subject.includes('credit card');
+        }
     }
 
     async readEmail(email: MailMessage): Promise<ImportData | MailAttachment[] | null> {

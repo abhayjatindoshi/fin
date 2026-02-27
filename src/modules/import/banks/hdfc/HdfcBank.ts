@@ -17,7 +17,7 @@ export class HdfcBank implements IBank {
             },
             adapters: [
                 new HdfcBankPdfAdapter(),
-                new HdfcBankEmailAdapter(),
+                new HdfcBankEmailAdapter('savings-account'),
             ]
         },
         {
@@ -27,6 +27,7 @@ export class HdfcBank implements IBank {
             },
             adapters: [
                 new HdfcCreditCardPdfAdapter(),
+                new HdfcBankEmailAdapter('credit-card'),
             ]
         }
     ]
