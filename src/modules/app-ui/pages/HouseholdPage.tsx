@@ -1,3 +1,5 @@
+import EditHouseholdDialog from "@/modules/app-ui/components/households/EditHouseholdDialog";
+import { TagIconComponent } from "@/modules/app-ui/icons/tags/TagIcons";
 import { util } from "@/modules/app/entities/entities";
 import type { Household } from "@/modules/app/entities/Household";
 import { AppLogger } from "@/modules/app/logging/AppLogger";
@@ -6,7 +8,6 @@ import { DateStrategy } from "@/modules/app/store/DateStrategy";
 import { LocalPersistence } from "@/modules/app/store/local/LocalPersistence";
 import { MemStore } from "@/modules/app/store/memory/MemStore";
 import { useAuth } from "@/modules/auth/AuthProvider";
-import { Spinner } from "@/modules/base-ui/components/ui/spinner";
 import type { IPersistence } from "@/modules/data-sync/interfaces/IPersistence";
 import { useDataSync } from "@/modules/data-sync/providers/DataSyncProvider";
 import { useTenant } from "@/modules/data-sync/providers/TenantProvider";
@@ -15,85 +16,88 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const HouseholdPage: React.FC = () => {
-
     const navigate = useNavigate();
     const [params, setParams] = useSearchParams();
     const { currentUser, token } = useAuth();
     const { orchestrator, load: loadDataSync, unload: unloadDataSync } = useDataSync();
-    const { setCurrentTenant, load: loadTenantManager, manager: tenantManager } = useTenant();
+    const { load: loadTenantManager, manager: tenantManager } = useTenant<typeof util, unknown, Household>();
+
     const [loading, setLoading] = useState(false);
+    const [editTarget, setEditTarget] = useState<Household | null>(null);
+    const autoSelectDefault = !params.get('pick');
 
     const returnBack = useCallback(() => {
-        const returnUrl = params.get('returnUrl') || '/';
-        navigate(returnUrl);
-        return null;
+        navigate(params.get('returnUrl') || '/');
     }, [navigate, params]);
 
-    const loadHousehold = useCallback(async (householdId: string, returnUrl: string) => {
-        if (!householdId || !tenantManager) return;
+    const loadHousehold = useCallback(async (household: Household) => {
+        if (!tenantManager) return;
         setLoading(true);
         try {
-            const tenant = await tenantManager.get(householdId);
-            if (!tenant) return;
-            setCurrentTenant(tenant);
-            const config = tenantManager.getDataSyncConfig(tenant);
-            setParams({
-                householdId,
-                returnUrl,
-            })
-            await loadDataSync(config);
+            setParams({ householdId: household.id!, returnUrl: `/${household.id}` });
+            await loadDataSync(tenantManager.getDataSyncConfig(household));
         } finally {
             setLoading(false);
         }
-    }, [tenantManager, setCurrentTenant, loadDataSync, params, setParams]);
+    }, [tenantManager, loadDataSync, setParams]);
 
+    // Auto-load if householdId param is present
     useEffect(() => {
         if (loading) return;
-
         const householdId = params.get('householdId');
-        if (!householdId) {
-            unloadDataSync();
-            return;
-        }
-
-        const returnUrl = params.get('returnUrl');
+        if (!householdId) { unloadDataSync(); return; }
         if (orchestrator && orchestrator.ctx.tenant.id === householdId) {
             returnBack();
         } else {
-            loadHousehold(householdId, returnUrl || `/${householdId}`);
+            tenantManager?.get(householdId).then(h => { if (h) loadHousehold(h); });
         }
+    }, [loading, tenantManager, loadHousehold, unloadDataSync, orchestrator, params, returnBack]);
 
-    }, [loading, loadHousehold, unloadDataSync, orchestrator, params, returnBack]);
-
+    // Bootstrap TenantManager on auth
     useEffect(() => {
-        if (orchestrator) return;
-        if (!currentUser) return;
-
+        if (orchestrator || !currentUser) return;
         token().then(tokenObj => {
             if (!tokenObj) return;
             let cloudService: IPersistence<Household> | null = null;
-
-            switch (tokenObj.handlerId) {
-                case 'google-drive':
-                    cloudService = GoogleDriveFileService.load(token);
-                    break;
+            if (tokenObj.handlerId === 'google-drive') {
+                cloudService = GoogleDriveFileService.load(token);
             }
             if (!cloudService) return;
-
             loadTenantManager({
-                util: util,
+                util,
                 store: MemStore.getInstance(),
                 logger: AppLogger.getInstance(),
                 local: new LocalPersistence(),
                 cloud: cloudService,
                 strategy: new DateStrategy(),
             });
-        })
-
+        });
     }, [currentUser, loadTenantManager, orchestrator]);
 
-    if (loading) return <Spinner />;
-    return <TenantSelectionComponent tenantStr="household" onSelect={(tenant) => tenant.id && loadHousehold(tenant.id, `/${tenant.id}`)} />
-}
+    const handleEdit = async (name: string, icon: string | undefined) => {
+        if (!tenantManager || !editTarget?.id) return;
+        await tenantManager.updateTenant(editTarget.id, { name, icon });
+        setEditTarget(null);
+    };
+
+    return (
+        <>
+            <TenantSelectionComponent<typeof util, unknown, Household>
+                tenantStr="household"
+                TenantIcon={({ tenant }) => <TagIconComponent name={tenant.icon ?? 'house'} className="h-10 w-10" />}
+                onSelect={loadHousehold}
+                onEdit={setEditTarget}
+                autoSelectDefault={autoSelectDefault}
+            />
+            {editTarget && (
+                <EditHouseholdDialog
+                    household={editTarget}
+                    onSave={handleEdit}
+                    onClose={() => setEditTarget(null)}
+                />
+            )}
+        </>
+    );
+};
 
 export default HouseholdPage;

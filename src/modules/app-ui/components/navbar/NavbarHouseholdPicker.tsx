@@ -51,7 +51,7 @@ const NavbarHouseholdPicker: React.FC<NavbarHouseholdPickerProps> = ({ className
                     </DropdownMenuCheckboxItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem key={'manage-households'} onClick={() => navigate('/')}>
+                <DropdownMenuItem key={'manage-households'} onClick={() => navigate('/auth/households?pick=true')}>
                     <Bolt /> Manage
                 </DropdownMenuItem>
             </DropdownMenuContent>

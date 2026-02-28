@@ -29,6 +29,12 @@ export const TenantProvider = <U extends EntityUtil<SchemaMap>, FilterOptions, T
 
     const chain = useRef(Promise.resolve());
 
+    useEffect(() => {
+        if (!manager) return;
+        const subscription = manager.observeLoading().subscribe(setLoading);
+        return () => subscription.unsubscribe();
+    }, [manager]);
+
     const load = useCallback(async (config: TenantManagerConfig<U, FilterOptions, T>) => {
         chain.current = chain.current.then(async () => {
             setLoading(true);

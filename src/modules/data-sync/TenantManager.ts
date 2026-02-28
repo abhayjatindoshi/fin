@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, Observable, map } from "rxjs";
 import { toRecord } from "../app-ui/common/ComponentUtils";
 import type { Tenant } from "./entities/Tenant";
 import type { EntityUtil } from "./EntityUtil";
@@ -10,20 +10,8 @@ export type TenantManagerConfig<U extends EntityUtil<SchemaMap>, FilterOptions, 
 
 export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant> {
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private static instance: TenantManager<any, any, any> | null = null;
-
-    public static getInstance<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant>(): TenantManager<U, FilterOptions, T> {
-        if (!TenantManager.instance) {
-            throw new Error("TenantManager is not loaded");
-        }
-        return TenantManager.instance as TenantManager<U, FilterOptions, T>;
-    }
-
     public static load<U extends EntityUtil<SchemaMap>, FilterOptions, T extends Tenant>(config: TenantManagerConfig<U, FilterOptions, T>): TenantManager<U, FilterOptions, T> {
-        const instance = new TenantManager<U, FilterOptions, T>(config);
-        TenantManager.instance = instance;
-        return instance;
+        return new TenantManager<U, FilterOptions, T>(config);
     }
 
     private static tenantKey = 'tenants';
@@ -31,7 +19,7 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
     private config: TenantManagerConfig<U, FilterOptions, T>;
     private tenants: Record<string, T> | null = null;
     private tenantsSubject = new BehaviorSubject<T[] | null>(null);
-    private tenantSubjectMap: Record<string, BehaviorSubject<T | null>> = {};
+    private loadingSubject = new BehaviorSubject<boolean>(true);
 
     private localLoad: Promise<void> | null = null;
     private cloudLoad: Promise<void> | null = null;
@@ -40,11 +28,15 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
         this.config = config;
         this.localLoad = this.config.local.loadData(null, TenantManager.tenantKey)
             .then(data => this.fromEntityKeyData(data))
-            .then(this.updateTenantData.bind(this))
+            .then(this.updateTenantData.bind(this));
 
         this.cloudLoad = this.config.cloud?.loadData(null, TenantManager.tenantKey)
             .then(data => this.fromEntityKeyData(data))
-            .then(this.updateTenantData.bind(this)) ?? Promise.resolve();
+            .then(this.updateTenantData.bind(this))
+            .then(() => this.saveToLocal()) ?? Promise.resolve();
+
+        Promise.allSettled([this.localLoad, this.cloudLoad])
+            .finally(() => this.loadingSubject.next(false));
     }
 
     async getAll(): Promise<T[]> {
@@ -67,22 +59,40 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
         });
     }
 
-    observe(id: string): Observable<T | null> {
-        if (!this.tenantSubjectMap[id]) {
-            const tenant = this.tenants ? this.tenants[id] ?? null : null;
-            this.tenantSubjectMap[id] = new BehaviorSubject<T | null>(tenant);
-        }
-
-        return new Observable<T | null>(subscriber => {
-            const subscription = this.tenantSubjectMap[id].subscribe(subscriber);
-            return () => {
-                subscription.unsubscribe();
-                if (!this.tenantSubjectMap[id].observed) {
-                    this.tenantSubjectMap[id].complete();
-                    delete this.tenantSubjectMap[id];
-                }
-            };
+    observeLoading(): Observable<boolean> {
+        return new Observable<boolean>(subscriber => {
+            const subscription = this.loadingSubject.subscribe(subscriber);
+            return () => subscription.unsubscribe();
         });
+    }
+
+    getDefaultTenantId(): string | null {
+        if (!this.tenants) return null;
+        return Object.values(this.tenants).find(t => t.isDefault)?.id ?? null;
+    }
+
+    async setDefaultTenantId(id: string | null): Promise<void> {
+        await this.getAll();
+        if (!this.tenants) return;
+        Object.values(this.tenants).forEach(t => {
+            this.tenants![t.id!] = { ...t, isDefault: t.id === id ? true : undefined };
+        });
+        this.notifyUpdate();
+        await this.save();
+    }
+
+    observeDefaultTenantId(): Observable<string | null> {
+        return this.tenantsSubject.pipe(
+            map(tenants => tenants?.find(t => t.isDefault)?.id ?? null)
+        );
+    }
+
+    async unlinkTenant(id: string): Promise<void> {
+        await this.getAll();
+        if (!this.tenants || !this.tenants[id]) return;
+        delete this.tenants[id];
+        this.notifyUpdate();
+        await this.save();
     }
 
     async createTenant(tenant: Partial<T>): Promise<T> {
@@ -99,9 +109,30 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
         } as T;
 
         this.tenants[tenantRecord.id!] = tenantRecord;
-        this.notifyUpdate(tenantRecord);
+        this.notifyUpdate();
         await this.save();
         return tenantRecord;
+    }
+
+    async updateTenant(id: string, updates: Partial<Omit<T, 'id' | 'createdAt' | 'updatedAt' | 'version'>>): Promise<T | null> {
+        await this.getAll();
+        if (!this.tenants || !this.tenants[id]) return null;
+
+        const existing = this.tenants[id];
+        const merged = { ...existing, ...updates };
+        const updated = {
+            ...merged,
+            ...this.config.util.parse(TenantManager.tenantEntityName, merged),
+            id: existing.id,
+            createdAt: existing.createdAt,
+            updatedAt: new Date(),
+            version: (existing.version ?? 1) + 1
+        } as T;
+
+        this.tenants[id] = updated;
+        this.notifyUpdate();
+        await this.save();
+        return updated;
     }
 
     combinedSettings(): TenantSettings<T> {
@@ -120,10 +151,7 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
         return { ...this.config, tenant };
     }
 
-    private notifyUpdate(tenant: T | null): void {
-        if (tenant && this.tenantSubjectMap[tenant.id!]) {
-            this.tenantSubjectMap[tenant.id!].next(tenant);
-        }
+    private notifyUpdate(): void {
         this.tenantsSubject.next(this.tenants ? Object.values(this.tenants) : null);
     }
 
@@ -133,10 +161,9 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
             if (!this.tenants || !t.id) return;
             if (!this.tenants[t.id] || new Date(t.updatedAt) > new Date(this.tenants[t.id].updatedAt)) {
                 this.tenants[t.id] = t;
-                this.notifyUpdate(t);
             }
         });
-        this.notifyUpdate(null);
+        this.notifyUpdate();
     }
 
     private fromEntityKeyData(data: EntityKeyData | null): T[] {
@@ -148,6 +175,12 @@ export class TenantManager<U extends EntityUtil<SchemaMap>, FilterOptions, T ext
         return {
             Tenant: toRecord(tenants, 'id')
         };
+    }
+
+    private async saveToLocal(): Promise<void> {
+        if (!this.tenants) return;
+        const data = this.toEntityKeyData(Object.values(this.tenants));
+        await this.config.local.storeData(null, TenantManager.tenantKey, data);
     }
 
     private async save(): Promise<void> {

@@ -249,6 +249,7 @@ const tags: SystemTags = {
             "Driver": { icon: "car", description: "Payments to a personal or hired driver." },
             "Photographer": { icon: "camera" },
             "Tailor": { icon: "sewing", description: "Clothing stitching, alteration, or repair services." },
+            "Driving School": { icon: "car", description: "Fees paid to a driving school for lessons or license training." },
         }
     },
     "Shared": { icon: "handshake", description: "Shared expenses or money borrowed, lent, split, or exchanged with friends or family that needs to be settled." },

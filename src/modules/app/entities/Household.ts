@@ -5,6 +5,7 @@ export const HouseholdSchema = TenantSchema.extend({
     spaceId: z.string(),
     folderId: z.string().optional(),
     folderName: z.string().optional(),
+    icon: z.string().optional(),
 });
 
 export type Household = z.infer<typeof HouseholdSchema>;
