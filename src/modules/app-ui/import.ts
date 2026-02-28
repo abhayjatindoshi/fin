@@ -8,11 +8,16 @@ import type { DateStrategy } from "../app/store/DateStrategy";
 import { DataOrchestrator } from "../data-sync/DataOrchestrator";
 import type { DataRepository } from "../data-sync/DataRepository";
 import type { DateStrategyOptions } from "../data-sync/strategies/EntityKeyDateStrategy";
+import tenant1 from "./import-files/tenant-KPpKf2SqMoB35UXl-transactions-2026-02-28T06-27-38-180Z.json";
+import tenant2 from "./import-files/tenant-l4N2vUBBhveim5ia-transactions-2026-02-28T06-27-44-117Z.json";
+import tenant3 from "./import-files/tenant-R6ORjK5NJWboJWzu-transactions-2026-02-28T06-27-33-415Z.json";
+import tenant4 from "./import-files/tenant-vYtxnwTT4fNmSFw5-transactions-2026-02-28T06-27-19-729Z.json";
+import tenant5 from "./import-files/tenant-XeGOQTtaTOH9R8dr-transactions-2026-02-28T06-27-29-228Z.json";
 
 declare global {
     interface Window {
         orchestrator?: DataOrchestrator<typeof util, DateStrategy, Household>;
-        import(data: OldTransactionData): Promise<void>;
+        import(): Promise<void>;
         tags: Record<string, Tag>;
         tagMap: Record<string, string>;
     }
@@ -20,13 +25,10 @@ declare global {
 
 type SearchIndex = {
     upiIds: string[];
+    txIds: string[];
     skippedWords: string[];
     fullNarration: string;
     leftOverLine: string;
-}
-
-export type OldTransactionData = {
-    transactions: OldTransactionPaste[];
 }
 
 type OldTransactionPaste = {
@@ -36,11 +38,11 @@ type OldTransactionPaste = {
     amount: number;
     transactionAt: Date;
     accountName: string;
-    subCategoryName: string | null;
-    transferAccountName: string | null;
-    categoryName: string | null;
+    subCategoryName?: string | null;
+    transferAccountName?: string | null;
+    categoryName?: string | null;
     createdAt: Date;
-    modifiedAt: Date | null;
+    modifiedAt?: Date | null;
 }
 
 type OldTransaction = {
@@ -50,11 +52,11 @@ type OldTransaction = {
     amount: number;
     transactionAt: Date;
     accountName: string;
-    subCategoryName: string | null;
-    transferAccountName: string | null;
-    categoryName: string | null;
+    subCategoryName?: string | null;
+    transferAccountName?: string | null;
+    categoryName?: string | null;
     createdAt: Date;
-    modifiedAt: Date | null;
+    modifiedAt?: Date | null;
 }
 
 type SearchTransaction = Transaction & {
@@ -115,6 +117,8 @@ const tagMap: Record<string, string> = {
     "Abhay HDFC A/C": "account-hdfc-savings-account-4560",
     "Federal Bank Wave CC": "account-federal-credit-card-3505",
     "Federal Bank Celesta CC": "account-federal-credit-card-1162",
+    "Abhay PayTM Bank A/C": "account-paytm-savings-account-4443",
+    "PayTM Bank A/C": "account-paytm-savings-account-4443",
     "Rajasthan Trip": "custom-Rajasthan Trip",
     "Dining": "system-tag-diningout-restaurant",
     "Grocery": "system-tag-groceries",
@@ -156,7 +160,74 @@ const tagMap: Record<string, string> = {
     "Papa Spends": "system-tag-support-dad",
     "Mummy Spends": "system-tag-support-mom",
     "Kanak Jewellers BOB A/C": "system-tag-support-dad",
-    // "Abhay PayTM Bank A/C": "",
+    // Third tenant additions
+    "ACT": "system-tag-bills-internet",
+    "ATM Withdrawal": "system-tag-cashwithdrawal",
+    "BESSCOM": "system-tag-bills-electricity",
+    "Bus": "system-tag-commute-bus",
+    "Bus Pass": "system-tag-commute-bus",
+    "Cohesity": "system-tag-income-salary",
+    "Electronics": "system-tag-shopping-electronics",
+    "Essential Clothing": "system-tag-shopping-clothes",
+    "Fixed Deposit": "system-tag-investments-fixeddeposits",
+    "Fruits/Veggies": "system-tag-groceries",
+    "Google Domain": "system-tag-subscription-software",
+    "GPay Cashback": "system-tag-cashback-googlepay",
+    "Gym": "system-tag-fitness-gym",
+    "HDFC PPF A/C": "system-tag-investments-ppf",
+    "Jio Mobile": "system-tag-bills-mobile",
+    "Kanak Jewellers BOB": "system-tag-support-dad",
+    "LIC ULIP": "system-tag-investments-ulip",
+    "Marriage Registeration": "system-tag-events-wedding",
+    "Meals": "system-tag-trips-meals",
+    "Non-essential Clothing": "system-tag-shopping-clothes",
+    "Oriental Insurance": "system-tag-insurance",
+    "Outings": "system-tag-entertainment-leisure",
+    "PayTM Cashback": "system-tag-cashback-paytm",
+    "Shoes": "system-tag-shopping-footwear",
+    "Snacks/Drinks": "system-tag-groceries-chips",
+    "Vehicle Rental": "system-tag-commute-localrental",
+    "Vini HDFC": "custom-Vini",
+    "Wedding Shopping": "system-tag-shopping-wedding",
+    "Jatin": "system-tag-support-dad",
+    "Jatin BOB": "system-tag-support-dad",
+    "Lifestyle Param": "system-tag-emi-house",
+    "Shubh Bank": "custom-Shubh",
+    "Petty": "system-tag-cashwithdrawal",
+    "Scooter": "system-tag-emi-vehicle",
+    "Resort Expense": "custom-ECR Trip",
+    "Shared Meal": "system-tag-diningout-restaurant",
+    "Driving School": "system-tag-services-drivingschool",
+    "Home Accessories": "system-tag-shopping-appliances",
+    "Abhay BOB": "system-tag-support-dad",
+    // New tenant additions
+    "Abhay PayTM": "account-paytm-savings-account-4443",
+    "Arjuna PayTM": "custom-Arjuna",
+    "Blender": "system-tag-shopping-appliances",
+    "Dinner": "system-tag-diningout-restaurant",
+    "Direct Expense": "system-tag-cashwithdrawal",
+    "Divine Equipments": "system-tag-shopping-appliances",
+    "Fridge": "system-tag-shopping-appliances",
+    "Home Loan": "system-tag-emi-house",
+    "Induction Stove": "system-tag-shopping-appliances",
+    "Interiors": "system-tag-house-maintenance",
+    "iPad": "system-tag-shopping-electronics",
+    "Jatin ICICI": "system-tag-support-dad",
+    "Jigna Central Bank": "system-tag-support-mom",
+    "Jio Fiber": "system-tag-bills-internet",
+    "Kanak BOB": "system-tag-support-dad",
+    "LIC Policy": "system-tag-investments-ulip",
+    "Lunch": "system-tag-diningout-restaurant",
+    "Manisha HDFC": "system-tag-support-dad",
+    "Milk": "system-tag-groceries-dairy",
+    "NPS": "system-tag-investments-nps",
+    "Respondent": "system-tag-income",
+    "Simran": "custom-Simran",
+    "Stamp Paper": "system-tag-professional-legal",
+    "Tax": "system-tag-tax",
+    "Term Insurance": "system-tag-insurance-life",
+    "Washing Machine": "system-tag-shopping-appliances",
+    "Workstation setup": "system-tag-shopping-electronics",
 };
 
 const customTags: Record<string, Partial<Tag>> = {
@@ -215,18 +286,28 @@ const customTags: Record<string, Partial<Tag>> = {
         icon: "plane",
         parent: 'system-tag-trips',
     },
+    "ECR Trip": {
+        name: "ECR Trip",
+        icon: "plane",
+        parent: 'system-tag-trips',
+    },
+    "Arjuna": {
+        name: "Arjuna",
+        icon: "user",
+        parent: "system-tag-shared",
+    },
+    "Simran": {
+        name: "Simran",
+        icon: "user",
+        parent: "system-tag-shared",
+    },
 }
 
 let store: any[] = [];
 
-export const importDataFromOldApp = async ({ transactions }: OldTransactionData) => {
-    transactions = transactions.map(tx => ({
-        ...tx,
-        transactionAt: new Date(tx.transactionAt),
-        createdAt: new Date(tx.createdAt),
-        modifiedAt: tx.modifiedAt ? new Date(tx.modifiedAt) : null,
-    }));
-    console.log("Importing data from old app:", transactions);
+const allTenantData = [tenant1, tenant2, tenant3, tenant4, tenant5];
+
+export const importDataFromOldApp = async () => {
     const orchestrator = window.orchestrator;
     if (!orchestrator) {
         console.error("Data orchestrator is not available.");
@@ -234,76 +315,81 @@ export const importDataFromOldApp = async ({ transactions }: OldTransactionData)
     }
 
     store = [];
+    let total = 0, noMatch = 0, multiMatch = 0, tagUpdated = 0, tagUnchanged = 0, saveErrors = 0;
+
     const repo = orchestrator.repo(EntityName.Transaction) as DataRepository<typeof util, typeof EntityName.Transaction, DateStrategyOptions, Household>;
-    for (const tx of transactions) {
-        const similarTx = await getSimilarTransaction(orchestrator, tx);
-        const storeEntry: any = { type: 'updated', source: tx, target: similarTx };
-        if (similarTx) {
-            if (tx.title !== tx.summary) {
-                similarTx.title = tx.title;
-                storeEntry.titleUpdated = true;
-            }
-            let existingTagId = similarTx.tagId;
 
-            if (tx.subCategoryName) {
-                const tagId = await getTagIdForName(tx.subCategoryName);
-                if (tagId) {
-                    similarTx.tagId = tagId;
-                    storeEntry.subCategoryTagAssigned = true;
-                } else {
-                    storeEntry.missingTagReference = true;
-                }
-            } else if (tx.transferAccountName) {
-                const tagId = await getTagIdForName(tx.transferAccountName);
-                if (tagId) {
-                    similarTx.tagId = tagId;
-                    storeEntry.transferAccountTagAssigned = true;
-                } else {
-                    storeEntry.missingTagReference = true;
-                }
-            } else {
-                storeEntry.noTagAssigned = true;
+    for (const tenantData of allTenantData) {
+        const rawTransactions = (tenantData as any).transactions as OldTransactionPaste[];
+        // Only process transactions that have a subCategoryName
+        const transactions: OldTransaction[] = rawTransactions
+            .filter(tx => tx.subCategoryName)
+            .map(tx => ({
+                ...tx,
+                transactionAt: new Date(tx.transactionAt),
+                createdAt: new Date(tx.createdAt),
+                modifiedAt: tx.modifiedAt ? new Date(tx.modifiedAt) : null,
+            }));
+
+        total += transactions.length;
+        console.log(`Processing ${tenantData.tenantId}: ${transactions.length} transactions with subCategoryName`);
+
+        let saveError = 0;
+
+        for (const tx of transactions) {
+            const similarTx = await getSimilarTransaction(orchestrator, tx);
+            if (!similarTx) {
+                // no-match and multi-match are pushed inside getSimilarTransaction
+                continue;
             }
 
-            if (existingTagId === similarTx.tagId) {
-                storeEntry.tagAlreadyAssigned = true;
-                delete storeEntry.subCategoryTagAssigned;
-                delete storeEntry.transferAccountTagAssigned;
-            } else {
-                storeEntry.tagUpdated = true;
+            const tagId = await getTagIdForName(tx.subCategoryName!);
+            if (!tagId) continue;
+
+            if (similarTx.tagId === tagId) {
+                tagUnchanged++;
+                continue; // skip unnecessary write
             }
 
-            repo.save({ ...similarTx });
-            store.push(storeEntry);
+            similarTx.tagId = tagId;
+            try {
+                repo.save({ ...similarTx });
+                tagUpdated++;
+                store.push({ source: tx, target: similarTx });
+            } catch (e) {
+                saveError++;
+                console.error(`Save failed for tx "${tx.title}" (${tx.transactionAt}):`, e, { source: tx, target: similarTx });
+            }
+        }
+
+        if (saveError > 0) {
+            saveErrors += saveError;
+            console.warn(`${tenantData.tenantId}: ${saveError} saves failed`);
         }
     }
 
-    console.log("Import completed. Summary:", store.reduce((acc, curr) => {
-        acc[curr.type] = (acc[curr.type] || 0) + 1;
-        if (curr.type === 'updated') {
-            acc['updatedStats'] = acc['updatedStats'] || {};
-            if (curr.titleUpdated) {
-                acc['updatedStats']['titleUpdated'] = (acc['updatedStats']['titleUpdated'] || 0) + 1;
-            }
-            if (curr.tagAlreadyAssigned) {
-                acc['updatedStats']['tagAlreadyAssigned'] = (acc['updatedStats']['tagAlreadyAssigned'] || 0) + 1;
-            }
-            if (curr.subCategoryTagAssigned) {
-                acc['updatedStats']['subCategoryTagAssigned'] = (acc['updatedStats']['subCategoryTagAssigned'] || 0) + 1;
-            }
-            if (curr.transferAccountTagAssigned) {
-                acc['updatedStats']['transferAccountTagAssigned'] = (acc['updatedStats']['transferAccountTagAssigned'] || 0) + 1;
-            }
-        }
-        return acc;
-    }, {} as Record<string, number>));
+    // Tally no-match and multi-match from store state
+    for (const entry of store) {
+        if (entry.type === 'no-match') noMatch++;
+        else if (entry.type === 'multiple-match') multiMatch++;
+    }
 
-    console.log("Detailed log:", store.reduce((acc, curr) => {
-        const type = curr.type;
-        if (!acc[type]) acc[type] = [];
-        acc[type].push(curr);
-        return acc;
-    }, {} as Record<string, any[]>));
+    console.log("Import completed.", {
+        total,
+        matched: total - noMatch - multiMatch,
+        noMatch,
+        multiMatch,
+        tagUpdated,
+        tagUnchanged,
+        saveErrors,
+    });
+
+    if (multiMatch > 0) {
+        console.log("Multi-match entries (review manually):", store.filter(e => e.type === 'multi-match'));
+    }
+    if (noMatch > 0) {
+        console.log("No-match entries:", store.filter(e => e.type === 'no-match'));
+    }
 }
 
 const getTagIdForName = async (name: string): Promise<string | null> => {
@@ -345,7 +431,7 @@ const getSimilarTransaction = async (orchestrator: DataOrchestrator<typeof util,
     }
     if (filtered.length === 1) return filtered[0];
     else {
-        const sourceIndex = createSearchIndex(transaction.summary);
+        const sourceIndex = createSearchIndex(transaction.summary || transaction.title);
         filtered.forEach(tx => {
             tx.idx = createSearchIndex(tx.narration);
             tx.score = getSimilarityScore(sourceIndex, tx.idx);
@@ -373,15 +459,37 @@ const skipWords = [
     // /[0-9]{6,12}/g, // generic numbers
     /upi|pay|paytm|phonepe|google|googlepay|bhim|amazon|amazonpay/gi, // common words
     /\d{2,4}[/\/-]\d{2}[/\/-]\d{2,4}/g, // dates
+    // Paytm adapter strips these from stored narrations — strip from old summaries too for parity
+    /Money (?:Sent|Received) using (?:UPI|IMPS)(?: Bank account linked to)?/gi,
+    /Paid using your Bank Account(?: From)?/gi,
+    /Money (?:Sent|Received) via UPI/gi,
+    /Interest Received/gi,
+    // Boilerplate labels that differ between old summaries and stored narrations
+    /(?:Sent to|Received from|Paid successfully at)\s*/gi,
+    /Reference Number\s*:?\s*\d+/gi,
+    /UPI Reference No\s*:?\s*\d+/gi,
+    /From Account Number\s*\d+/gi,
+    /A\/C No\s*:?\s*[\w\s]+\([^)]+\)/gi,
+    /VPA\s*:/gi,
 ];
 
 
+const txIdRegex = /Transaction ID\s*:?\s*([SM]\d+)/gi;
+
 const createSearchIndex = (line: string): SearchIndex => {
+
+    // Extract Paytm transaction IDs as exact-match signals
+    const txIds: string[] = [];
+    for (const match of [...line.matchAll(txIdRegex)]) {
+        if (match[1]) txIds.push(match[1].toUpperCase());
+        line = line.replace(match[0], '');
+    }
 
     const upiIds: string[] = [];
     let matches = [...line.matchAll(upiRegex)];
     if (matches.length === 0) {
-        matches = [...line.replaceAll(/\s/g, '').matchAll(upiRegex)];
+        line = line.replaceAll(/\s/g, '');
+        matches = [...line.matchAll(upiRegex)];
     }
     for (const match of matches) {
         if (match[1]) upiIds.push(match[1]);
@@ -397,11 +505,14 @@ const createSearchIndex = (line: string): SearchIndex => {
         }
     }
 
-    return { upiIds, skippedWords, fullNarration: line.toLowerCase(), leftOverLine: line.toLowerCase() };
+    return { upiIds, txIds, skippedWords, fullNarration: line.toLowerCase(), leftOverLine: line.toLowerCase() };
 }
 
 const getSimilarityScore = (left: SearchIndex, right: SearchIndex): number => {
     if (left.upiIds.some(upi => right.upiIds.includes(upi))) {
+        return 1;
+    }
+    if (left.txIds.length > 0 && left.txIds.some(id => right.txIds.includes(id))) {
         return 1;
     }
 
