@@ -12,6 +12,10 @@ export class FederalBankPdfAdapter implements IPdfImportAdapter {
     private dateRegex = /(\d{1,2})-(\d{1,2})-(\d{2,4})/g;
     private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
 
+    // Holder name: ALL-CAPS full name after the "Name and Address" label line
+    private holderNameLabelRegex = /Name and Address of the Customer/i;
+    private holderNameRegex = /^([A-Z][A-Z\s]+[A-Z])$/;
+
     isSupported(file: IPdfFile): boolean {
         return file.pages.some(page => /\@federalbank\.co\.in/i.test(page.join(' '))) &&
             !file.pages.some(page => /Fintech Partnerships/i.test(page.join(' ')));
@@ -20,14 +24,29 @@ export class FederalBankPdfAdapter implements IPdfImportAdapter {
     async read(file: IPdfFile): Promise<ImportData> {
         const cardNumber = this.extractCardNumber(file.pages);
         if (!cardNumber) throw new Error('Unable to extract account number from Federal Bank PDF file.');
+        const holderName = this.extractHolderName(file.pages);
         const transactions = this.extractTransactions(file.pages);
 
         return {
             account: {
                 accountNumber: [cardNumber],
+                ...(holderName && { accountHolderName: [holderName] }),
             },
-            transactions
+            transactions,
+        };
+    }
+
+    public extractHolderName(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (let i = 0; i < page.length - 1; i++) {
+                if (!this.holderNameLabelRegex.test(page[i])) continue;
+                for (let j = i + 1; j < Math.min(i + 3, page.length); j++) {
+                    const line = page[j].trim();
+                    if (this.holderNameRegex.test(line)) return line;
+                }
+            }
         }
+        return null;
     }
 
     public extractCardNumber(pages: string[][]): string | null {

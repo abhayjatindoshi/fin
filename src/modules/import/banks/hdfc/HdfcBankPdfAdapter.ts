@@ -11,6 +11,16 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
     private hdfcIfscCodeRegex = /HDFC0\d{6,}/i;
     private hdfcIfscCodeLabelRegex = /RTGS\/NEFT[\s]+IFSC/i;
     private openingBalanceLabelRegex = /Opening[\s]+Balance/i;
+
+    // Metadata extraction — colon-prefixed value lines in the header block
+    // Holder name: first line of statement pages (Proper Case, ≥2 words)
+    private holderNameRegex = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)$/;
+    // Customer ID: ": " + 7–9 digits only
+    private customerIdValueRegex = /^:\s*(\d{7,9})$/;
+    // Account number value line: ": " + 14–16 digits
+    private accountNumberValueRegex = /^:\s*(\d{14,16})$/;
+    // IFSC + MICR on the same line: ": HDFC0001073   : 600240051"
+    private ifscMicrValueRegex = /^:\s*(HDFC0\w+)\s+:\s*(\d{9})$/i;
     private amountRegex = /(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+\.\d{2})/g;
     private dateStartRegex = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\b/;
     private skipLinesAfter = [
@@ -27,20 +37,36 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
     }
 
     async read(file: IPdfFile): Promise<ImportData> {
-
         const accountNumber = this.extractAccountNumber(file.pages);
         if (!accountNumber) throw new Error('Unable to extract account number from HDFC PDF file.');
+
+        const holderName = this.extractHolderName(file.pages);
+        const customerId = this.extractCustomerId(file.pages);
+        const ifscCode = this.extractIfscCode(file.pages);
+        const micrCode = this.extractMicrCode(file.pages);
         const transactions = this.extractTransactions(file.pages);
 
         return {
             account: {
                 accountNumber: [accountNumber],
+                ...(holderName && { accountHolderName: [holderName] }),
+                ...(customerId && { customerId: [customerId] }),
+                ...(ifscCode && { ifscCode: [ifscCode] }),
+                ...(micrCode && { micrCode: [micrCode] }),
             },
-            transactions
-        }
+            transactions,
+        };
     }
 
     public extractAccountNumber(pages: string[][]): string | null {
+        // Prefer the colon-prefixed 14–16 digit value line that appears in the header block
+        for (const page of pages) {
+            for (const line of page) {
+                const match = line.trim().match(this.accountNumberValueRegex);
+                if (match) return match[1];
+            }
+        }
+        // Fallback: find label then scan for digits
         for (const page of pages) {
             for (let i = 0; i < page.length; i++) {
                 if (this.accountNumberLabelRegex.test(page[i])) {
@@ -48,6 +74,45 @@ export class HdfcBankPdfAdapter implements IPdfImportAdapter {
                     const match = page[i].match(this.accountNumberRegex);
                     if (match) return match[1];
                 }
+            }
+        }
+        return null;
+    }
+
+    public extractHolderName(pages: string[][]): string | null {
+        // The account holder name is the very first line of page 2 (index 1)
+        for (let p = 1; p < pages.length; p++) {
+            const first = pages[p][0]?.trim();
+            if (first && this.holderNameRegex.test(first)) return first;
+        }
+        return null;
+    }
+
+    public extractCustomerId(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (const line of page) {
+                const match = line.trim().match(this.customerIdValueRegex);
+                if (match) return match[1];
+            }
+        }
+        return null;
+    }
+
+    public extractIfscCode(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (const line of page) {
+                const match = line.trim().match(this.ifscMicrValueRegex);
+                if (match) return match[1].toUpperCase();
+            }
+        }
+        return null;
+    }
+
+    public extractMicrCode(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (const line of page) {
+                const match = line.trim().match(this.ifscMicrValueRegex);
+                if (match) return match[2];
             }
         }
         return null;

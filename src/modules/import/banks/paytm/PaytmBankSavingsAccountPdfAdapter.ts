@@ -11,6 +11,10 @@ export class PaytmBankSavingsAccountPdfAdapter implements IPdfImportAdapter {
     private accountNumberLabelRegex = /^ACCOUNT[\s]+NUMBER$/i;
     private accountNumberRegex = /(\d{9,})/;
 
+    // Holder name: Proper-case full name (2+ words), found after the GSTIN line on page 1
+    private gstinLineRegex = /^GSTIN/i;
+    private holderNameRegex = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)$/;
+
     // Transaction patterns
     private dateRegex = /^(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})$/i;
     private timeRegex = /^(\d{1,2}:\d{2})\s*(AM|PM)$/i;
@@ -53,12 +57,31 @@ export class PaytmBankSavingsAccountPdfAdapter implements IPdfImportAdapter {
         const accountNumber = account.accountNumber?.[0];
         if (!accountNumber) throw new Error('Unable to extract account number from Paytm PDF file.');
 
+        const holderName = this.extractHolderName(file.pages);
         const transactions = this.extractTransactions(file.pages);
 
         return {
-            account,
+            account: {
+                ...account,
+                ...(holderName && { accountHolderName: [holderName] }),
+            },
             transactions,
+        };
+    }
+
+    public extractHolderName(pages: string[][]): string | null {
+        // The holder name appears on page 1 immediately after the GSTIN line
+        const page = pages[0];
+        if (!page) return null;
+        for (let i = 0; i < page.length - 1; i++) {
+            if (this.gstinLineRegex.test(page[i])) {
+                for (let j = i + 1; j < Math.min(i + 3, page.length); j++) {
+                    const line = page[j].trim();
+                    if (this.holderNameRegex.test(line)) return line;
+                }
+            }
         }
+        return null;
     }
 
     extractAccountDetails(pages: string[][]): AccountDetails {

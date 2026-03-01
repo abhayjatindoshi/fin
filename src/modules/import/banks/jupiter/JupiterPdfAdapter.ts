@@ -13,7 +13,14 @@ export class JupiterPdfAdapter implements IPdfImportAdapter {
     private skipLinesAfter = [
         /^Page/i,
         /^GRAND TOTAL/i,
-    ]
+    ];
+
+    // Metadata: all fields appear as inline "Label   Value" pairs on page 1
+    private holderNameRegex = /^Name\s{2,}(.+?)\s{2,}/i;
+    private customerIdRegex = /Customer[\s]+ID\s{2,}(\d{6,})/i;
+    private ifscRegex = /^IFSC\s{2,}([A-Z0-9]{8,11})\b/i;
+    private micrRegex = /MICR[\s]+Code\s{2,}(\d{9})/i;
+    private swiftRegex = /SWIFT[\s]+Code\s{2,}([A-Z0-9]{8,11})/i;
 
 
     isSupported(file: IPdfFile): boolean {
@@ -25,15 +32,24 @@ export class JupiterPdfAdapter implements IPdfImportAdapter {
         const accountNumber = this.extractAccountNumber(file.pages);
         if (!accountNumber) throw new Error('Unable to extract account number from Jupiter PDF file.');
 
+        const holderName = this.extractMatch(file.pages, this.holderNameRegex);
+        const customerId = this.extractMatch(file.pages, this.customerIdRegex);
+        const ifscCode = this.extractMatch(file.pages, this.ifscRegex);
+        const micrCode = this.extractMatch(file.pages, this.micrRegex);
+        const swiftCode = this.extractMatch(file.pages, this.swiftRegex);
         const transactions = this.extractTransactions(file.pages);
 
         return {
             account: {
-                accountNumber: [accountNumber]
+                accountNumber: [accountNumber],
+                ...(holderName && { accountHolderName: [holderName] }),
+                ...(customerId && { customerId: [customerId] }),
+                ...(ifscCode && { ifscCode: [ifscCode] }),
+                ...(micrCode && { micrCode: [micrCode] }),
+                ...(swiftCode && { swiftCode: [swiftCode] }),
             },
-            transactions
-        }
-
+            transactions,
+        };
     }
 
     public extractAccountNumber(pages: string[][]): string | null {
@@ -43,6 +59,17 @@ export class JupiterPdfAdapter implements IPdfImportAdapter {
                     const match = page[i].match(this.accountNumberRegex);
                     if (match) return match[1];
                 }
+            }
+        }
+        return null;
+    }
+
+    /** Generic helper: scan all pages for the first capture group of a regex. */
+    private extractMatch(pages: string[][], regex: RegExp): string | null {
+        for (const page of pages) {
+            for (const line of page) {
+                const match = line.match(regex);
+                if (match) return match[1].trim();
             }
         }
         return null;

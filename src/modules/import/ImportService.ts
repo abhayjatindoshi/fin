@@ -238,6 +238,10 @@ export class ImportService {
         context.selectedAccountId = await this.getAccount(context, bank, offering, context.data.account);
         this.handleCancellation(context);
 
+        if (context.selectedAccountId) {
+            await this.store.updateAccountDetails(context.selectedAccountId, context.data.account);
+        }
+
         context.parsedTransactions = await this.parseTransactions(context);
         this.handleCancellation(context);
 

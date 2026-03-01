@@ -16,6 +16,16 @@ export class HdfcCreditCardPdfAdapter implements IPdfImportAdapter {
     private maskedCardNumberRegex = /\d[\dX]{11,}/i;
     private numericAccountNumberRegex = /\d{10,}/;
 
+    // Account holder name: ALL-CAPS words between the transaction column header and the first transaction line
+    private transactionHeaderRegex = /DATE & TIME\s+TRANSACTION DESCRIPTION/i;
+    private accountHolderNameRegex = /^[A-Z][A-Z\s]+[A-Z]$/;
+
+    // Statement metadata labels and values
+    private statementDateLabelRegex = /^Statement Date$/i;
+    private billingPeriodLabelRegex = /^Billing Period$/i;
+    private statementDateValueRegex = /^\d{1,2}\s+[A-Za-z]+,\s+\d{4}$/;
+    private billingPeriodValueRegex = /^(\d{1,2}\s+[A-Za-z]+,\s+\d{4})\s*-\s*(\d{1,2}\s+[A-Za-z]+,\s+\d{4})$/;
+
     // Transaction parsing
     // Format: DD/MM/YYYY| HH:MM   DESCRIPTION   + [REWARDS]   C   AMOUNT   [l]
     private dateTimeRegex = /^(\d{2}\/\d{2}\/\d{4})\|\s*(\d{2}:\d{2})/;
@@ -51,10 +61,14 @@ export class HdfcCreditCardPdfAdapter implements IPdfImportAdapter {
     async read(file: IPdfFile): Promise<ImportData> {
         const accountNumber = this.extractAccountNumber(file.pages);
         if (!accountNumber) throw new Error('Unable to extract account number from HDFC Credit Card PDF file.');
+        const accountHolderName = this.extractAccountHolderName(file.pages);
+        const alternateAccountNumber = this.extractAlternateAccountNumber(file.pages);
         const transactions = this.extractTransactions(file.pages);
         return {
             account: {
                 accountNumber: [accountNumber],
+                ...(accountHolderName && { accountHolderName: [accountHolderName] }),
+                ...(alternateAccountNumber && { customerId: [alternateAccountNumber] }),
             },
             transactions,
         };
@@ -78,6 +92,64 @@ export class HdfcCreditCardPdfAdapter implements IPdfImportAdapter {
                 for (let j = i; j < Math.min(i + 5, page.length); j++) {
                     const match = page[j].match(this.numericAccountNumberRegex);
                     if (match) return match[0];
+                }
+            }
+        }
+        return null;
+    }
+
+    public extractAccountHolderName(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (let i = 0; i < page.length - 1; i++) {
+                if (!this.transactionHeaderRegex.test(page[i])) continue;
+                // The cardholder name appears as a section header between the column header line
+                // and the first transaction line (only on the first page of transactions for that cardholder)
+                for (let j = i + 1; j < Math.min(i + 3, page.length); j++) {
+                    const line = page[j].trim();
+                    if (this.dateTimeRegex.test(line)) break;
+                    if (this.accountHolderNameRegex.test(line)) return line;
+                }
+            }
+        }
+        return null;
+    }
+
+    public extractAlternateAccountNumber(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (let i = 0; i < page.length; i++) {
+                if (!this.alternateAccountNumberLabelRegex.test(page[i])) continue;
+                // Values appear after the label block; skip other label lines while searching forward
+                for (let j = i + 1; j < Math.min(i + 8, page.length); j++) {
+                    const line = page[j].trim();
+                    if (this.statementDateLabelRegex.test(line) || this.billingPeriodLabelRegex.test(line)) continue;
+                    const match = line.match(this.numericAccountNumberRegex);
+                    if (match) return match[0];
+                }
+            }
+        }
+        return null;
+    }
+
+    public extractStatementDate(pages: string[][]): string | null {
+        for (const page of pages) {
+            for (let i = 0; i < page.length; i++) {
+                if (!this.statementDateLabelRegex.test(page[i].trim())) continue;
+                for (let j = i + 1; j < Math.min(i + 8, page.length); j++) {
+                    const line = page[j].trim();
+                    if (this.statementDateValueRegex.test(line)) return line;
+                }
+            }
+        }
+        return null;
+    }
+
+    public extractBillingPeriod(pages: string[][]): { start: string; end: string } | null {
+        for (const page of pages) {
+            for (let i = 0; i < page.length; i++) {
+                if (!this.billingPeriodLabelRegex.test(page[i].trim())) continue;
+                for (let j = i + 1; j < Math.min(i + 8, page.length); j++) {
+                    const match = page[j].match(this.billingPeriodValueRegex);
+                    if (match) return { start: match[1], end: match[2] };
                 }
             }
         }

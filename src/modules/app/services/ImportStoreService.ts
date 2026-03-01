@@ -8,7 +8,7 @@ import type { AccountDetails, EmailImportState, ImportSource, ImportTransaction,
 import type { AuthAccount } from "../entities/AuthAccount";
 import type { EmailImportSetting } from "../entities/EmailImportSetting";
 import { EntityName } from "../entities/entities";
-import type { MoneyAccount } from "../entities/MoneyAccount";
+import type { MoneyAccount, MoneyAccountMetadata } from "../entities/MoneyAccount";
 import { TransactionSchema, type Transaction, type TransactionSource } from "../entities/Transaction";
 import { BaseService } from "./BaseService";
 import { SettingService } from "./SettingService";
@@ -41,7 +41,7 @@ export class ImportStoreService extends BaseService implements IImportStore {
             .filter(a =>
                 a.bankId === bank.id &&
                 a.offeringId === offering.id &&
-                a.identifiers.some(id => details['accountNumber'].includes(id))
+                a.metadata?.accountNumber?.some(accNum => details.accountNumber.includes(accNum))
             )
             .map(a => a.id!);
     }
@@ -60,11 +60,42 @@ export class ImportStoreService extends BaseService implements IImportStore {
             offeringId: offering.id,
             accountNumber: details['accountNumber'][0],
             initialBalance: 0,
-            identifiers: [details['accountNumber'][0]],
             active: true,
+            metadata: this.buildMetadata(details),
         } as MoneyAccount;
         account.id = accountRepo.save(account);
         return Promise.resolve(account.id) as Promise<string>;
+    }
+
+    async updateAccountDetails(accountId: string, details: AccountDetails): Promise<void> {
+        const accountRepo = this.repository(EntityName.MoneyAccount);
+        const account = await accountRepo.get(accountId) as MoneyAccount | null;
+        if (!account) return;
+
+        const existingMetadata = account.metadata ?? {};
+        const newMetadata = this.buildMetadata(details);
+        const mergedMetadata: MoneyAccountMetadata = { ...existingMetadata };
+        for (const key of Object.keys(newMetadata) as (keyof MoneyAccountMetadata)[]) {
+            const incoming = newMetadata[key];
+            if (!incoming || incoming.length === 0) continue;
+            const existing = mergedMetadata[key] ?? [];
+            mergedMetadata[key] = [...new Set([...existing, ...incoming])];
+        }
+
+        if (JSON.stringify(mergedMetadata) === JSON.stringify(existingMetadata)) return;
+
+        account.metadata = mergedMetadata;
+        accountRepo.save(account);
+    }
+
+    /** Build a MoneyAccountMetadata object from AccountDetails, omitting empty entries. */
+    private buildMetadata(details: AccountDetails): MoneyAccountMetadata {
+        const result: MoneyAccountMetadata = {};
+        for (const key of Object.keys(details) as (keyof MoneyAccountMetadata)[]) {
+            const values = details[key as keyof AccountDetails];
+            if (values && values.length > 0) result[key] = values;
+        }
+        return result;
     }
 
     addTransactions(source: ImportSource, accountId: string, transactions: ImportTransaction[]): Promise<void> {

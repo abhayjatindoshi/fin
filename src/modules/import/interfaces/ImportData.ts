@@ -18,7 +18,7 @@ export type ImportTransaction = TransactionDetails & {
     hash: number;
 }
 
-const identifiers = [
+export const identifiers = [
     "accountHolderName",
     "accountNumber",
     "customerId",

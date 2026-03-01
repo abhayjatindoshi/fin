@@ -8,6 +8,10 @@ export class PaytmBankWalletPdfAdapter implements IPdfImportAdapter {
 
     // Account details patterns - supports both table format and vertical list format
     private walletAccountNumberRegex = /(\+\d{1,3}-\d{10})/;
+    // Holder name: ALL-CAPS full name (2+ words) on the line immediately before the phone number
+    private holderNameRegex = /^([A-Z][A-Z\s]+[A-Z])$/;;
+    // Holder name: ALL-CAPS full name (2+ words) on the line immediately before the phone number
+    private holderNameRegex = /^([A-Z][A-Z\s]+[A-Z])$/;
 
     // Transaction patterns
     private timeRegex = /^(\d{1,2}:\d{2})\s*(AM|PM)$/i;
@@ -85,7 +89,7 @@ export class PaytmBankWalletPdfAdapter implements IPdfImportAdapter {
         return {
             account,
             transactions,
-        }
+        };
     }
 
     extractAccountDetails(pages: string[][]): AccountDetails {
@@ -95,8 +99,13 @@ export class PaytmBankWalletPdfAdapter implements IPdfImportAdapter {
                     const accountNumberMatch = page[i].match(this.walletAccountNumberRegex);
                     if (accountNumberMatch) {
                         const accountNumber = accountNumberMatch[1].replaceAll(/[^0-9]/g, '');
+                        // Holder name is on the line immediately before the phone number
+                        const holderName = i > 0 && this.holderNameRegex.test(page[i - 1].trim())
+                            ? page[i - 1].trim()
+                            : undefined;
                         return {
                             accountNumber: [accountNumber],
+                            ...(holderName && { accountHolderName: [holderName] }),
                         };
                     }
                 }

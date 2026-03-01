@@ -10,6 +10,7 @@ export interface IImportStore {
     findMatchingAccounts(bank: IBank, offering: IBankOffering, details: AccountDetails): Promise<string[]>;
     isExistingTransaction(accountDetails: AccountDetails, transaction: TransactionDetails, hash: number): Promise<boolean>;
     createAccount(bank: IBank, offering: IBankOffering, details: AccountDetails): Promise<string>;
+    updateAccountDetails(accountId: string, details: AccountDetails): Promise<void>;
     addTransactions(source: ImportSource, accountId: string, transactions: ImportTransaction[]): Promise<void>;
     updateToken(account: IAuthUser, token: IAuthToken): Promise<void>;
     updateSyncState(userId: string, state: EmailImportState): Promise<void>;
