@@ -34,7 +34,13 @@ const HouseholdPage: React.FC = () => {
         if (!tenantManager) return;
         setLoading(true);
         try {
-            setParams({ householdId: household.id!, returnUrl: `/${household.id}` });
+            setParams(prev => {
+                const existingReturnUrl = prev.get('returnUrl');
+                return new URLSearchParams({
+                    householdId: household.id!,
+                    returnUrl: existingReturnUrl || `/${household.id}`,
+                });
+            });
             await loadDataSync(tenantManager.getDataSyncConfig(household));
         } finally {
             setLoading(false);
