@@ -9,8 +9,6 @@ export class PaytmBankWalletPdfAdapter implements IPdfImportAdapter {
     // Account details patterns - supports both table format and vertical list format
     private walletAccountNumberRegex = /(\+\d{1,3}-\d{10})/;
     // Holder name: ALL-CAPS full name (2+ words) on the line immediately before the phone number
-    private holderNameRegex = /^([A-Z][A-Z\s]+[A-Z])$/;;
-    // Holder name: ALL-CAPS full name (2+ words) on the line immediately before the phone number
     private holderNameRegex = /^([A-Z][A-Z\s]+[A-Z])$/;
 
     // Transaction patterns
