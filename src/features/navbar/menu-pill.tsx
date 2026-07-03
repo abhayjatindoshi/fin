@@ -13,6 +13,7 @@ type MenuItem = {
 const MENU: readonly MenuItem[] = [
   { key: "home", label: "Home", path: "", iconName: "home" },
   { key: "accounts", label: "Accounts", path: "accounts", iconName: "wallet" },
+  { key: "tag", label: "Tag", path: "tag", iconName: "tags" },
   { key: "transactions", label: "Transactions", path: "transactions", iconName: "arrow-left-right" },
 ]
 
