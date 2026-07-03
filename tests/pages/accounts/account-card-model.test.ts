@@ -4,7 +4,7 @@ import {
   balanceLabel,
   buildAccountCardModel,
   isCreditCard,
-} from "@/features/home/account-card-model"
+} from "@/features/accounts/account-card-model"
 
 // A full credit-card snapshot — balance stored negative (liability), with the
 // credit-only extras populated.

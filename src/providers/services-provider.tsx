@@ -8,6 +8,8 @@ import { ConnectionsService } from "@/services/connections-service"
 import { NotificationsService } from "@/services/notifications/notifications-service"
 import { TransactionsService } from "@/services/transactions-service"
 import { ImportService } from "@/services/import/import-service"
+import { BudgetsService } from "@/services/budgets-service"
+import { BriefingService } from "@/services/briefing"
 import type { Disposable } from "@/services/types"
 
 /**
@@ -23,6 +25,8 @@ export type Services = {
   readonly notifications: NotificationsService
   readonly transactions: TransactionsService
   readonly import: ImportService
+  readonly budgets: BudgetsService
+  readonly briefing: BriefingService
 }
 
 export const ServicesContext = createContext<Services | null>(null)
@@ -65,7 +69,14 @@ export function ServicesProvider({ children }: ServicesProviderProps) {
     const connections = new ConnectionsService(fyredb)
     const notifications = new NotificationsService(fyredb)
     const importSvc = new ImportService(fyredb, { transactions, notifications })
-    return { settings, accounts, tags, connections, notifications, transactions, import: importSvc }
+    // Budgets scopes to the selected year (Settings); Briefing composes the
+    // rollup + engines over Transactions, Budgets, Tags and Settings.
+    const budgets = new BudgetsService(fyredb, settings)
+    const briefing = new BriefingService(fyredb, { settings, transactions, budgets })
+    return {
+      settings, accounts, tags, connections, notifications, transactions,
+      import: importSvc, budgets, briefing,
+    }
   }, [app, session])
 
   useEffect(() => {

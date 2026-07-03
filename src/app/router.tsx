@@ -5,6 +5,7 @@ import { FullPageSpinner } from "@/components/full-page-spinner"
 import { UnlockDialog } from "@/features/auth/unlock-dialog"
 import { DefaultTemplate } from "@/templates/default-template"
 import { HomePage } from "@/features/home/home-page"
+import { AccountsPage } from "@/features/accounts/accounts-page"
 import { TenantsPage } from "@/features/tenants/tenants-page"
 import { LoginPage } from "@/features/auth/login-page"
 import { AuthCallbackPage } from "@/features/auth/auth-callback-page"
@@ -102,6 +103,7 @@ export function AppRouter() {
           <Route path="/t/:tenantId" element={<TenantGuardRoute />}>
             <Route element={<DefaultLayoutRoute />}>
               <Route index element={<HomePage />} />
+              <Route path="accounts" element={<AccountsPage />} />
               <Route path="transactions" element={<TransactionsPage />} />
               <Route path="settings/*" element={<SettingsPage />} />
               <Route path="dev/*" element={<DevHubPage />} />
