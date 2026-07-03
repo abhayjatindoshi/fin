@@ -1,12 +1,12 @@
 import { parseEmail, ParseError, statementEmailDomains } from "@pai-app/adapters"
-import type { AccountDetails, AccountKind } from "@pai-app/adapters"
+import type { AccountDetails, AccountKind, StatementSummary } from "@pai-app/adapters"
 import type { BaseEntity } from "@fyre-db/core"
 import type { RepositoryType as Repository } from "@fyre-db/core"
 import { getMailProvider } from "@/services/mail"
 import type { EmailSummary, MailCursor, MailQuery } from "@/services/mail"
-import type { AuthAccount } from "@/services/entities/auth-account"
-import type { Transaction } from "@/services/entities/transaction"
-import type { EmailImportState, EmailImportCursor } from "@/services/entities/email-import-setting"
+import type { Connection } from "@/entities/connection"
+import type { Transaction } from "@/entities/transaction"
+import type { EmailImportState, EmailImportCursor } from "@/entities/email-import-setting"
 import { ImportContext } from "./import-context"
 import { CancelledError, throwIfCancelled, hashAndDedup, EmailPasswordError } from "./import-utils"
 import type { HashedTransaction } from "./import-utils"
@@ -36,6 +36,7 @@ export type EmailResult = {
   readonly adapterId: string
   readonly kind: AccountKind
   readonly accountDetails: AccountDetails
+  readonly statement?: StatementSummary
   readonly transactions: ReadonlyArray<HashedTransaction>
   readonly newCount: number
   readonly duplicateCount: number
@@ -84,7 +85,7 @@ export type EmailRunHooks = {
  */
 export async function runEmailImport(
   ctx: ImportContext,
-  account: AuthAccount & BaseEntity,
+  account: Connection & BaseEntity,
   initialState: EmailImportState,
   filePasswords: readonly string[],
   transactionRepo: Repository<Transaction>,
@@ -209,6 +210,7 @@ async function buildEmailResult(
     adapterId: `${data.bankId}/${data.offeringId}`,
     kind: data.kind,
     accountDetails: data.account,
+    statement: data.statement,
     transactions: hashed,
     newCount,
     duplicateCount: hashed.length - newCount,

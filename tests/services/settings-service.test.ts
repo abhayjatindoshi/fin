@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest"
 import type { FyreDb } from "@fyre-db/core"
 import { createTestFyreDb } from "../helpers/test-fyredb"
 import { SettingsService } from "@/services/settings-service"
-import { USER_SETTINGS_DEFAULTS } from "@/services/entities"
+import { USER_SETTINGS_DEFAULTS } from "@/entities"
 import { fiscalYearMonthKeys } from "@/lib/fiscal"
 
 describe("SettingsService", () => {
@@ -10,6 +10,7 @@ describe("SettingsService", () => {
   let svc: SettingsService
 
   afterEach(async () => {
+    vi.useRealTimers()
     svc.dispose()
     await fyredb.dispose().catch(() => {})
   })
@@ -64,5 +65,26 @@ describe("SettingsService", () => {
     // The vault must never surface on the UI-facing view.
     expect(Object.keys(svc.settings$.value)).not.toContain("filePasswords")
     expect(JSON.stringify(svc.settings$.value)).not.toContain("s3cret")
+  })
+
+  it("selects the current fiscal year when today is in or after the first month", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(Date.UTC(2025, 5, 15))) // June ≥ April (default first month)
+    await setup()
+    expect(svc.selectedYear$.value).toBe(2025)
+  })
+
+  it("selects the prior fiscal year when today is before the first month", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(Date.UTC(2025, 1, 15))) // February < April
+    await setup()
+    expect(svc.selectedYear$.value).toBe(2024)
+  })
+
+  it("setSelectedYear is a no-op when the year is unchanged", async () => {
+    await setup()
+    const before = svc.monthKeys$.value
+    svc.setSelectedYear(svc.selectedYear$.value)
+    expect(svc.monthKeys$.value).toBe(before) // same reference — never recomputed
   })
 })
