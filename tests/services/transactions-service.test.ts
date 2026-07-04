@@ -343,4 +343,65 @@ describe("TransactionsService", () => {
 
     expect(repo.get(id)?.tagId).toBeUndefined()
   })
+
+  describe("previewSimilar", () => {
+    it("returns undefined for a lone key (no rule would form, no bulk offer)", async () => {
+      await setup()
+      const repo = fyredb.repo(transactionEntity)
+      const id = repo.save(tx({ hash: "p1", narration: "ONE OFF MERCHANT XYZ" }))
+      // A single occurrence of a novel narration → no recurrence, no siblings.
+      expect(svc.previewSimilar(id, "tag-food")).toBeUndefined()
+    })
+
+    it("surfaces untagged look-alikes when the key recurs, excluding the row itself", async () => {
+      await setup()
+      const repo = fyredb.repo(transactionEntity)
+      const id1 = repo.save(tx({ hash: "p1", narration: UPI }))
+      const id2 = repo.save(tx({ hash: "p2", narration: UPI, transactionAt: Date.UTC(2026, 0, 16) }))
+      const id3 = repo.save(tx({ hash: "p3", narration: UPI, transactionAt: Date.UTC(2026, 0, 17) }))
+
+      const preview = svc.previewSimilar(id1, "tag-food")
+      expect(preview?.tagId).toBe("tag-food")
+      // The two OTHER untagged rows are siblings; id1 itself is excluded.
+      expect([...(preview?.transactionIds ?? [])].sort()).toEqual([id2, id3].sort())
+    })
+
+    it("matches exactly what tag() then surfaces as `similar`", async () => {
+      await setup()
+      const repo = fyredb.repo(transactionEntity)
+      const id1 = repo.save(tx({ hash: "p1", narration: UPI }))
+      const id2 = repo.save(tx({ hash: "p2", narration: UPI, transactionAt: Date.UTC(2026, 0, 16) }))
+
+      const preview = svc.previewSimilar(id1, "tag-food")
+      const { similar } = svc.tag(id1, "tag-food")
+
+      // The pre-tag preview must equal the post-tag fact — the checkbox count
+      // is guaranteed to match what tagMany would apply.
+      expect(preview?.transactionIds).toEqual(similar?.transactionIds)
+      expect(similar?.transactionIds).toContain(id2)
+    })
+
+    it("returns undefined for an already-tagged row", async () => {
+      await setup()
+      const repo = fyredb.repo(transactionEntity)
+      const id = repo.save(tx({ hash: "p1", narration: UPI, tagId: "tag-x" }))
+      expect(svc.previewSimilar(id, "tag-food")).toBeUndefined()
+    })
+
+    it("returns undefined for a missing row", async () => {
+      await setup()
+      expect(svc.previewSimilar("nope", "tag-food")).toBeUndefined()
+    })
+
+    it("returns undefined when the key recurs but all look-alikes are already tagged", async () => {
+      await setup()
+      const repo = fyredb.repo(transactionEntity)
+      // Establish a rule (recurring key), then tag every sibling but one.
+      const id1 = repo.save(tx({ hash: "p1", narration: UPI }))
+      const id2 = repo.save(tx({ hash: "p2", narration: UPI, transactionAt: Date.UTC(2026, 0, 16) }))
+      svc.tag(id2, "tag-food") // now a rule exists for the key
+      // id1 is the only untagged row left sharing the key → no OTHER siblings.
+      expect(svc.previewSimilar(id1, "tag-food")).toBeUndefined()
+    })
+  })
 })
