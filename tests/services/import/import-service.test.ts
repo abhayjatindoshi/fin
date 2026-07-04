@@ -325,6 +325,60 @@ describe("ImportService", () => {
     expect(logRow?.emailRun?.scanned).toBe(1)
   })
 
+  it("startEmailSync: forwards the bankIds allow-list to the email runner", async () => {
+    await setup()
+    const accountId = seedConnection()
+    runEmailImportMock.mockReturnValue(new Promise<EmailRunSummary>(() => {})) // never settles
+
+    svc.startEmailSync(accountId, { bankIds: ["sbi"] })
+
+    await vi.waitFor(() => { expect(runEmailImportMock).toHaveBeenCalledTimes(1) })
+    // options is the 7th positional arg (index 6).
+    expect(runEmailImportMock.mock.calls[0][6]).toEqual({ bankIds: ["sbi"] })
+  })
+
+  it("startEmailSync: reset wipes the sweep checkpoint before running", async () => {
+    await setup()
+    const accountId = seedConnection()
+    // Seed a completed run's high-water mark + an in-flight cursor.
+    fyredb.repo(emailImportSettingEntity).save({
+      connectionId: accountId,
+      paused: false,
+      importState: {
+        endPoint: { date: STMT_OLD, emailId: "old" },
+        currentPoint: { date: STMT_NEW, emailId: "cur" },
+        lastImportAt: STMT_NEW,
+      },
+    })
+    runEmailImportMock.mockReturnValue(new Promise<EmailRunSummary>(() => {})) // never settles
+
+    svc.startEmailSync(accountId, { reset: true })
+
+    const setting = fyredb
+      .repo(emailImportSettingEntity)
+      .query({ where: { connectionId: accountId } })[0]
+    expect(setting.importState).toEqual({})
+    expect(setting.lastErrorLogId).toBeUndefined()
+  })
+
+  it("startEmailSync: without reset, preserves the existing checkpoint", async () => {
+    await setup()
+    const accountId = seedConnection()
+    const importState = {
+      endPoint: { date: STMT_OLD, emailId: "old" },
+      lastImportAt: STMT_OLD,
+    }
+    fyredb.repo(emailImportSettingEntity).save({ connectionId: accountId, paused: false, importState })
+    runEmailImportMock.mockReturnValue(new Promise<EmailRunSummary>(() => {})) // never settles
+
+    svc.startEmailSync(accountId)
+
+    const setting = fyredb
+      .repo(emailImportSettingEntity)
+      .query({ where: { connectionId: accountId } })[0]
+    expect(setting.importState).toEqual(importState)
+  })
+
   // ── Init sweep ────────────────────────────────────────
 
   it("init sweep: cancels stale in_progress and file needs_input logs from a prior session", async () => {

@@ -71,6 +71,15 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
       wallet: { label: "Wallet" },
     },
   },
+  sbi: {
+    label: "State Bank of India",
+    icon: "bank-sbi",
+    color: "#00b5ef",
+    offerings: {
+      savings: { label: "Savings Account" },
+      loan: { label: "Loan Account" },
+    },
+  },
 }
 
 /** Display details for an account kind — the structural fallback tier. */
