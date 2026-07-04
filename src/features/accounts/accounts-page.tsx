@@ -1,7 +1,7 @@
 import { Icon } from "@/ui/icon"
 import { Money } from "@/components/money"
-import { accountIconName } from "@/catalog/icon-resolve"
-import { getBankDisplay, getOfferingDisplay, KIND_DISPLAY } from "@/catalog/bank-display"
+import { getAccountDisplay } from "@/catalog/account-display"
+import { KIND_DISPLAY } from "@/catalog/bank-display"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import type { Account } from "@/entities"
@@ -92,12 +92,7 @@ function AccountCard({ account }: { account: AccountView }) {
 
   const model = buildAccountCardModel(account.kind, account.statement)
 
-  const bankDisplay = account.bankId ? getBankDisplay(account.bankId) : undefined
-  const bankLabel = bankDisplay?.label
-  const offeringLabel =
-    (details.bankId && details.offeringId
-      ? getOfferingDisplay(details.bankId, details.offeringId)?.label
-      : undefined) ?? KIND_DISPLAY[account.kind].label
+  const display = getAccountDisplay(account)
 
   const accountNumber = firstMeta(details.metadata, "accountNumber")
   const holderName = firstMeta(details.metadata, "accountHolderName")
@@ -113,9 +108,9 @@ function AccountCard({ account }: { account: AccountView }) {
       <Icon
         name={KIND_DISPLAY[account.kind].icon}
         aria-hidden
-        style={bankDisplay?.color ? { color: bankDisplay.color } : undefined}
-        className={`pointer-events-none absolute right-2 top-14 size-28 rotate-[-12deg] ${
-          bankDisplay?.color ? "opacity-[0.18]" : "text-muted-foreground/25"
+        style={display.color ? { color: display.color } : undefined}
+        className={`pointer-events-none absolute right-2 top-14 size-28 -rotate-12 ${
+          display.color ? "opacity-[0.18]" : "text-muted-foreground/25"
         }`}
       />
 
@@ -124,22 +119,22 @@ function AccountCard({ account }: { account: AccountView }) {
       <div
         aria-hidden
         style={
-          bankDisplay?.color
-            ? { background: `linear-gradient(to bottom, color-mix(in srgb, ${bankDisplay.color} 28%, transparent), transparent)` }
+          display.color
+            ? { background: `linear-gradient(to bottom, color-mix(in srgb, ${display.color} 28%, transparent), transparent)` }
             : undefined
         }
         className={`pointer-events-none absolute inset-x-0 top-0 h-28 backdrop-blur-[2px] ${
-          bankDisplay?.color ? "" : "bg-gradient-to-b from-muted/50 to-transparent"
+          display.color ? "" : "bg-linear-to-b from-muted/50 to-transparent"
         }`}
       />
 
       {/* Header: two columns — bank identity (left) + balance/due (right). */}
       <div className="relative flex items-start justify-between gap-3 p-4 pb-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Icon name={accountIconName(account)} className="size-8 shrink-0" />
+          <Icon name={display.icon} className="size-8 shrink-0" />
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{bankLabel ?? account.name}</div>
-            <div className="truncate text-xs text-muted-foreground">{offeringLabel}</div>
+            <div className="truncate text-sm font-semibold">{display.label}</div>
+            <div className="truncate text-xs text-muted-foreground">{display.sublabel}</div>
           </div>
         </div>
         <div className="shrink-0 text-right">
