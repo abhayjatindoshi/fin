@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { FyreDbConfigError } from "@fyre-db/core"
 import type { ImportContext } from "@/services/import/import-context"
+import type { EmailSyncOptions } from "@/services/import/import-service"
 import { ServicesContext } from "@/providers/services-provider"
 import { registerNotificationAction } from "@/providers/notification-actions"
 
@@ -15,7 +16,7 @@ type ImportContextValue = {
   readonly activeImportCount: number
   // Actions — all delegate to the service
   readonly startFileImport: (files: File[]) => void
-  readonly startEmailSync: (accountId: string) => void
+  readonly startEmailSync: (accountId: string, options?: EmailSyncOptions) => void
   readonly openSheet: (logId: string) => void
   readonly closeSheet: () => void
 }
@@ -46,10 +47,10 @@ export function ImportProvider({ children }: ImportProviderProps) {
     setOpenLogId(logId)
   }, [service])
 
-  const startEmailSync = useCallback((accountId: string) => {
+  const startEmailSync = useCallback((accountId: string, options?: EmailSyncOptions) => {
     if (!service) throw new FyreDbConfigError("Import is unavailable until a household is open")
     // Background — does NOT open the sheet.
-    service.startEmailSync(accountId)
+    service.startEmailSync(accountId, options)
   }, [service])
 
   const openSheet = useCallback((logId: string) => {

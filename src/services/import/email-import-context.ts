@@ -16,11 +16,12 @@ import type { HashedTransaction } from "./import-utils"
 /** Politeness delay between provider pages to avoid throttling during backfill. */
 const PAGE_DELAY_MS = 400
 
-/** Server-side filter for statement emails — the union of every registered
- *  bank's email domains (same pre-filter `parseEmail` applies to `email.from`).
- *  Falls back to a subject match when no bank declares domains. */
-function statementQuery(): MailQuery {
-  const domains = statementEmailDomains()
+/** Server-side filter for statement emails — the union of the selected banks'
+ *  email domains (same pre-filter `parseEmail` applies to `email.from`).
+ *  `bankIds` narrows it to the chosen adapter subset; empty/omitted = all banks.
+ *  Falls back to a subject match when no matching bank declares domains. */
+function statementQuery(bankIds?: readonly string[]): MailQuery {
+  const domains = statementEmailDomains(bankIds)
   return domains.length > 0 ? { domains } : { subject: "statement" }
 }
 
@@ -70,6 +71,12 @@ export type EmailRunHooks = {
   readonly reportProgress: (progress: EmailRunProgress) => void
 }
 
+/** Optional tuning for a sweep. */
+export type EmailRunOptions = {
+  /** Restrict parsing to this subset of bank ids. Empty/omitted = all banks. */
+  readonly bankIds?: readonly string[]
+}
+
 // ── Runner ──────────────────────────────────────────────
 
 /**
@@ -90,11 +97,12 @@ export async function runEmailImport(
   filePasswords: readonly string[],
   transactionRepo: Repository<Transaction>,
   hooks: EmailRunHooks,
+  options?: EmailRunOptions,
 ): Promise<EmailRunSummary> {
   ctx.status = "in_progress"
   const provider = getMailProvider(account)
-  const query = statementQuery()
-
+  const bankIds = options?.bankIds
+  const query = statementQuery(bankIds)
   let state = initialState
   let scanned = 0
   let imported = 0
@@ -146,7 +154,7 @@ export async function runEmailImport(
       scanned++
       currentFrom = email.from
       try {
-        const result = await buildEmailResult(provider, email, filePasswords, transactionRepo)
+        const result = await buildEmailResult(provider, email, filePasswords, transactionRepo, bankIds)
         if (result) {
           hooks.commitEmail(result)            // persist BEFORE checkpoint
           imported++
@@ -194,9 +202,10 @@ async function buildEmailResult(
   email: EmailSummary,
   filePasswords: readonly string[],
   transactionRepo: Repository<Transaction>,
+  bankIds?: readonly string[],
 ): Promise<EmailResult | null> {
   const fullEmail = await provider.fetchMessage(email.id)
-  const data = await parseEmail(fullEmail, filePasswords)
+  const data = await parseEmail(fullEmail, filePasswords, bankIds)
   if (!data) return null
 
   const hashed = hashAndDedup(data, transactionRepo)

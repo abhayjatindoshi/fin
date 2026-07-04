@@ -4,12 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar"
 import { useServices } from "@/providers/services-provider"
 import { useObservable } from "@/providers/use-observable"
 import type { ConnectionView } from "@/views/connection-view"
-import { useImportService } from "@/providers/import-provider"
+import { SyncDialog } from "@/features/settings/sections/connections/sync-dialog"
 
-export function AccountsSection() {
+export function ConnectionsSection() {
   const { connections: connectionsService } = useServices()
   const connections = useObservable(connectionsService.connections$)
-  const { startEmailSync } = useImportService()
 
   const handleAddGoogle = () => {
     connectionsService.connectGoogle()
@@ -17,12 +16,6 @@ export function AccountsSection() {
 
   const handleAddMicrosoft = () => {
     connectionsService.connectMicrosoft()
-  }
-
-  const handleSync = (connection: ConnectionView) => {
-    // Fire-and-forget — the import runs in the background. Progress/errors
-    // surface via the import log + notifications.
-    startEmailSync(connection.id)
   }
 
   const handleRemove = (connection: ConnectionView) => {
@@ -44,16 +37,15 @@ export function AccountsSection() {
 
       {connections.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          No email accounts connected. Connect a Gmail or Outlook account to import bank statements from email.
+          No connections yet. Connect a Gmail or Outlook account to import bank statements from email.
         </p>
       )}
 
       <div className="flex flex-col gap-3">
         {connections.map((connection) => (
-          <AccountCard
+          <ConnectionCard
             key={connection.id}
             connection={connection}
-            onSync={() => { handleSync(connection) }}
             onRemove={() => { handleRemove(connection) }}
           />
         ))}
@@ -62,13 +54,11 @@ export function AccountsSection() {
   )
 }
 
-function AccountCard({
+function ConnectionCard({
   connection,
-  onSync,
   onRemove,
 }: {
   connection: ConnectionView
-  onSync: () => void
   onRemove: () => void
 }) {
   const lastSynced = connection.lastSyncedAt
@@ -97,10 +87,15 @@ function AccountCard({
         )}
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={onSync}>
-          <Icon name="refresh-cw" className="mr-1 size-3" />
-          Sync now
-        </Button>
+        <SyncDialog
+          connection={connection}
+          trigger={
+            <Button variant="outline" size="sm">
+              <Icon name="refresh-cw" className="mr-1 size-3" />
+              Sync now
+            </Button>
+          }
+        />
         <Button variant="ghost" size="sm" onClick={onRemove}>
           <Icon name="trash-2" className="size-4 text-muted-foreground" />
         </Button>

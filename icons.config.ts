@@ -230,6 +230,7 @@ export const manifest: Manifest = {
         { key: 'bank-hdfc', kind: 'svg', path: 'banks/hdfc.svg' },
         { key: 'bank-jupiter', kind: 'svg', path: 'banks/jupiter.svg' },
         { key: 'bank-paytm', kind: 'svg', path: 'banks/paytm.svg' },
+        { key: 'bank-sbi', kind: 'svg', path: 'banks/sbi.svg' },
       ],
     },
     // Shared chrome — navbar pills, theme switcher, sync status, tenants

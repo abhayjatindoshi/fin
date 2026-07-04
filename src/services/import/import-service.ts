@@ -44,6 +44,14 @@ type ActiveImport = {
   readonly ctx: ImportContext
 }
 
+/** Options for an email sync trigger. */
+export type EmailSyncOptions = {
+  /** Restrict parsing to this subset of bank ids. Empty/omitted = all banks. */
+  readonly bankIds?: readonly string[]
+  /** Wipe the sweep checkpoint first so the run re-imports from scratch. */
+  readonly reset?: boolean
+}
+
 // ── Service ─────────────────────────────────────────────
 
 /**
@@ -128,8 +136,12 @@ export class ImportService implements Disposable {
    * while a run is already live (`in_progress` or parked on `needs_input`)
    * returns the existing log id instead of spawning a parallel run. Two runs
    * would race on the single shared `EmailImportSetting.importState` cursor and
-   * corrupt the high-water mark. */
-  startEmailSync(accountId: string): string {
+   * corrupt the high-water mark.
+   *
+   * `options.bankIds` restricts parsing to a subset of adapters (empty/omitted
+   * = all banks). `options.reset` wipes the sweep checkpoint first, so the run
+   * re-imports the mailbox from the newest email all the way back. */
+  startEmailSync(accountId: string, options?: EmailSyncOptions): string {
     const account = this.fyredb.repo(connectionEntity).get(accountId)
     if (account === undefined) {
       log.import('email sync: unknown account=%s', accountId)
@@ -139,6 +151,10 @@ export class ImportService implements Disposable {
     if (existing) {
       log.import('email sync already active: account=%s logId=%s', account.email, existing)
       return existing
+    }
+
+    if (options?.reset) {
+      this.resetEmailSyncState(account)
     }
 
     const source: ImportLogEmailSource = {
@@ -152,10 +168,19 @@ export class ImportService implements Disposable {
     const logId = this.createLog("manual", source)
     const ctx = new ImportContext()
     this.active.set(logId, { logId, ctx })
-    log.import('email sync started: %s logId=%s', account.email, logId)
+    log.import('email sync started: %s logId=%s reset=%s banks=%s',
+      account.email, logId, options?.reset ?? false, options?.bankIds?.join(",") ?? "all")
 
-    void this.executeEmailImport(logId, ctx, account)
+    void this.executeEmailImport(logId, ctx, account, { bankIds: options?.bankIds })
     return logId
+  }
+
+  /** Wipe the sweep checkpoint for an account so the next run backfills from
+   *  scratch. Clears the high-water mark, in-flight cursor, and last error. */
+  private resetEmailSyncState(account: Connection & BaseEntity): void {
+    const current = this.getOrCreateEmailSetting(account)
+    this.settingsRepo.save({ ...current, importState: {}, lastErrorLogId: undefined })
+    log.import('email sync state reset: %s', account.email)
   }
 
   /** The live (`in_progress` / `needs_input`) email-sweep log id for an
@@ -335,6 +360,7 @@ export class ImportService implements Disposable {
     logId: string,
     ctx: ImportContext,
     account: Connection & BaseEntity,
+    options?: { readonly bankIds?: readonly string[] },
   ): Promise<void> {
     try {
       const passwords = [...this.getUserSettings().filePasswords]
@@ -416,6 +442,7 @@ export class ImportService implements Disposable {
           const summary = await runEmailImport(
             ctx, account, this.getOrCreateEmailSetting(account).importState,
             passwords, this.txRepo, { commitEmail, saveState, reportProgress },
+            { bankIds: options?.bankIds },
           )
           ctx.status = "completed"
           log.import('email sync completed: logId=%s emails=%d imported=%d', logId, summary.scanned, summary.imported)
