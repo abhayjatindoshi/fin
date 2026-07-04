@@ -62,7 +62,7 @@
     "wrangler": "^4.81.0"
   },
   "dependencies": {
-    "@pai-app/adapters": "^0.1.3",
+    "@pai-app/adapters": "^0.1.0",
     "@tanstack/react-virtual": "^3.13.24",
     "debug": "^4.4.3",
     "motion": "^12.42.0",
