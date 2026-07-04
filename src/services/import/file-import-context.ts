@@ -4,8 +4,8 @@ import type { RepositoryType as Repository } from "@fyre-db/core"
 import { ImportContext } from "./import-context"
 import { CancelledError, throwIfCancelled, findMatchingAccounts, hashAndDedup } from "./import-utils"
 import type { HashedTransaction } from "./import-utils"
-import type { MoneyAccount } from "@/services/entities/money-account"
-import type { Transaction } from "@/services/entities/transaction"
+import type { Account } from "@/entities/account"
+import type { Transaction } from "@/entities/transaction"
 
 // ── Result ──────────────────────────────────────────────
 
@@ -32,24 +32,31 @@ export async function runFileImport(
   ctx: ImportContext,
   file: File,
   filePasswords: readonly string[],
-  accountRepo: Repository<MoneyAccount>,
+  accountRepo: Repository<Account>,
   transactionRepo: Repository<Transaction>,
+  onPasswordValidated?: (password: string) => void,
 ): Promise<FileImportResult> {
   ctx.status = "in_progress"
 
-  // 1. Parse file (handles passwords via prompt loop)
+  // 1. Parse file (handles passwords via prompt loop). A newly-entered password
+  // is persisted the moment it opens the file — independent of whether the rest
+  // of the import completes — so a validated password is never lost on cancel.
+  const origSet = new Set(filePasswords)
   const passwords = [...filePasswords]
+  let lastEntered: string | undefined
   let data: ImportData | null
   for (;;) {
     throwIfCancelled(ctx)
     try {
       data = await parseFile(file, passwords)
+      if (lastEntered !== undefined && !origSet.has(lastEntered)) onPasswordValidated?.(lastEntered)
       break
     } catch (err) {
       if (err instanceof ParseError && err.kind === "password-required") {
         const answer = await ctx.waitForAnswer({ kind: "password" })
         throwIfCancelled(ctx)
         if (answer.kind !== "password") throw new Error("Unexpected answer kind", { cause: err })
+        lastEntered = answer.password
         passwords.push(answer.password)
         ctx.status = "in_progress"
         continue
@@ -88,7 +95,6 @@ export async function runFileImport(
   ctx.status = "in_progress"
 
   // Figure out which passwords are new (not in the original vault)
-  const origSet = new Set(filePasswords)
   const newPasswords = passwords.filter((p) => !origSet.has(p))
 
   return {
@@ -108,7 +114,7 @@ export async function runFileImport(
 async function resolveAccount(
   ctx: ImportContext,
   data: ImportData,
-  accountRepo: Repository<MoneyAccount>,
+  accountRepo: Repository<Account>,
 ): Promise<string> {
   const all = accountRepo.query()
   const matches = findMatchingAccounts(all, data.bankId, data.kind, data.account)

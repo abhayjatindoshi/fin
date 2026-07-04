@@ -1,46 +1,41 @@
 import type { FyreDb, BaseEntity, RepositoryType as Repository, SingletonRepositoryType as SingletonRepository } from "@fyre-db/core"
 import type { Observable } from "rxjs"
-import {
-  importLogEntity,
-  type ImportLog,
-  type ImportLogFileSource,
-  type ImportLogEmailSource,
-} from "@/services/entities/import-log"
-import {
-  importSourceEntity,
-  importSourceMonthKey,
-  type ImportSource,
-  type ImportSourceDescriptor,
-} from "@/services/entities/import-source"
-import {
-  emailImportSettingEntity,
-  type EmailImportSetting,
-  type EmailImportState,
-} from "@/services/entities/email-import-setting"
+import { importLogEntity } from "@/entities/import-log"
+import type {
+  ImportLog,
+  ImportLogFileSource,
+  ImportLogEmailSource,
+} from "@/entities/import-log"
+import { importSourceEntity, importSourceMonthKey } from "@/entities/import-source"
+import type {
+  ImportSource,
+  ImportSourceDescriptor,
+} from "@/entities/import-source"
+import { emailImportSettingEntity } from "@/entities/email-import-setting"
+import type {
+  EmailImportSetting,
+  EmailImportState,
+} from "@/entities/email-import-setting"
 import type { NotificationsService } from "@/services/notifications/notifications-service"
+import { userSettingsEntity } from "@/entities/user-settings"
 import {
-  userSettingsEntity,
   USER_SETTINGS_DEFAULTS,
   type UserSettings,
-} from "@/services/entities/user-settings"
-import {
-  transactionEntity,
-  type Transaction,
-} from "@/services/entities/transaction"
-import {
-  moneyAccountEntity,
-  type MoneyAccount,
-} from "@/services/entities/money-account"
+} from "@/entities/user-settings"
+import { transactionEntity } from "@/entities/transaction"
+import type { Transaction } from "@/entities/transaction"
+import { accountEntity } from "@/entities/account"
+import type { AccountStatement, Account } from "@/entities/account"
 import type { TransactionsService } from "@/services/transactions-service"
 import type { Disposable } from "@/services/types"
-import type { AuthAccount } from "@/services/entities/auth-account"
-import { authAccountEntity } from "@/services/entities/auth-account"
+import type { Connection } from "@/entities/connection"
+import { connectionEntity } from "@/entities/connection"
 import { ImportContext } from "./import-context"
 import type { PromptAnswer } from "./import-context"
 import { runFileImport, type FileImportResult } from "./file-import-context"
 import { runEmailImport, type EmailResult, type EmailRunProgress } from "./email-import-context"
 import { CancelledError, EmailPasswordError, findMatchingAccounts, mergeMetadata } from "./import-utils"
-import { log } from "@/log"
+import { log } from "@/lib/log"
 
 // ── Active context entry ────────────────────────────────
 
@@ -70,7 +65,7 @@ export class ImportService implements Disposable {
   private readonly settingsRepo: Repository<EmailImportSetting>
   private readonly userSettingsRepo: SingletonRepository<UserSettings>
   private readonly txRepo: Repository<Transaction>
-  private readonly accountRepo: Repository<MoneyAccount>
+  private readonly accountRepo: Repository<Account>
   private readonly txService: TransactionsService
   private readonly notifications: NotificationsService
   private readonly active = new Map<string, ActiveImport>()
@@ -82,7 +77,7 @@ export class ImportService implements Disposable {
     this.settingsRepo = fyredb.repo(emailImportSettingEntity)
     this.userSettingsRepo = fyredb.repo(userSettingsEntity)
     this.txRepo = fyredb.repo(transactionEntity)
-    this.accountRepo = fyredb.repo(moneyAccountEntity)
+    this.accountRepo = fyredb.repo(accountEntity)
     this.txService = deps.transactions
     this.notifications = deps.notifications
     log.import('service initialised')
@@ -135,7 +130,7 @@ export class ImportService implements Disposable {
    * would race on the single shared `EmailImportSetting.importState` cursor and
    * corrupt the high-water mark. */
   startEmailSync(accountId: string): string {
-    const account = this.fyredb.repo(authAccountEntity).get(accountId)
+    const account = this.fyredb.repo(connectionEntity).get(accountId)
     if (account === undefined) {
       log.import('email sync: unknown account=%s', accountId)
       return ""
@@ -148,7 +143,7 @@ export class ImportService implements Disposable {
 
     const source: ImportLogEmailSource = {
       kind: "email",
-      authAccountId: account.id,
+      connectionId: account.id,
       emailId: "",          // filled per-email during the sweep
       receivedAt: 0,
       from: account.email,
@@ -165,10 +160,10 @@ export class ImportService implements Disposable {
 
   /** The live (`in_progress` / `needs_input`) email-sweep log id for an
    *  account, if one is currently active. */
-  private findActiveEmailLog(authAccountId: string): string | null {
+  private findActiveEmailLog(connectionId: string): string | null {
     for (const logId of this.active.keys()) {
       const row = this.logRepo.get(logId)
-      if (row?.source.kind === "email" && row.source.authAccountId === authAccountId) {
+      if (row?.source.kind === "email" && row.source.connectionId === connectionId) {
         return logId
       }
     }
@@ -226,10 +221,10 @@ export class ImportService implements Disposable {
     if (!canResume) return null
 
     // Look up the auth account
-    const authRepo = this.fyredb.repo(authAccountEntity)
-    const account = authRepo.get(existingLog.source.authAccountId)
+    const authRepo = this.fyredb.repo(connectionEntity)
+    const account = authRepo.get(existingLog.source.connectionId)
     if (!account) {
-      log.import.error('resume failed: auth account %s not found', existingLog.source.authAccountId)
+      log.import.error('resume failed: auth account %s not found', existingLog.source.connectionId)
       return null
     }
 
@@ -255,6 +250,7 @@ export class ImportService implements Disposable {
       const result = await runFileImport(
         ctx, file, settings.filePasswords,
         this.accountRepo, this.txRepo,
+        (pw) => { this.appendPasswords([pw]) },
       )
       this.commitFileResult(logId, result)
       ctx.status = "completed"
@@ -276,6 +272,10 @@ export class ImportService implements Disposable {
     const accountId = existingAccountId || this.createAccount(result)
     if (existingAccountId) {
       this.mergeAccountMetadata(existingAccountId, buildMetadata(result.importData.account))
+      this.mergeAccountStatement(
+        existingAccountId,
+        toAccountStatement(result.importData.statement, result.importData.transactions),
+      )
     }
 
     // Write transactions, parented to a per-file source row (only created
@@ -283,10 +283,12 @@ export class ImportService implements Disposable {
     const newTxs = result.transactions.filter((t) => t.isNew)
     if (newTxs.length > 0) {
       const log = this.logRepo.get(logId)
+      /* v8 ignore start -- the log is always the file-source row created at startFileImport */
       const descriptor: ImportSourceDescriptor =
         log?.source.kind === "file"
           ? log.source
           : { kind: "file", fileName: "import" }
+      /* v8 ignore stop */
       const sourceId = this.createSource(logId, descriptor, {
         adapterId: result.adapterId,
         accountId,
@@ -332,7 +334,7 @@ export class ImportService implements Disposable {
   private async executeEmailImport(
     logId: string,
     ctx: ImportContext,
-    account: AuthAccount & BaseEntity,
+    account: Connection & BaseEntity,
   ): Promise<void> {
     try {
       const passwords = [...this.getUserSettings().filePasswords]
@@ -353,7 +355,7 @@ export class ImportService implements Disposable {
         if (newTxs.length > 0) {
           const descriptor: ImportSourceDescriptor = {
             kind: "email",
-            authAccountId: account.id,
+            connectionId: account.id,
             emailId: result.emailId,
             receivedAt: result.date,
             from: result.from,
@@ -421,6 +423,7 @@ export class ImportService implements Disposable {
           // Persist any new passwords
           const origSet = new Set(this.getUserSettings().filePasswords)
           const newPwds = passwords.filter((p) => !origSet.has(p))
+          /* v8 ignore next -- passwords persist on answer, so none are new by completion */
           if (newPwds.length > 0) this.appendPasswords(newPwds)
 
           this.updateLog(logId, {
@@ -442,6 +445,7 @@ export class ImportService implements Disposable {
             log.import('email sync needs password: logId=%s emailId=%s', logId, innerErr.emailId)
             // Update the log source with the real email ID so the UI can fetch it
             const existingLog = this.logRepo.get(logId)
+            /* v8 ignore next -- in this handler the log is always a live email-source row */
             if (existingLog && existingLog.source.kind === "email") {
               this.updateLog(logId, {
                 source: { ...existingLog.source, emailId: innerErr.emailId },
@@ -454,6 +458,9 @@ export class ImportService implements Disposable {
             if (ctx.isCancelled()) throw new CancelledError()
             if (answer.kind !== "password") throw new Error("Unexpected answer kind", { cause: innerErr })
             passwords.push(answer.password)
+            // Persist the password as soon as the user supplies it for a locked
+            // email — so it survives even if the rest of the sweep later errors.
+            this.appendPasswords([answer.password])
             ctx.status = "in_progress"
             this.updateLog(logId, { status: "in_progress", prompt: undefined })
             continue
@@ -464,8 +471,10 @@ export class ImportService implements Disposable {
     } catch (err) {
       this.handleError(logId, ctx, err)
       // Persist error on the email setting
+      /* v8 ignore next -- account always carries an id */
       if (account.id) {
-        const settings = this.settingsRepo.query({ where: { authAccountId: account.id } })
+        const settings = this.settingsRepo.query({ where: { connectionId: account.id } })
+        /* v8 ignore next -- the setting is created before the run, so it always exists */
         if (settings.length > 0) {
           this.settingsRepo.save({ ...settings[0], lastErrorLogId: logId })
         }
@@ -509,7 +518,7 @@ export class ImportService implements Disposable {
   }
 
   /** Notify the user that a background email import is parked awaiting input. */
-  private notifyNeedsInput(logId: string, account: AuthAccount & BaseEntity): void {
+  private notifyNeedsInput(logId: string, account: Connection & BaseEntity): void {
     this.notifications.notify({
       kind: "import-needs-input",
       display: "warning",
@@ -565,6 +574,7 @@ export class ImportService implements Disposable {
 
   private updateLog(logId: string, patch: Partial<ImportLog>): void {
     const existing = this.logRepo.get(logId)
+    /* v8 ignore next -- updateLog callers always pass a live log id */
     if (!existing) return
     this.logRepo.save({ ...existing, ...patch })
   }
@@ -589,11 +599,15 @@ export class ImportService implements Disposable {
   // ── Account creation ─────────────────────────────────
 
   private createAccount(result: FileImportResult): string {
+    const statement = toAccountStatement(
+      result.importData.statement,
+      result.importData.transactions,
+    )
     return this.accountRepo.save({
       kind: result.importData.kind,
       name: result.importData.bankId,
       currency: result.importData.account.currency,
-      initialBalance: 0,
+      ...(statement && { statement }),
       bankId: result.importData.bankId,
       offeringId: result.importData.offeringId,
       metadata: buildMetadata(result.importData.account),
@@ -602,14 +616,15 @@ export class ImportService implements Disposable {
 
   private createAccountFromEmail(
     emailResult: EmailResult,
-    account: AuthAccount & BaseEntity,
+    account: Connection & BaseEntity,
   ): string {
     const [bankId, offeringId] = emailResult.adapterId.split("/")
+    const statement = toAccountStatement(emailResult.statement, emailResult.transactions)
     return this.accountRepo.save({
       kind: emailResult.kind,
       name: bankId || account.email,
       currency: emailResult.accountDetails.currency,
-      initialBalance: 0,
+      ...(statement && { statement }),
       bankId,
       ...(offeringId && { offeringId }),
       metadata: buildMetadata(emailResult.accountDetails),
@@ -617,7 +632,7 @@ export class ImportService implements Disposable {
   }
 
   /**
-   * Resolve the MoneyAccount for an email result, creating it only when no
+   * Resolve the Account for an email result, creating it only when no
    * match exists. Accounts are created lazily at commit time, so two emails
    * from the same account both arrive with `accountId: ""`; re-querying here
    * (the repo's in-memory store reflects a `save` synchronously) lets the
@@ -626,12 +641,16 @@ export class ImportService implements Disposable {
    */
   private resolveOrCreateEmailAccount(
     emailResult: EmailResult,
-    account: AuthAccount & BaseEntity,
+    account: Connection & BaseEntity,
   ): string {
     const [bankId] = emailResult.adapterId.split("/")
     const matches = findMatchingAccounts(this.accountRepo.query(), bankId, emailResult.kind, emailResult.accountDetails)
     if (matches.length > 0) {
       this.mergeAccountMetadata(matches[0].id, buildMetadata(emailResult.accountDetails))
+      this.mergeAccountStatement(
+        matches[0].id,
+        toAccountStatement(emailResult.statement, emailResult.transactions),
+      )
       return matches[0].id
     }
     return this.createAccountFromEmail(emailResult, account)
@@ -651,6 +670,24 @@ export class ImportService implements Disposable {
     if (changed) this.accountRepo.save({ ...account, metadata })
   }
 
+  /**
+   * Latest-wins merge of a statement snapshot onto an existing account: store
+   * `snapshot` only when there is no current snapshot or `snapshot.asOf` is
+   * strictly newer than the stored one. Survives out-of-order email backfill
+   * (an older statement imported later must not regress the balance).
+   */
+  private mergeAccountStatement(
+    accountId: string,
+    snapshot: AccountStatement | undefined,
+  ): void {
+    if (!snapshot) return
+    const account = this.accountRepo.get(accountId)
+    if (!account) return
+    const existing = account.statement
+    if (existing && existing.asOf >= snapshot.asOf) return
+    this.accountRepo.save({ ...account, statement: snapshot })
+  }
+
   // ── Settings helpers ──────────────────────────────────
 
   private getUserSettings(): UserSettings {
@@ -668,22 +705,54 @@ export class ImportService implements Disposable {
     })
   }
 
-  private getOrCreateEmailSetting(account: AuthAccount & BaseEntity): EmailImportSetting & BaseEntity {
-    const existing = this.settingsRepo.query({ where: { authAccountId: account.id } })
+  private getOrCreateEmailSetting(account: Connection & BaseEntity): EmailImportSetting & BaseEntity {
+    const existing = this.settingsRepo.query({ where: { connectionId: account.id } })
     if (existing.length > 0) return existing[0]
 
     const id = this.settingsRepo.save({
-      authAccountId: account.id,
+      connectionId: account.id,
       paused: false,
       importState: {},
     })
     const created = this.settingsRepo.get(id)
+    /* v8 ignore next -- the row was just saved, so the get always resolves */
     if (!created) throw new Error(`Failed to create email import setting for ${account.id}`)
     return created
   }
 }
 
 // ── Utilities ───────────────────────────────────────────
+
+/**
+ * Map an adapter `StatementSummary` (integer minor units) to the app's typed
+ * `AccountStatement`, or `undefined` when no snapshot can be stored.
+ *
+ * - `balance` is required, so a snapshot is built only when `closingBalance`
+ *   is defined; the credit-only extras carry through when present.
+ * - `asOf` falls back to `max(tx.date)` of the import's transactions when the
+ *   adapter omits it; with neither an `asOf` nor any transaction, no snapshot
+ *   is stored (latest-wins has no anchor).
+ */
+function toAccountStatement(
+  summary: import("@pai-app/adapters").StatementSummary | undefined,
+  transactions: readonly { readonly date: number }[],
+): AccountStatement | undefined {
+  if (!summary || summary.closingBalance === undefined) return undefined
+  const asOf =
+    summary.asOf ??
+    (transactions.length > 0
+      ? transactions.reduce((max, t) => (t.date > max ? t.date : max), transactions[0].date)
+      : undefined)
+  if (asOf === undefined) return undefined
+  return {
+    asOf,
+    balance: summary.closingBalance,
+    ...(summary.available !== undefined && { available: summary.available }),
+    ...(summary.creditLimit !== undefined && { creditLimit: summary.creditLimit }),
+    ...(summary.minimumDue !== undefined && { minimumDue: summary.minimumDue }),
+    ...(summary.dueDate !== undefined && { dueDate: summary.dueDate }),
+  }
+}
 
 function buildMetadata(
   account: import("@pai-app/adapters").AccountDetails,
