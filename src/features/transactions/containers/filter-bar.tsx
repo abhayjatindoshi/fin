@@ -4,6 +4,7 @@ import { Icon } from "@/ui/icon"
 import { SortControl } from "../components/sort-control"
 import { AccountFilter } from "./account-filter"
 import { TagToggle } from "../components/tag-toggle"
+import { TagSelect } from "./tag-select"
 import { AmountRange } from "./amount-range"
 import { SearchBar } from "@/components/search-bar"
 import type { UseTransactionsFilter } from "../hooks/use-transactions-filter"
@@ -27,6 +28,7 @@ export function FilterBar({ state, ref }: FilterBarProps) {
       <SortControl state={state} />
       <AccountFilter state={state} />
       <TagToggle state={state} />
+      <TagSelect state={state} />
       <AmountRange state={state} />
       {dirty && (
         <Button variant="ghost" size="sm" className="font-light" onClick={clearAll}>

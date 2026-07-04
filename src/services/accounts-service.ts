@@ -71,6 +71,7 @@ function toAccountView(row: StoredAccount): AccountView {
     currency: row.currency,
     maskedNumber: maskAccountNumber(row),
     bankId: row.bankId,
+    offeringId: row.offeringId,
     statement: row.statement,
     archived: row.archived ?? false,
   }

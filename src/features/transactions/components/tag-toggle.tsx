@@ -3,12 +3,13 @@ import { ButtonGroup } from "@/ui/button-group"
 import { cn } from "@/lib/utils"
 import type { FilterControlProps } from "../types"
 
-/** Tagged / Untagged toggle. Clicking the active option clears it. */
+/** Tagged / Untagged toggle. Clicking the active option clears it. Picking a
+ *  side clears any specific-tag selection (the two are mutually exclusive). */
 export function TagToggle({ state, variant = "bar", className }: FilterControlProps) {
   const { filter, patch, untaggedCount } = state
   const value = filter.tag
   const toggle = (option: "tagged" | "untagged") => {
-    patch({ tag: value === option ? null : option })
+    patch({ tag: value === option ? null : option, tagId: undefined })
   }
   return (
     <ButtonGroup

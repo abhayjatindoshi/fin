@@ -9,6 +9,7 @@ export type AccountView = {
   readonly currency: string
   readonly maskedNumber?: string // "****1234" from metadata.accountNumber, else undefined
   readonly bankId?: string
+  readonly offeringId?: string // parser offering id within the bank (drives offering display)
   readonly statement?: AccountStatement // latest closing-figure snapshot, if any
   readonly archived: boolean
 }

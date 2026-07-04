@@ -5,6 +5,7 @@ import { Icon } from "@/ui/icon"
 import { SortControl } from "../components/sort-control"
 import { AccountFilter } from "./account-filter"
 import { TagToggle } from "../components/tag-toggle"
+import { TagSelect } from "./tag-select"
 import { AmountRange } from "./amount-range"
 import { SearchBar } from "@/components/search-bar"
 import type { UseTransactionsFilter } from "../hooks/use-transactions-filter"
@@ -54,8 +55,11 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
             <Field label="Accounts">
               <AccountFilter state={state} variant="sheet" />
             </Field>
-            <Field label="Tag">
+            <Field label="Status">
               <TagToggle state={state} variant="sheet" />
+            </Field>
+            <Field label="Tag">
+              <TagSelect state={state} variant="sheet" />
             </Field>
             <Field label="Amount">
               <AmountRange state={state} variant="sheet" />
