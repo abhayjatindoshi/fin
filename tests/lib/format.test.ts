@@ -6,6 +6,7 @@ import {
   getCurrencyDigits,
   getCurrencyMeta,
   isKnownCurrency,
+  majorToMinor,
   minorToMajor,
 } from "@/lib/format"
 
@@ -50,6 +51,31 @@ describe("minorToMajor", () => {
 
   it("is identity for a zero-decimal currency", () => {
     expect(minorToMajor(1000, "JPY")).toBe(1000)
+  })
+})
+
+describe("majorToMinor", () => {
+  it("scales up to minor units and rounds to currency precision", () => {
+    expect(majorToMinor(1234.5, "INR")).toBe(123450)
+    expect(majorToMinor(0, "INR")).toBe(0)
+  })
+
+  it("rounds a fractional minor amount to the nearest integer", () => {
+    // 10.005 * 100 = 1000.4999… → rounds to 1000 (float) — the guard is the round.
+    expect(majorToMinor(10.007, "INR")).toBe(1001)
+  })
+
+  it("is identity for a zero-decimal currency", () => {
+    expect(majorToMinor(1000, "JPY")).toBe(1000)
+  })
+
+  it("returns 0 for non-finite input (empty / NaN field)", () => {
+    expect(majorToMinor(Number.NaN, "INR")).toBe(0)
+    expect(majorToMinor(Number.POSITIVE_INFINITY, "USD")).toBe(0)
+  })
+
+  it("round-trips with minorToMajor for representable amounts", () => {
+    expect(minorToMajor(majorToMinor(4999.99, "INR"), "INR")).toBe(4999.99)
   })
 })
 

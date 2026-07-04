@@ -5,6 +5,7 @@ import { GeneralSection } from "@/features/settings/sections/general-section"
 import { AccountsSection } from "@/features/settings/sections/accounts-section"
 import { ImportsSection } from "@/features/settings/sections/imports-section"
 import { RulesSection } from "@/features/settings/sections/rules-section"
+import { BudgetsSection } from "@/features/settings/sections/budgets-section"
 
 type SettingsSection = {
   readonly key: string
@@ -16,6 +17,7 @@ type SettingsSection = {
 const SECTIONS: SettingsSection[] = [
   { key: "general", label: "General", icon: "settings", element: <GeneralSection /> },
   { key: "accounts", label: "Accounts", icon: "mail", element: <AccountsSection /> },
+  { key: "budgets", label: "Budgets", icon: "piggy-bank", element: <BudgetsSection /> },
   { key: "imports", label: "Imports", icon: "upload", element: <ImportsSection /> },
   { key: "rules", label: "Tag Rules", icon: "sparkles", element: <RulesSection /> },
 ]
