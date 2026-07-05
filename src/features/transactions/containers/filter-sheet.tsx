@@ -16,6 +16,9 @@ export type FilterSheetProps = {
   readonly ref?: Ref<HTMLDivElement>
 }
 
+/** Strips the pill's glass fill/border/blur so controls blend into the glass sheet. */
+const FLAT_PILL = "border-transparent bg-transparent backdrop-blur-none"
+
 /**
  * Mobile filtering — a collapsible search pill and a filter pill (with an
  * active-count badge) that opens a bottom sheet of stacked controls. Live
@@ -26,8 +29,8 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div ref={ref} className="sticky top-0 z-20 flex flex-row items-center gap-1.5 px-4 pb-3 pt-2">
-      <SearchBar state={state} variant="sheet" />
+    <div ref={ref} className="flex min-w-0 flex-1 flex-row items-center gap-1.5">
+      <SearchBar state={state} />
       <AdaptiveSurface
         open={open}
         onOpenChange={setOpen}
@@ -37,7 +40,7 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
             variant="ghost"
             size="icon"
             aria-label="Filters"
-            className="glass relative size-9 shrink-0 rounded-full border border-border"
+            className="glass relative size-10 shrink-0 rounded-full border border-border"
           >
             <Icon name="sliders-horizontal" />
             {activeCount > 0 && (
@@ -48,21 +51,21 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
           </Button>
         }
         content={
-          <div className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-2.5 px-4 pb-4">
             <Field label="Sort">
-              <SortControl state={state} variant="sheet" />
+              <SortControl state={state} className={FLAT_PILL} />
             </Field>
             <Field label="Accounts">
-              <AccountFilter state={state} variant="sheet" />
+              <AccountFilter state={state} className={FLAT_PILL} />
             </Field>
             <Field label="Status">
-              <TagToggle state={state} variant="sheet" />
+              <TagToggle state={state} className={FLAT_PILL} />
             </Field>
             <Field label="Tag">
-              <TagSelect state={state} variant="sheet" />
+              <TagSelect state={state} className={FLAT_PILL} />
             </Field>
             <Field label="Amount">
-              <AmountRange state={state} variant="sheet" />
+              <AmountRange state={state} />
             </Field>
 
             <div className="mt-2 flex items-center justify-between border-t pt-3">
@@ -75,8 +78,8 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
             </div>
           </div>
         }
-        desktop={{ type: "sheet", props: { side: "bottom" } }}
-        mobile={{ type: "sheet", props: { side: "bottom" } }}
+        desktop={{ type: "popover", props: { surface: "glass" } }}
+        mobile={{ type: "sheet", props: { side: "bottom", surface: "glass", className: "gap-2" } }}
       />
     </div>
   )
@@ -84,9 +87,9 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {children}
+    <div className="flex items-center gap-3">
+      <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   )
 }

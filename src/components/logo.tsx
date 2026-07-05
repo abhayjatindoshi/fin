@@ -16,7 +16,7 @@ export function Logo({ className, title = "pai", linked = false }: LogoProps) {
     <LogoSvg
       role="img"
       aria-label={title}
-      className={cn("m-1 h-7 w-auto font-bold", className)}
+      className={cn("m-1 h-6 w-auto font-bold", className)}
     />
   )
 

@@ -6,15 +6,19 @@ import { Button } from "@/ui/button"
 import { cn } from "@/lib/utils"
 import { log } from "@/lib/log"
 
-type SyncStatusProps = {
-  readonly className?: string
+export type SyncState = {
+  readonly available: boolean
+  readonly dirty: boolean
+  readonly syncing: boolean
+  readonly saving: boolean
+  readonly saveChanges: () => void
 }
 
-export function SyncStatus({ className }: SyncStatusProps) {
+/** Subscribes to the db's dirty/sync events and exposes the current sync state. */
+export function useSyncStatus(): SyncState {
   const fyredb = useDb()
   const [dirty, setDirty] = useState(false)
   const [syncing, setSyncing] = useState(false)
-
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -36,21 +40,37 @@ export function SyncStatus({ className }: SyncStatusProps) {
     }
   }, [fyredb])
 
-  if (!fyredb) return null
-
-  const icon = saving
-    ? <Icon name="refresh-cw" className="animate-spin" />
-    : syncing
-      ? <Icon name="refresh-cw" className="animate-spin" />
-      : dirty
-        ? <Icon name="circle-dashed" />
-        : <Icon name="cloud-check" />
-
   const saveChanges = () => {
     setSaving(true)
-    // FyreDb doesn't expose syncNow() yet — trigger a no-op write to nudge the sync engine
-    setTimeout(() => { setSaving(false); }, 1500)
+    // FyreDb doesn't expose syncNow() yet — nudge the sync engine, then settle.
+    setTimeout(() => { setSaving(false) }, 1500)
   }
+
+  return { available: fyredb !== null, dirty, syncing, saving, saveChanges }
+}
+
+/**
+ * Maps the sync state to an icon: dotted circle = pending changes, spinning
+ * refresh = saving/syncing, cloud-check = all saved.
+ */
+export function syncIcon(
+  state: Pick<SyncState, "saving" | "syncing" | "dirty">,
+): { readonly name: string; readonly spin: boolean } {
+  if (state.saving || state.syncing) return { name: "refresh-cw", spin: true }
+  if (state.dirty) return { name: "circle-dashed", spin: false }
+  return { name: "cloud-check", spin: false }
+}
+
+type SyncStatusProps = {
+  readonly className?: string
+}
+
+export function SyncStatus({ className }: SyncStatusProps) {
+  const { available, dirty, syncing, saving, saveChanges } = useSyncStatus()
+  if (!available) return null
+
+  const { name, spin } = syncIcon({ saving, syncing, dirty })
+  const icon = <Icon name={name} className={cn(spin && "animate-spin")} />
 
   return (
     <Popover>

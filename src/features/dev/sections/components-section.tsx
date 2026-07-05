@@ -3,14 +3,14 @@ import { Button } from "@/ui/button"
 import { Currency } from "@/components/currency"
 import { Icon } from "@/ui/icon"
 import { Money } from "@/components/money"
-import { OverflowBar } from "@/ui/overflow-bar"
+import { Pill } from "@/ui/pill"
+import { PillBar } from "@/ui/pill-bar"
 import { tagIconName } from "@/catalog/icon-resolve"
 import { Text } from "@/ui/text"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { FullPageSpinner } from "@/components/full-page-spinner"
 import { Logo } from "@/components/logo"
-import { SyncStatus } from "@/features/navbar/sync-status"
-import { Navbar } from "@/features/navbar/navbar"
+import { SyncStatus } from "@/features/shell/sync-status"
 import { TagPicker } from "@/features/transactions/containers/tag-picker"
 import type { TagView } from "@/views/tag-view"
 import { useServices } from "@/providers/services-provider"
@@ -41,19 +41,6 @@ export function ComponentsSection() {
       <Section title="Logo">
         <Logo className="h-8 w-auto" />
         <Logo className="h-12 w-auto" />
-      </Section>
-
-      <Section title="Navbar">
-        <div className="flex w-full flex-col gap-4">
-          <div>
-            <Text variant="caption">Default layout</Text>
-            <div className="mt-2"><Navbar /></div>
-          </div>
-          <div>
-            <Text variant="caption">Compact (mobile) layout</Text>
-            <div className="mt-2"><Navbar isMobile /></div>
-          </div>
-        </div>
       </Section>
 
       <Section title="Theme switcher">
@@ -101,11 +88,27 @@ export function ComponentsSection() {
         <Text variant="destructive">Destructive</Text>
       </Section>
 
-      <Section title="Overflow bar">
+      <Section title="Pill">
+        <Pill variant="label">Label</Pill>
+        <Pill variant="label" active>Active</Pill>
+        <Pill variant="label" interactive>
+          <Icon name="calendar" />
+          <span>With icon</span>
+          <Icon name="chevron-down" />
+        </Pill>
+        <Pill variant="icon">
+          <Icon name="user" />
+        </Pill>
+        <Pill variant="tight">
+          <Logo className="h-5 w-auto" />
+        </Pill>
+      </Section>
+
+      <Section title="Pill bar">
         <div className="w-full max-w-md">
-          <OverflowBar
-            className="glass h-11 min-w-0 shrink rounded-full px-1.5"
-            items={Array.from({ length: 12 }, (_, i) => ({
+          <PillBar
+            className="glass h-10 min-w-0 rounded-full px-1.5"
+            items={Array.from({ length: 4 }, (_, i) => ({
               key: String(i),
               element: <span className="relative z-10">Item {i + 1}</span>,
               active: i === 0,
@@ -165,12 +168,30 @@ function NotificationDemo() {
     }, { channels: ["toast"] })
   }
 
+  const firePersistent = (display: "info" | "success" | "warning" | "error") => {
+    notificationsService.notify({
+      kind: "showcase-demo",
+      display,
+      title: `${display[0].toUpperCase()}${display.slice(1)} notification`,
+      body: "Persistent notification — stored in the inbox.",
+      actionLabel: "View",
+    }, { channels: ["inbox", "toast"] })
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" onClick={() => { fire("info") }}>Info</Button>
-      <Button variant="outline" onClick={() => { fire("success") }}>Success</Button>
-      <Button variant="outline" onClick={() => { fire("warning") }}>Warning</Button>
-      <Button variant="outline" onClick={() => { fire("error") }}>Error</Button>
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => { fire("info") }}>Info</Button>
+        <Button variant="outline" onClick={() => { fire("success") }}>Success</Button>
+        <Button variant="outline" onClick={() => { fire("warning") }}>Warning</Button>
+        <Button variant="outline" onClick={() => { fire("error") }}>Error</Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => { firePersistent("info") }}>Persist info</Button>
+        <Button onClick={() => { firePersistent("success") }}>Persist success</Button>
+        <Button onClick={() => { firePersistent("warning") }}>Persist warning</Button>
+        <Button onClick={() => { firePersistent("error") }}>Persist error</Button>
+      </div>
     </div>
   )
 }

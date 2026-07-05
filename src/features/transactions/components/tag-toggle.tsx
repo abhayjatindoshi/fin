@@ -1,33 +1,30 @@
 import { Button } from "@/ui/button"
-import { ButtonGroup } from "@/ui/button-group"
 import { cn } from "@/lib/utils"
+import { pillVariants } from "@/ui/pill"
 import type { FilterControlProps } from "../types"
 
 /** Tagged / Untagged toggle. Clicking the active option clears it. Picking a
  *  side clears any specific-tag selection (the two are mutually exclusive). */
-export function TagToggle({ state, variant = "bar", className }: FilterControlProps) {
+export function TagToggle({ state, className }: FilterControlProps) {
   const { filter, patch, untaggedCount } = state
   const value = filter.tag
   const toggle = (option: "tagged" | "untagged") => {
     patch({ tag: value === option ? null : option, tagId: undefined })
   }
   return (
-    <ButtonGroup
-      className={cn(
-        "glass h-9 overflow-hidden rounded-full border",
-        variant === "sheet" && "w-full *:flex-1",
-        className,
-      )}
+    <div
+      role="group"
+      className={cn(pillVariants({ variant: "group" }), "w-full overflow-hidden *:flex-1", className)}
     >
       <Button
-        className={cn("h-full", value !== "tagged" && "font-light")}
+        className={cn("h-full rounded-full", value !== "tagged" && "font-light")}
         variant={value === "tagged" ? "default" : "ghost"}
         onClick={() => { toggle("tagged") }}
       >
         Tagged
       </Button>
       <Button
-        className={cn("h-full", value !== "untagged" && "font-light")}
+        className={cn("h-full rounded-full", value !== "untagged" && "font-light")}
         variant={value === "untagged" ? "default" : "ghost"}
         onClick={() => { toggle("untagged") }}
       >
@@ -38,6 +35,6 @@ export function TagToggle({ state, variant = "bar", className }: FilterControlPr
           </span>
         )}
       </Button>
-    </ButtonGroup>
+    </div>
   )
 }
