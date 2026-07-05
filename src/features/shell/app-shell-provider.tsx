@@ -9,7 +9,6 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { useLocation } from "react-router"
-import { FyreDbConfigError } from "@fyre-db/core"
 import { useApp } from "@/providers/app-provider"
 import { AppShellTemplate } from "./app-shell-template"
 
@@ -46,7 +45,7 @@ const ShellContext = createContext<ShellContextValue | undefined>(undefined)
 
 function useShell(): ShellContextValue {
   const ctx = useContext(ShellContext)
-  if (!ctx) throw new FyreDbConfigError("useShell must be used within an AppShellProvider")
+  if (!ctx) throw new Error("useShell must be used within an AppShellProvider")
   return ctx
 }
 
