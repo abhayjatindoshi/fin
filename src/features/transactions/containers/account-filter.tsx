@@ -9,12 +9,13 @@ import {
 } from "@/ui/dropdown-menu"
 import { getAccountDisplay } from "@/catalog/account-display"
 import { cn } from "@/lib/utils"
+import { pillVariants } from "@/ui/pill"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import type { FilterControlProps } from "../types"
 
 /** Multi-select account filter. Empty selection = all accounts. */
-export function AccountFilter({ state, variant = "bar", className }: FilterControlProps) {
+export function AccountFilter({ state, className }: FilterControlProps) {
   const { filter, patch } = state
   const selected = filter.accountIds
   const accounts = useObservable(useServices().accounts.accounts$)
@@ -36,11 +37,7 @@ export function AccountFilter({ state, variant = "bar", className }: FilterContr
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={cn(
-            "glass h-9 rounded-full border border-border font-light",
-            variant === "sheet" && "w-full justify-start",
-            className,
-          )}
+          className={cn(pillVariants({ variant: "label", interactive: true }), "w-full justify-start font-light", className)}
         >
           <Icon name={onlyAccount ? getAccountDisplay(onlyAccount).icon : "landmark"} />
           <span className="truncate">{label}</span>

@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
-import { Navigate, useLocation, useNavigate, useParams } from "react-router"
-import { SectionPage, type Section } from "@/components/section-page"
+import { Navigate, useParams } from "react-router"
+import { useApp } from "@/providers/app-provider"
+import { useAppShell } from "@/features/shell/app-shell-provider"
+import { SubNavPage } from "@/features/shell/sub-nav-page"
 import { GeneralSection } from "@/features/settings/sections/general-section"
 import { ConnectionsSection } from "@/features/settings/sections/connections-section"
 import { ImportsSection } from "@/features/settings/sections/imports-section"
@@ -14,7 +16,7 @@ type SettingsSection = {
   readonly element: ReactNode
 }
 
-const SECTIONS: SettingsSection[] = [
+const SECTIONS: readonly SettingsSection[] = [
   { key: "general", label: "General", icon: "settings", element: <GeneralSection /> },
   { key: "connections", label: "Connections", icon: "mail", element: <ConnectionsSection /> },
   { key: "budgets", label: "Budgets", icon: "piggy-bank", element: <BudgetsSection /> },
@@ -24,23 +26,19 @@ const SECTIONS: SettingsSection[] = [
 
 export function SettingsPage() {
   const { tenantId } = useParams()
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const base = `/t/${tenantId ?? ""}/settings`
-
-  const activeKey = pathname.slice(base.length).split("/").filter(Boolean)[0] ?? ""
+  const { isMobile } = useApp()
+  const basePath = `/t/${tenantId ?? ""}/settings`
+  const subNav = {
+    title: "Settings",
+    basePath,
+    items: SECTIONS.map((s) => ({ key: s.key, label: s.label, icon: s.icon })),
+  }
+  const { activeKey } = useAppShell({ subNav })
 
   if (!SECTIONS.some((s) => s.key === activeKey)) {
-    return <Navigate to={`${base}/${SECTIONS[0].key}`} replace />
+    if (isMobile) return <SubNavPage subNav={subNav} />
+    return <Navigate to={`${basePath}/${SECTIONS[0].key}`} replace />
   }
 
-  const sections: Section[] = SECTIONS.map((s) => ({
-    key: s.key,
-    label: s.label,
-    icon: s.icon,
-    onClick: () => { void navigate(`${base}/${s.key}`) },
-    element: s.element,
-  }))
-
-  return <SectionPage title="Settings" sections={sections} active={activeKey} />
+  return SECTIONS.find((s) => s.key === activeKey)?.element ?? null
 }

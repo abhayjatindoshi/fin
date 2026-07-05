@@ -14,8 +14,10 @@ import { TransactionCardRow } from "@/components/transaction/card-row"
 import { TransactionDetail } from "@/features/transactions/containers/transaction-detail"
 import { TagPickerCell } from "@/features/transactions/containers/tag-picker-cell"
 import { AccountCell } from "@/features/transactions/containers/account-cell"
-import { FilterBar } from "./containers/filter-bar"
 import { FilterSheet } from "./containers/filter-sheet"
+import { FilterBar } from "./containers/filter-bar"
+import { ActiveFilters } from "./containers/active-filters"
+import { PrimarySlot, SecondarySlot } from "@/features/shell/app-shell-provider"
 
 function EmptyState() {
   return (
@@ -49,20 +51,9 @@ export function TransactionsPage() {
   const { filtered, clearAll } = filterState
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Measure the sticky filter chrome so the month headers can pin directly
-  // below it instead of sliding to the top of the scroll viewport. Desktop
-  // chrome pins at 72px (≈10px below the navbar); mobile at `top-0`.
-  const [filterEl, setFilterEl] = useState<HTMLDivElement | null>(null)
-  const [filterHeight, setFilterHeight] = useState(0)
-  useEffect(() => {
-    if (!filterEl) return
-    const measure = () => { setFilterHeight(filterEl.offsetHeight) }
-    const ro = new ResizeObserver(measure)
-    ro.observe(filterEl)
-    measure()
-    return () => { ro.disconnect() }
-  }, [filterEl])
-  const stickyTop = (isMobile ? 0 : 72) + filterHeight
+  // Page chrome (search + filters) now lives in the AppBar; month headers pin
+  // just below the floating bar.
+  const stickyTop = 72
 
   // Warm the bank-icons pack so account marks render in a single chunk
   // instead of each `<AccountIcon>` triggering its own dynamic import.
@@ -97,9 +88,20 @@ export function TransactionsPage() {
   return (
     <div className="flex flex-col">
       {isMobile ? (
-        <FilterSheet ref={setFilterEl} state={filterState} resultCount={filtered.length} />
+        <>
+          <PrimarySlot>
+            <FilterSheet state={filterState} resultCount={filtered.length} />
+          </PrimarySlot>
+          {filterState.activeCount > 0 && (
+            <SecondarySlot>
+              <ActiveFilters state={filterState} />
+            </SecondarySlot>
+          )}
+        </>
       ) : (
-        <FilterBar ref={setFilterEl} state={filterState} />
+        <SecondarySlot>
+          <FilterBar state={filterState} />
+        </SecondarySlot>
       )}
 
       <div className="flex flex-row gap-4">

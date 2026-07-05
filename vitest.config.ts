@@ -24,14 +24,14 @@ export default defineConfig({
         'src/services/mail/**', // Gmail/Graph network IO — integration, not unit
         'src/services/import/file-import-context.ts', // file parse pipeline — integration
         'src/services/import/email-import-context.ts', // email/mail pipeline — integration
-        'src/lib/fyredb-config.ts', // app bootstrap/config
-        'src/log.ts', // logger setup
+        'src/providers/fyredb-config.ts', // app bootstrap/config
+        'src/lib/log.ts', // logger setup
         'src/**/types.ts', // type-only
         'src/services/types.ts',
         'src/services/email-types.ts',
         'src/**/index.ts', // re-export barrels
-        'src/pages/landing/features.ts', // static content
-        'src/pages/settings/sections/general/options.ts', // static content
+        'src/features/landing/features.ts', // static content
+        'src/features/settings/sections/general/options.ts', // static content
       ],
     },
   },

@@ -3,6 +3,7 @@ import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { tagIconName } from "@/catalog/icon-resolve"
 import { cn } from "@/lib/utils"
+import { pillVariants } from "@/ui/pill"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import type { TagView } from "@/views/tag-view"
@@ -15,7 +16,7 @@ import type { FilterControlProps } from "../types"
  * Picking a tag clears the Tagged/Untagged toggle — the two are mutually
  * exclusive. `undefined` selection = all tags.
  */
-export function TagSelect({ state, variant = "bar", className }: FilterControlProps) {
+export function TagSelect({ state, className }: FilterControlProps) {
   const { filter, patch } = state
   const selectedId = filter.tagId
   const [open, setOpen] = useState(false)
@@ -35,11 +36,7 @@ export function TagSelect({ state, variant = "bar", className }: FilterControlPr
     >
       <Button
         variant="ghost"
-        className={cn(
-          "glass h-9 rounded-full border border-border font-light",
-          variant === "sheet" && "w-full justify-start",
-          className,
-        )}
+        className={cn(pillVariants({ variant: "label", interactive: true }), "w-full justify-start font-light", className)}
       >
         <Icon
           name={selected ? tagIconName(selected) : "hash"}

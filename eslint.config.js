@@ -80,6 +80,19 @@ export default defineConfig([
     },
   },
   {
+    // The app shell is provider-like infrastructure: these two files
+    // intentionally co-locate the shell hook/context (`useAppShell`) and the
+    // sync-status hook/helper with their components, mirroring the providers
+    // exemption above.
+    files: [
+      'src/features/shell/app-shell-provider.tsx',
+      'src/features/shell/sync-status.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
     // `useFyreDb`/repo access belongs to the service layer. These are the only
     // legitimate fyredb touch-points outside it: the service entry point
     // (ServicesProvider), the dev debug handle (AppProvider), the store-level
@@ -88,7 +101,7 @@ export default defineConfig([
       'src/services/**/*.{ts,tsx}',
       'src/providers/services-provider.tsx',
       'src/providers/app-provider.tsx',
-      'src/features/navbar/sync-status.tsx',
+      'src/features/shell/sync-status.tsx',
       'src/features/dev/sections/data-section.tsx',
     ],
     rules: {
@@ -238,10 +251,9 @@ export default defineConfig([
     // exception. Follow-up: relocate the pure display helpers
     // (catalog / tagging-strength / notification registry) to `lib/`.
     files: [
-
       'src/features/settings/sections/rules-section.tsx',
       'src/features/settings/sections/rules/rule-card.tsx',
-      'src/features/navbar/profile-pill.tsx',
+      'src/features/shell/notifications-sheet.tsx',
       'src/features/transactions/notify-tag-similar.ts',
     ],
     rules: { 'boundaries/element-types': 'off' },

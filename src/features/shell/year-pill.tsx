@@ -10,6 +10,7 @@ import {
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import { cn } from "@/lib/utils"
+import { pillVariants } from "@/ui/pill"
 
 const MONTH_SHORT = [
   "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -41,18 +42,10 @@ function MonthYearStack({ month, year }: { readonly month: string; readonly year
 
 /**
  * Trigger label — uses the vertical month/year stack for fiscal-year ranges
- * so the pill stays compact while still surfacing the start/end months.
+ * so the start/end months stay visible.
  */
-function formatYearTrigger(year: number, firstMonth: number, compact: boolean): ReactNode {
+function formatYearTrigger(year: number, firstMonth: number): ReactNode {
   if (firstMonth === 1) return shortYear(year)
-  if (compact) {
-    return (
-      <>
-        <MonthLabel>FY</MonthLabel>
-        <span>{shortYear(year)}</span>
-      </>
-    )
-  }
   return (
     <>
       <MonthYearStack month={MONTH_SHORT[firstMonth]} year={year} />
@@ -83,15 +76,13 @@ const RANGE = 3
 
 type YearPillProps = {
   readonly className?: string
-  readonly variant?: "default" | "compact"
 }
 
-export function YearPill({ className, variant = "default" }: YearPillProps) {
+export function YearPill({ className }: YearPillProps) {
   const { settings: settingsService } = useServices()
   const settings = useObservable(settingsService.settings$)
   const year = useObservable(settingsService.selectedYear$)
   const { firstMonth } = settings
-  const compact = variant === "compact"
 
   const today = new Date()
   const currentMonth = today.getMonth() + 1
@@ -111,13 +102,10 @@ export function YearPill({ className, variant = "default" }: YearPillProps) {
         <button
           type="button"
           aria-label="Select year"
-          className={cn(
-            "glass flex h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-sm font-medium",
-            className,
-          )}
+          className={cn(pillVariants({ variant: "label", interactive: true }), "font-medium", className)}
         >
-          {!compact && <Icon name="calendar" className="size-4 text-muted-foreground" />}
-          <span className="flex items-center gap-1">{formatYearTrigger(year, firstMonth, compact)}</span>
+          <Icon name="calendar" className="size-4 text-muted-foreground" />
+          <span className="flex items-center gap-1">{formatYearTrigger(year, firstMonth)}</span>
           <Icon name="chevron-down" className="size-4 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
