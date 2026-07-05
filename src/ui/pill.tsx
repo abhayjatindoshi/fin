@@ -30,6 +30,11 @@ const pillVariants = cva(
         /** Segmented container (e.g. a status toggle). */
         group: "gap-0 p-0.5",
       },
+      /** The single active-state language: a soft-solid fill. */
+      active: {
+        true: "bg-primary/15 text-foreground",
+        false: "",
+      },
       interactive: {
         true: "cursor-pointer",
         false: "",
@@ -37,6 +42,7 @@ const pillVariants = cva(
     },
     defaultVariants: {
       variant: "label",
+      active: false,
       interactive: false,
     },
   },
@@ -47,12 +53,12 @@ type PillProps = React.ComponentProps<"div"> &
     readonly asChild?: boolean
   }
 
-function Pill({ className, variant, interactive, asChild = false, ...props }: PillProps) {
+function Pill({ className, variant, active, interactive, asChild = false, ...props }: PillProps) {
   const Comp = asChild ? Slot.Root : "div"
   return (
     <Comp
       data-slot="pill"
-      className={cn(pillVariants({ variant, interactive, className }))}
+      className={cn(pillVariants({ variant, active, interactive, className }))}
       {...props}
     />
   )
