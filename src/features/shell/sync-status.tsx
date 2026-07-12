@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Icon } from "@/ui/icon"
 import { useDb } from "@fyre-db/plugins-ui"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover"
@@ -20,16 +20,25 @@ export function useSyncStatus(): SyncState {
   const [dirty, setDirty] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const mounted = useRef(true)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
 
   useEffect(() => {
     if (!fyredb) return
     const dirtySub = fyredb.observe("dirty").subscribe(setDirty)
     const syncSub = fyredb.observe("sync").subscribe((evt) => {
+      // Only surface cloud syncs. The memory↔local flush runs every couple of
+      // seconds; reflecting it would flicker the indicator constantly.
+      if (evt.source !== "cloud" && evt.target !== "cloud") return
       if (evt.type === "sync-started") {
-        log.sync('sync started: %s → %s', evt.source, evt.target)
+        log.sync('cloud sync started: %s → %s', evt.source, evt.target)
         setSyncing(true)
       } else {
-        log.sync('sync %s: %s → %s%s', evt.type, evt.source, evt.target,
+        log.sync('cloud sync %s: %s → %s%s', evt.type, evt.source, evt.target,
           evt.result ? ` (${evt.result.entitiesUpdated} entities, ${evt.result.partitionsSynced} partitions)` : '')
         setSyncing(false)
       }
@@ -41,9 +50,12 @@ export function useSyncStatus(): SyncState {
   }, [fyredb])
 
   const saveChanges = () => {
+    if (!fyredb) return
     setSaving(true)
-    // FyreDb doesn't expose syncNow() yet — nudge the sync engine, then settle.
-    setTimeout(() => { setSaving(false) }, 1500)
+    fyredb.tenants
+      .sync()
+      .catch((err: unknown) => { log.sync.error('manual sync failed: %O', err) })
+      .finally(() => { if (mounted.current) setSaving(false) })
   }
 
   return { available: fyredb !== null, dirty, syncing, saving, saveChanges }
