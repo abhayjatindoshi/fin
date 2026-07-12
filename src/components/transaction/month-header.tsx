@@ -7,20 +7,17 @@ const MONTH_FMT = new Intl.DateTimeFormat(undefined, {
   timeZone: "UTC",
 })
 
-export type MonthHeaderProps = RenderHeaderArgs & {
-  readonly isMobile: boolean
-}
+export type MonthHeaderProps = RenderHeaderArgs
 
 /**
  * Sticky section header for a month group. When `active` (pinned at the top of
- * the scroll viewport) the label and count gain a floating glass pill. On
- * mobile the row is inset to align with the transaction cards (`mx-4`).
- * Presentational: `isMobile` is injected by the caller.
+ * the scroll viewport) the label and count gain a floating glass pill. The row
+ * inherits the page gutter for horizontal alignment with the rows.
  */
-export function MonthHeader({ monthStart, count, active, isMobile }: MonthHeaderProps) {
+export function MonthHeader({ monthStart, count, active }: MonthHeaderProps) {
   const pill = active && "glass rounded-full border px-4"
   return (
-    <div className={cn("flex flex-row items-center justify-between py-1", isMobile && "px-4")}>
+    <div className="flex flex-row items-center justify-between py-1">
       <span className={cn("flex h-9 w-fit items-center font-semibold text-muted-foreground", pill)}>
         {MONTH_FMT.format(monthStart)}
       </span>

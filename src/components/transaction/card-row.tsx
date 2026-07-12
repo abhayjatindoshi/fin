@@ -27,7 +27,7 @@ export function TransactionCardRow({
   onClick,
 }: TransactionCardRowProps) {
   return (
-    <div onClick={onClick} className="mx-4 flex flex-col rounded-xl border">
+    <div onClick={onClick} className="flex flex-col rounded-xl border">
       <div className="flex flex-row items-center justify-between gap-3 px-3 py-1">
         <div className="min-w-0 flex-1"><DescriptionCell title={title} narration={narration} /></div>
         <div className="shrink-0"><DateCell date={date} /></div>

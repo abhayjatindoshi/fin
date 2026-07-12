@@ -107,7 +107,7 @@ export function TransactionsPage() {
       )}
 
       <div className="flex flex-row gap-4">
-        <div className="min-w-0 flex-1 pb-4">
+        <div className="min-w-0 flex-1">
           {filtered.length === 0 ? (
             <NoResults onClear={clearAll} />
           ) : (
@@ -117,7 +117,7 @@ export function TransactionsPage() {
               headerHeight={isMobile ? 44 : 50}
               stickyTop={stickyTop}
               scrollElementRef={scrollElementRef}
-              renderHeader={(args) => <MonthHeader {...args} isMobile={isMobile} />}
+              renderHeader={(args) => <MonthHeader {...args} />}
               renderRow={(args) =>
                 isMobile ? (
                   <TransactionCardRow
