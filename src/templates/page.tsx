@@ -40,7 +40,7 @@ export type PageProps = {
  */
 export function Page({
   children,
-  width = "md",
+  width = "full",
   gutter,
   gutterTop,
   gutterRight,
