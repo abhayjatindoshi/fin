@@ -4,6 +4,7 @@ import { Progress } from "@/ui/progress"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import { cn } from "@/lib/utils"
+import { Page } from "@/templates/page"
 import type {
   BriefingView,
   BriefingHeadline,
@@ -42,11 +43,11 @@ export function HomePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4">
+    <Page width="md" className="flex flex-col gap-6">
       <Header briefing={briefing} />
       <AttentionSection briefing={briefing} />
       {briefing.progress.length > 0 && <ProgressSection rows={briefing.progress} />}
-    </div>
+    </Page>
   )
 }
 

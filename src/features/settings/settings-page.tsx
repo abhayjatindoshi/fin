@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Navigate, useParams } from "react-router"
 import { useApp } from "@/providers/app-provider"
 import { useAppShell } from "@/features/shell/app-shell-provider"
+import { Page } from "@/templates/page"
 import { SubNavPage } from "@/features/shell/sub-nav-page"
 import { GeneralSection } from "@/features/settings/sections/general-section"
 import { ConnectionsSection } from "@/features/settings/sections/connections-section"
@@ -40,5 +41,6 @@ export function SettingsPage() {
     return <Navigate to={`${basePath}/${SECTIONS[0].key}`} replace />
   }
 
-  return SECTIONS.find((s) => s.key === activeKey)?.element ?? null
+  const element = SECTIONS.find((s) => s.key === activeKey)?.element
+  return element ? <Page width="lg">{element}</Page> : null
 }

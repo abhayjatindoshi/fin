@@ -6,7 +6,7 @@ import { Icon } from "@/ui/icon"
 import { Input } from "@/ui/input"
 import { Button } from "@/ui/button"
 import { Spinner } from "@/ui/spinner"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet"
+import { AdaptiveSurface, SurfaceBody } from "@/components/adaptive-surface"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/providers/app-provider"
 import { useObservable } from "@/providers/use-observable"
@@ -171,21 +171,31 @@ function EntityDetail({ entityName, isMobile }: {
     />
   )
 
+  // The selected-row JSON: a persistent side panel on desktop, a bottom sheet
+  // on mobile — one AdaptiveSurface (inline vs sheet) instead of two code paths.
+  const detail = (
+    <AdaptiveSurface
+      open={selectedRow !== null}
+      onOpenChange={(open) => { if (!open) setSelectedRow(null) }}
+      title={<span className="block truncate font-mono text-xs">{selectedRow?.id}</span>}
+      content={
+        <SurfaceBody className="overflow-auto">
+          <pre className="whitespace-pre-wrap break-all text-xs">
+            {selectedRow ? JSON.stringify(selectedRow, null, 2) : ""}
+          </pre>
+        </SurfaceBody>
+      }
+      desktop={{ type: "inline", props: { className: "w-1/3 shrink-0 overflow-auto rounded-lg border" } }}
+      mobile={{ type: "sheet", props: { side: "bottom", className: "max-h-[80vh]" } }}
+    />
+  )
+
   if (isMobile) {
     return (
       <>
         {header}
         <RowCards rows={filteredRows} loading={loading} onSelect={setSelectedRow} />
-        <Sheet open={selectedRow !== null} onOpenChange={(open) => { if (!open) setSelectedRow(null) }}>
-          <SheetContent side="bottom" className="max-h-[80vh]">
-            <SheetHeader>
-              <SheetTitle className="truncate font-mono text-xs">{selectedRow?.id}</SheetTitle>
-            </SheetHeader>
-            <pre className="overflow-auto whitespace-pre-wrap break-all p-4 pt-0 text-xs">
-              {selectedRow ? JSON.stringify(selectedRow, null, 2) : ""}
-            </pre>
-          </SheetContent>
-        </Sheet>
+        {detail}
       </>
     )
   }
@@ -198,11 +208,7 @@ function EntityDetail({ entityName, isMobile }: {
           <RowTable rows={filteredRows} loading={loading} selectedId={selectedRow?.id ?? null} onSelect={setSelectedRow} />
         </div>
       </div>
-      {selectedRow && (
-        <div className="w-1/3 shrink-0 overflow-auto rounded-lg border">
-          <JsonPanel row={selectedRow} onClose={() => { setSelectedRow(null) }} />
-        </div>
-      )}
+      {detail}
     </>
   )
 }
@@ -379,17 +385,4 @@ function formatCell(value: unknown): string {
     return value.toString()
   }
   return JSON.stringify(value)
-}
-
-// ── JSON views ──────────────────────────────────────────
-
-function JsonPanel({ row, onClose }: { row: Row; onClose: () => void }) {
-  return (
-    <div className="relative p-2">
-      <Button variant="ghost" size="icon-sm" className="absolute right-2 top-2" onClick={onClose}>
-        <Icon name="x" className="size-4" />
-      </Button>
-      <pre className="overflow-auto whitespace-pre-wrap break-all text-xs">{JSON.stringify(row, null, 2)}</pre>
-    </div>
-  )
 }

@@ -24,6 +24,7 @@ type SheetProps = Omit<ComponentProps<typeof SheetContent>, "children">
 type PopoverProps = Omit<ComponentProps<typeof PopoverContent>, "children">
 type DrawerProps = Omit<ComponentProps<typeof DrawerContent>, "children">
 type DrawerDirection = ComponentProps<typeof Drawer>["direction"]
+type InlineProps = Omit<ComponentProps<"div">, "children"> & { readonly showCloseButton?: boolean }
 
 /**
  * Which overlay primitive to render for a given breakpoint, plus the
@@ -33,6 +34,7 @@ export type SurfaceSpec =
   | { readonly type: "dialog"; readonly props?: DialogProps }
   | { readonly type: "sheet"; readonly props?: SheetProps }
   | { readonly type: "popover"; readonly props?: PopoverProps }
+  | { readonly type: "inline"; readonly props?: InlineProps }
   | {
       readonly type: "drawer"
       readonly props?: {

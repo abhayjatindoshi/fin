@@ -17,7 +17,8 @@ import { AccountCell } from "@/features/transactions/containers/account-cell"
 import { FilterSheet } from "./containers/filter-sheet"
 import { FilterBar } from "./containers/filter-bar"
 import { ActiveFilters } from "./containers/active-filters"
-import { PrimarySlot, SecondarySlot } from "@/features/shell/app-shell-provider"
+import { PrimarySlot, SecondarySlot, useChromeOffsets } from "@/features/shell/app-shell-provider"
+import { Page } from "@/templates/page"
 
 function EmptyState() {
   return (
@@ -51,9 +52,10 @@ export function TransactionsPage() {
   const { filtered, clearAll } = filterState
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Page chrome (search + filters) now lives in the AppBar; month headers pin
-  // just below the floating bar.
-  const stickyTop = 72
+  // Month headers pin just below the floating chrome. Track the shell's real
+  // offset (via useChromeOffsets) so they stay correct when the filter bar
+  // adds a line — instead of a hard-coded number that ignores it.
+  const { top: stickyTop } = useChromeOffsets()
 
   // Warm the bank-icons pack so account marks render in a single chunk
   // instead of each `<AccountIcon>` triggering its own dynamic import.
@@ -86,7 +88,7 @@ export function TransactionsPage() {
   }
 
   return (
-    <div className="flex flex-col">
+    <Page width="full" className="flex flex-col">
       {isMobile ? (
         <>
           <PrimarySlot>
@@ -149,6 +151,6 @@ export function TransactionsPage() {
           <TransactionDetail tx={selectedTx} onClose={() => { setSelectedId(null) }} />
         )}
       </div>
-    </div>
+    </Page>
   )
 }

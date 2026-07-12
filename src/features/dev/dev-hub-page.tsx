@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Navigate, useParams } from "react-router"
 import { useApp } from "@/providers/app-provider"
 import { useAppShell } from "@/features/shell/app-shell-provider"
+import { Page } from "@/templates/page"
 import { SubNavPage } from "@/features/shell/sub-nav-page"
 import { LoggingSection } from "@/features/dev/sections/logging-section"
 import { ComponentsSection } from "@/features/dev/sections/components-section"
@@ -46,5 +47,6 @@ export function DevHubPage() {
     return <Navigate to={`${base}/${available[0].key}`} replace />
   }
 
-  return available.find((s) => s.key === activeKey)?.element ?? null
+  const element = available.find((s) => s.key === activeKey)?.element
+  return element ? <Page width="lg">{element}</Page> : null
 }

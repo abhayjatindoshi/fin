@@ -28,7 +28,7 @@ export function LobbyTemplate({ children }: { readonly children: ReactNode }) {
           </>
         )}
       </div>
-      <div className="flex w-full max-w-4xl flex-col items-center gap-6 px-4">
+      <div className="flex w-full max-w-4xl flex-col items-center gap-6 px-(--gutter)">
         <Logo className="h-12 w-auto" />
         {children}
       </div>

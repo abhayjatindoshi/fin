@@ -4,6 +4,7 @@ import { getAccountDisplay } from "@/catalog/account-display"
 import { KIND_DISPLAY } from "@/catalog/bank-display"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
+import { Page } from "@/templates/page"
 import type { Account } from "@/entities"
 import type { AccountView } from "@/views/account-view"
 import { buildAccountCardModel } from "./account-card-model"
@@ -32,14 +33,14 @@ export function AccountsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <Page width="lg" className="flex flex-col gap-4">
       <h1 className="text-lg font-semibold">Accounts</h1>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {accounts.map((account) => (
           <AccountCard key={account.id} account={account} />
         ))}
       </div>
-    </div>
+    </Page>
   )
 }
 

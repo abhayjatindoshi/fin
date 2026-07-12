@@ -131,6 +131,29 @@
     --glass-border: oklch(from var(--foreground) l c h / 0.12);
 }
 
+/* ─── Layout gutter tokens ───────────────────────────── */
+
+:root {
+    /* Base gutter — the single spacing size shared by pages and surfaces.
+       Responsive: flips at the same 768px cutoff as MOBILE_BREAKPOINT
+       (app-provider.tsx) so it tracks the JS `isMobile` used elsewhere.
+       Defined on :root so body-portalled surfaces inherit it too. */
+    --gutter: --spacing(4);
+
+    /* Role + axis tokens — default to the base; override any to give page vs
+       surface, or horizontal vs vertical, different sizes. */
+    --page-gutter-x: var(--gutter);
+    --page-gutter-y: var(--gutter);
+    --surface-gutter-x: var(--gutter);
+    --surface-gutter-y: var(--gutter);
+}
+
+@media (width >= 768px) {
+    :root {
+        --gutter: --spacing(6);
+    }
+}
+
 @keyframes fade-out {
     from {
         opacity: 1;
@@ -225,6 +248,39 @@
         opacity: 0.22;
         filter: blur(0.2px);
     }
+}
+
+/* ─── Page / surface gutter boxes ────────────────────── */
+
+/* Each box adopts its role tokens into the effective --gutter-x / --gutter-y
+   that both padding and the bleed utilities read. A page/surface can override
+   --gutter-x / --gutter-y inline (via the gutter / gutterX / gutterY props). */
+@utility page-box {
+    --gutter-x: var(--page-gutter-x);
+    --gutter-y: var(--page-gutter-y);
+    padding-inline: var(--gutter-x);
+    padding-block: var(--gutter-y);
+}
+
+@utility surface-box {
+    --gutter-x: var(--surface-gutter-x);
+    --gutter-y: var(--surface-gutter-y);
+    padding-inline: var(--gutter-x);
+    padding-block: var(--gutter-y);
+}
+
+/* Break a child out of the enclosing box's gutter on an axis (or both). */
+@utility bleed {
+    margin-inline: calc(-1 * var(--gutter-x, var(--gutter)));
+    margin-block: calc(-1 * var(--gutter-y, var(--gutter)));
+}
+
+@utility bleed-x {
+    margin-inline: calc(-1 * var(--gutter-x, var(--gutter)));
+}
+
+@utility bleed-y {
+    margin-block: calc(-1 * var(--gutter-y, var(--gutter)));
 }
 
 /* ─── Glass surface ──────────────────────────────────── */
