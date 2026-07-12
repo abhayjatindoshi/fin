@@ -33,11 +33,10 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
         onOpenChange={setOpen}
         title="Filters"
         trigger={
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             aria-label="Filters"
-            className="pill glass relative aspect-square shrink-0 border border-border"
+            className="pill glass relative aspect-square shrink-0 cursor-pointer border border-border hover:bg-muted hover:text-foreground aria-expanded:bg-muted"
           >
             <Icon name="sliders-horizontal" />
             {activeCount > 0 && (
@@ -45,7 +44,7 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
                 {activeCount}
               </span>
             )}
-          </Button>
+          </button>
         }
         content={
           <div className="flex flex-col gap-2.5 px-4 pb-4">

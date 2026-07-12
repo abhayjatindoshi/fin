@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { tagIconName } from "@/catalog/icon-resolve"
 import { cn } from "@/lib/utils"
@@ -33,9 +32,13 @@ export function TagSelect({ state, className }: FilterControlProps) {
       selectedTagId={selectedId ?? null}
       onSelect={onSelect}
     >
-      <Button
-        variant="ghost"
-        className={cn("pill px-3", "w-full justify-start font-light", className)}
+      <button
+        type="button"
+        className={cn(
+          "pill cursor-pointer px-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+          "w-full justify-start font-light",
+          className,
+        )}
       >
         <Icon
           name={selected ? tagIconName(selected) : "hash"}
@@ -43,7 +46,7 @@ export function TagSelect({ state, className }: FilterControlProps) {
         />
         <span className="truncate">{selected ? selected.name : "All tags"}</span>
         <Icon name="chevron-down" className="text-muted-foreground" />
-      </Button>
+      </button>
     </TagPicker>
   )
 }

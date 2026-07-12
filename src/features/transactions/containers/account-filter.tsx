@@ -1,4 +1,3 @@
-import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import {
   DropdownMenu,
@@ -34,14 +33,18 @@ export function AccountFilter({ state, className }: FilterControlProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn("pill px-3", "w-full justify-start font-light", className)}
+        <button
+          type="button"
+          className={cn(
+            "pill cursor-pointer px-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+            "w-full justify-start font-light",
+            className,
+          )}
         >
           <Icon name={onlyAccount ? getAccountDisplay(onlyAccount).icon : "landmark"} />
           <span className="truncate">{label}</span>
           <Icon name="chevron-down" className="text-muted-foreground" />
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-80 w-72 overflow-auto">
         <DropdownMenuItem onClick={() => { patch({ accountIds: [] }) }}>

@@ -1,4 +1,3 @@
-import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { cn } from "@/lib/utils"
 import type { FilterControlProps } from "../types"
@@ -8,13 +7,17 @@ export function SortControl({ state, className }: FilterControlProps) {
   const { filter, patch } = state
   const desc = filter.sort === "desc"
   return (
-    <Button
-      variant="ghost"
-      className={cn("pill px-3", "w-full justify-start font-light", className)}
+    <button
+      type="button"
+      className={cn(
+        "pill cursor-pointer px-3 hover:bg-muted hover:text-foreground",
+        "w-full justify-start font-light",
+        className,
+      )}
       onClick={() => { patch({ sort: desc ? "asc" : "desc" }) }}
     >
       <Icon name={desc ? "arrow-down-wide-narrow" : "arrow-up-narrow-wide"} />
       {desc ? "Newest first" : "Oldest first"}
-    </Button>
+    </button>
   )
 }
