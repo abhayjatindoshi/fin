@@ -22,9 +22,11 @@ export type TransactionVirtualizerProps = {
   readonly transactions: readonly TransactionRow[]
   readonly rowHeight: number
   readonly headerHeight: number
-  /** Offset (px) at which the active month header pins, so it stops below any
-   *  sticky chrome above the list (the filter bar) instead of the viewport top. */
-  readonly stickyTop?: number
+  /** Where the active month header pins, so it stops below the floating chrome
+   *  instead of the viewport top. A CSS length or number (px); pass a
+   *  `calc(var(--chrome-top) + var(--gutter-top))` so it tracks the chrome +
+   *  any page gutter the list sits inside. */
+  readonly stickyTop?: number | string
   /** The scroll container the list virtualizes against — injected by the caller
    *  so this view stays free of app context. */
   readonly scrollElementRef: RefObject<HTMLDivElement | null>
@@ -62,7 +64,7 @@ function buildItems(transactions: readonly TransactionRow[]): {
   return { items, stickyIndices }
 }
 
-function itemStyle(item: VirtualItem, header: boolean, active: boolean, stickyTop: number): CSSProperties {
+function itemStyle(item: VirtualItem, header: boolean, active: boolean, stickyTop: number | string): CSSProperties {
   const style: CSSProperties = { top: 0, left: 0, width: "100%", height: `${item.size}px` }
   if (header) style.zIndex = 9
   if (active) {

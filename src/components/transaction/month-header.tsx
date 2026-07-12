@@ -17,7 +17,7 @@ export type MonthHeaderProps = RenderHeaderArgs
 export function MonthHeader({ monthStart, count, active }: MonthHeaderProps) {
   const pill = active && "glass rounded-full border px-4"
   return (
-    <div className="flex flex-row items-center justify-between py-1">
+    <div className="flex flex-row items-center justify-between">
       <span className={cn("flex h-9 w-fit items-center font-semibold text-muted-foreground", pill)}>
         {MONTH_FMT.format(monthStart)}
       </span>

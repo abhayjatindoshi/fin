@@ -162,11 +162,20 @@
         --gutter: --spacing(6);
 
         /* Desktop widens the page's left/right gutters. */
-        --page-gutter-right: --spacing(24); /* 96px */
-        --page-gutter-left: --spacing(24); /* 96px */
+        --page-gutter-right: --spacing(30); /* 120px */
+        --page-gutter-left: --spacing(30); /* 120px */
 
-        /* Desktop drops the page's top padding. */
-        --page-gutter-top: 0;
+        /* Keep a length unit (not a bare 0) so the token composes inside
+           calc() — e.g. the sticky month-header pin does
+           `calc(var(--chrome-top) + var(--gutter-top))`, and `<length> + 0`
+           (unitless) is invalid CSS, which would drop the pin to `top: auto`. */
+        --page-gutter-top: 0px;
+    }
+}
+
+@media (width < 768px) {
+    :root {
+        --page-gutter-top: --spacing(1);
     }
 }
 

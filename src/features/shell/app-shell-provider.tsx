@@ -55,7 +55,7 @@ function useShell(): ShellContextValue {
 // so the content padding always tracks the visual chrome. `PILL_GAP` mirrors
 // `--pill-gap` in index.css (the gap between stacked pill rows); `SPACE` is the
 // edge inset / content clearance (`top-4` / `bottom-4`).
-const SPACE = 16 // edge insets + chrome→content clearance
+const SPACE = 12 // edge insets + chrome→content clearance
 const PILL_GAP = 8 // gap between stacked pill rows — mirror of --pill-gap (index.css)
 const PILL_DESKTOP = 40 // .pill height on desktop (h-10)
 const PILL_MOBILE = 48 // .pill height on mobile (h-12)
