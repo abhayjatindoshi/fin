@@ -47,12 +47,13 @@ describe("BANK_DISPLAY ↔ adapters BANK_CATALOG parity", () => {
     }
   })
 
-  it("gives every bank a non-empty label and icon, and every offering a label", () => {
+  it("gives every bank a non-empty label and icon, and every offering a label + slang", () => {
     for (const [bankId, display] of Object.entries(BANK_DISPLAY)) {
       expect(display.label.length, `${bankId} label`).toBeGreaterThan(0)
       expect(display.icon.length, `${bankId} icon`).toBeGreaterThan(0)
       for (const [offeringId, offering] of Object.entries(display.offerings)) {
         expect(offering.label.length, `${bankId}/${offeringId} label`).toBeGreaterThan(0)
+        expect(offering.slang.length, `${bankId}/${offeringId} slang`).toBeGreaterThan(0)
       }
     }
   })

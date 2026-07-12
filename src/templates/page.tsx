@@ -1,20 +1,8 @@
 import type { CSSProperties, ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
-/** Content-column widths for the page's centred max-width box. */
-const WIDTHS = {
-  sm: "28rem",
-  md: "42rem",
-  lg: "64rem",
-  full: "100%",
-} as const
-
-export type PageWidth = keyof typeof WIDTHS
-
 export type PageProps = {
   readonly children: ReactNode
-  /** Max width of the centred content column. Default `md`. */
-  readonly width?: PageWidth
   /** Override every gutter side for this page (e.g. `--spacing(2)`). */
   readonly gutter?: string
   /** Override the top gutter only. */
@@ -29,10 +17,10 @@ export type PageProps = {
 }
 
 /**
- * The standard page box: a centred, max-width column padded by the shared
- * gutter tokens (`--page-gutter-*`, responsive off `--gutter`). Children that
- * need to reach the edge use `<Bleed>`. Pages that want total control (e.g.
- * virtualized lists) can skip `<Page>` and render straight into the shell.
+ * The standard page box: a full-width column padded by the shared gutter tokens
+ * (`--page-gutter-*`, responsive off `--gutter`). Children that need to reach
+ * the edge use `<Bleed>`. Pages that want total control (e.g. virtualized
+ * lists) can skip `<Page>` and render straight into the shell.
  *
  * The `gutter*` props set the effective `--gutter-top` / `-right` / `-bottom` /
  * `-left` inline, so both the padding here and any `<Bleed>` inside track the
@@ -40,7 +28,6 @@ export type PageProps = {
  */
 export function Page({
   children,
-  width = "full",
   gutter,
   gutterTop,
   gutterRight,
@@ -53,7 +40,6 @@ export function Page({
   const bottom = gutterBottom ?? gutter
   const left = gutterLeft ?? gutter
   const style = {
-    "--page-w": WIDTHS[width],
     ...(top ? { "--gutter-top": top } : {}),
     ...(right ? { "--gutter-right": right } : {}),
     ...(bottom ? { "--gutter-bottom": bottom } : {}),
@@ -61,7 +47,7 @@ export function Page({
   } as CSSProperties
 
   return (
-    <div data-slot="page" className={cn("page-box mx-auto w-full max-w-(--page-w)", className)} style={style}>
+    <div data-slot="page" className={cn("page-box w-full", className)} style={style}>
       {children}
     </div>
   )

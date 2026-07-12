@@ -35,6 +35,7 @@ import type { PromptAnswer } from "./import-context"
 import { runFileImport, type FileImportResult } from "./file-import-context"
 import { runEmailImport, type EmailResult, type EmailRunProgress } from "./email-import-context"
 import { CancelledError, EmailPasswordError, findMatchingAccounts, mergeMetadata } from "./import-utils"
+import { getOfferingSlang } from "@/catalog/bank-display"
 import { log } from "@/lib/log"
 
 // ── Active context entry ────────────────────────────────
@@ -632,7 +633,12 @@ export class ImportService implements Disposable {
     )
     return this.accountRepo.save({
       kind: result.importData.kind,
-      name: result.importData.bankId,
+      name:
+        buildDefaultName(
+          result.importData.account,
+          result.importData.bankId,
+          result.importData.offeringId,
+        ) || result.importData.bankId,
       currency: result.importData.account.currency,
       ...(statement && { statement }),
       bankId: result.importData.bankId,
@@ -641,15 +647,12 @@ export class ImportService implements Disposable {
     })
   }
 
-  private createAccountFromEmail(
-    emailResult: EmailResult,
-    account: Connection & BaseEntity,
-  ): string {
+  private createAccountFromEmail(emailResult: EmailResult, account: Connection & BaseEntity): string {
     const [bankId, offeringId] = emailResult.adapterId.split("/")
     const statement = toAccountStatement(emailResult.statement, emailResult.transactions)
     return this.accountRepo.save({
       kind: emailResult.kind,
-      name: bankId || account.email,
+      name: buildDefaultName(emailResult.accountDetails, bankId, offeringId) || account.email,
       currency: emailResult.accountDetails.currency,
       ...(statement && { statement }),
       bankId,
@@ -666,10 +669,7 @@ export class ImportService implements Disposable {
    * second email reuse the account the first one just created instead of
    * spawning a duplicate.
    */
-  private resolveOrCreateEmailAccount(
-    emailResult: EmailResult,
-    account: Connection & BaseEntity,
-  ): string {
+  private resolveOrCreateEmailAccount(emailResult: EmailResult, account: Connection & BaseEntity): string {
     const [bankId] = emailResult.adapterId.split("/")
     const matches = findMatchingAccounts(this.accountRepo.query(), bankId, emailResult.kind, emailResult.accountDetails)
     if (matches.length > 0) {
@@ -779,6 +779,25 @@ function toAccountStatement(
     ...(summary.minimumDue !== undefined && { minimumDue: summary.minimumDue }),
     ...(summary.dueDate !== undefined && { dueDate: summary.dueDate }),
   }
+}
+
+/**
+ * Seed a new account's name from the offering slang + masked account number,
+ * e.g. "HDFC ****1234". Falls back to just the slang (or `bankId`), then to the
+ * masked number alone. Returns "" when nothing is known — the caller supplies a
+ * final fallback (bank id for files, mailbox email for email imports).
+ */
+function buildDefaultName(
+  account: import("@pai-app/adapters").AccountDetails,
+  bankId: string,
+  offeringId: string,
+): string {
+  const slang = getOfferingSlang(bankId, offeringId) ?? bankId
+  const first = account.accountNumber?.[0]
+  const last4 = first ? first.replace(/\D/g, "").slice(-4) : ""
+  if (slang && last4) return `${slang} ****${last4}`
+  if (slang) return slang
+  return last4 ? `****${last4}` : ""
 }
 
 function buildMetadata(

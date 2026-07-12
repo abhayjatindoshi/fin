@@ -8,7 +8,7 @@ import { BANK_DISPLAY, KIND_DISPLAY } from "@/catalog/bank-display"
  * `BANK_DISPLAY` / `KIND_DISPLAY` catalog so every surface renders identically.
  */
 describe("getAccountDisplay", () => {
-  it("uses the bank brand label, offering sublabel, icon and color when both are known", () => {
+  it("uses a custom account name as the label and brand · offering as the sublabel when both are known", () => {
     const bank = BANK_DISPLAY.hdfc
 
     const display = getAccountDisplay({
@@ -20,13 +20,28 @@ describe("getAccountDisplay", () => {
 
     expect(display).toEqual({
       icon: bank.icon,
-      label: bank.label,
-      sublabel: bank.offerings.savings.label,
+      label: "My HDFC",
+      sublabel: `${bank.label} · ${bank.offerings.savings.label}`,
       color: bank.color,
     })
   })
 
-  it("falls back to the kind label when the bank is known but the offering is not", () => {
+  it("shows the bank brand as the label and just the offering as the sublabel when the name is the auto default", () => {
+    const bank = BANK_DISPLAY.hdfc
+
+    const display = getAccountDisplay({
+      name: `${bank.offerings.savings.slang} ****1234`,
+      maskedNumber: "****1234",
+      kind: "bank",
+      bankId: "hdfc",
+      offeringId: "savings",
+    })
+
+    expect(display.label).toBe(bank.label)
+    expect(display.sublabel).toBe(bank.offerings.savings.label)
+  })
+
+  it("prefixes the brand onto the kind-label sublabel when the bank is known but the offering is not", () => {
     const bank = BANK_DISPLAY.hdfc
 
     const display = getAccountDisplay({
@@ -36,19 +51,19 @@ describe("getAccountDisplay", () => {
       offeringId: "not-a-real-offering",
     })
 
-    expect(display.label).toBe(bank.label)
-    expect(display.sublabel).toBe(KIND_DISPLAY.bank.label)
+    expect(display.label).toBe("My HDFC")
+    expect(display.sublabel).toBe(`${bank.label} · ${KIND_DISPLAY.bank.label}`)
     expect(display.color).toBe(bank.color)
   })
 
-  it("falls back to the kind label when the bank is known but no offeringId is supplied", () => {
+  it("prefixes the brand onto the kind-label sublabel when the bank is known but no offeringId is supplied", () => {
     const display = getAccountDisplay({
       name: "My HDFC",
       kind: "bank",
       bankId: "hdfc",
     })
 
-    expect(display.sublabel).toBe(KIND_DISPLAY.bank.label)
+    expect(display.sublabel).toBe(`${BANK_DISPLAY.hdfc.label} · ${KIND_DISPLAY.bank.label}`)
   })
 
   it("falls back to the account name, kind icon and kind label when the bank is unknown", () => {
@@ -93,8 +108,8 @@ describe("getAccountDisplay", () => {
     })
 
     expect(display.icon).toBe("star")
-    // The rest of the chain still resolves from the bank.
-    expect(display.label).toBe(bank.label)
+    // The label is the personal name; brand still drives the color.
+    expect(display.label).toBe("My HDFC")
     expect(display.color).toBe(bank.color)
   })
 })

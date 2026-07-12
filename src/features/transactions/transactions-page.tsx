@@ -89,7 +89,7 @@ export function TransactionsPage() {
   }
 
   return (
-    <Page width="full" className="flex flex-col">
+    <Page className="flex flex-col">
       {isMobile ? (
         <>
           <PrimarySlot>
