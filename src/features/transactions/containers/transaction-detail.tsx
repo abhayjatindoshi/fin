@@ -208,7 +208,7 @@ export function TransactionDetail({ tx, onClose }: TransactionDetailProps) {
   }
 
   return (
-    <div className="sticky top-20 h-[calc(100vh-6rem)] w-96 overflow-y-auto rounded-xl border">
+    <div className="sticky top-[var(--chrome-top)] h-[calc(100dvh-var(--chrome-top)-var(--chrome-bottom))] w-96 overflow-y-auto rounded-xl border">
       <button type="button" onClick={onClose} className={cn("m-2 ml-auto block cursor-pointer")}>
         <Icon name="x" className="size-5" />
       </button>

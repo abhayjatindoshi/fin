@@ -146,6 +146,16 @@ export function useAppShell(options?: { readonly subNav?: SubNav }): { activeKey
   return { activeKey }
 }
 
+/**
+ * The shell's computed chrome offsets (px) — the top/bottom padding that clears
+ * the floating nav/sub-nav. Pages use it for sticky offsets instead of
+ * hard-coded numbers, so they stay correct as the chrome grows.
+ */
+export function useChromeOffsets(): { readonly top: number; readonly bottom: number } {
+  const { chromeTop, chromeBottom } = useShell()
+  return { top: chromeTop, bottom: chromeBottom }
+}
+
 /** Portal a page's chrome (search/filters) into the shell's primary slot. */
 export function PrimarySlot({ children }: { readonly children: ReactNode }) {
   return <SlotPortal name="primary">{children}</SlotPortal>

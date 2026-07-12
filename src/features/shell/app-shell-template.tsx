@@ -85,9 +85,10 @@ export function AppShellTemplate() {
   const setSecondary = useCallback((el: HTMLElement | null) => { setNode("secondary", el) }, [setNode])
 
   const contentStyle = {
-    paddingTop: chromeTop,
-    paddingBottom: chromeBottom,
+    paddingTop: "var(--chrome-top)",
+    paddingBottom: "var(--chrome-bottom)",
     "--chrome-top": `${String(chromeTop)}px`,
+    "--chrome-bottom": `${String(chromeBottom)}px`,
   } as CSSProperties
 
   if (isMobile) {
@@ -140,7 +141,7 @@ export function AppShellTemplate() {
         />
       </div>
 
-      <div style={contentStyle} className="mx-24">
+      <div style={contentStyle}>
         <Outlet />
       </div>
 
