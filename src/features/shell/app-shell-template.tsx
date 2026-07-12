@@ -94,7 +94,7 @@ export function AppShellTemplate() {
   if (isMobile) {
     return (
       <div className="w-full">
-        <div className="absolute inset-x-0 top-4 z-20 flex flex-col gap-2 px-2">
+        <div className="absolute inset-x-0 top-4 z-20 flex flex-col gap-2 px-4">
           {subNav && <MobileSubNav subNav={subNav} />}
           <div
             ref={setPrimary}
@@ -110,7 +110,7 @@ export function AppShellTemplate() {
           <Outlet />
         </div>
 
-        <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-2">
+        <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-4">
           <NavMenu variant="icons" />
         </div>
 
@@ -128,7 +128,7 @@ export function AppShellTemplate() {
           <NavMenu variant="labels" />
           <div
             ref={setPrimary}
-            className="flex min-w-0 flex-1 items-center gap-2"
+            className="flex min-w-0 flex-1 items-center gap-4"
           />
           <YearPill />
           <NotificationsSheet />

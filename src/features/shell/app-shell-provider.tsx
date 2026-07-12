@@ -51,11 +51,20 @@ function useShell(): ShellContextValue {
 
 // ─── Offset computation (provider's job) ──────────────────
 
-const DESKTOP_BASE = 72 // line-1 bar + top margin
-const LINE = 48 // each extra desktop line (sub-nav / secondary)
-const MOBILE_ROW = 48 // each mobile top row (primary / secondary)
-const MOBILE_TOP_BASE = 16
-const MOBILE_BOTTOM = 72 // bottom nav + margin
+// One spacing unit drives every gap, inset, and the content clearance, so the
+// chrome padding always matches the visual rhythm between the floating pills.
+// Keep in sync with the shell template's `gap-4` / `top-4` / `bottom-4` and the
+// `.pill` heights (`h-12` mobile → `md:h-10` desktop).
+const SPACE = 16 // unified spacing: pill gaps, row gaps, edge insets, clearance
+const PILL_DESKTOP = 40 // .pill height on desktop (h-10)
+const PILL_MOBILE = 48 // .pill height on mobile (h-12)
+
+// A stacked chrome line = one pill-height row plus the gap above it.
+const DESKTOP_LINE = PILL_DESKTOP + SPACE // extra desktop line (sub-nav / secondary)
+// Base = top inset + the line-1 bar + the clearance before content.
+const DESKTOP_BASE = SPACE + PILL_DESKTOP + SPACE
+const MOBILE_ROW = PILL_MOBILE + SPACE // each mobile top row (primary / secondary / sub-nav)
+const MOBILE_BOTTOM = SPACE + PILL_MOBILE + SPACE // bottom nav + margin + clearance
 
 function computeOffsets(
   isMobile: boolean,
@@ -65,10 +74,10 @@ function computeOffsets(
   if (isMobile) {
     const rows =
       (filled.primary ? 1 : 0) + (filled.secondary ? 1 : 0) + (hasSubNav ? 1 : 0)
-    return { top: MOBILE_TOP_BASE + rows * MOBILE_ROW, bottom: MOBILE_BOTTOM }
+    return { top: SPACE + rows * MOBILE_ROW, bottom: MOBILE_BOTTOM }
   }
-  const top = DESKTOP_BASE + (hasSubNav ? LINE : 0) + (filled.secondary ? LINE : 0)
-  return { top, bottom: 16 }
+  const top = DESKTOP_BASE + (hasSubNav ? DESKTOP_LINE : 0) + (filled.secondary ? DESKTOP_LINE : 0)
+  return { top, bottom: SPACE }
 }
 
 // ─── Provider ─────────────────────────────────────────────
