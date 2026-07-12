@@ -3,7 +3,6 @@ import { Button } from "@/ui/button"
 import { Currency } from "@/components/currency"
 import { Icon } from "@/ui/icon"
 import { Money } from "@/components/money"
-import { Pill } from "@/ui/pill"
 import { PillBar } from "@/ui/pill-bar"
 import { tagIconName } from "@/catalog/icon-resolve"
 import { Text } from "@/ui/text"
@@ -89,25 +88,26 @@ export function ComponentsSection() {
       </Section>
 
       <Section title="Pill">
-        <Pill variant="label">Label</Pill>
-        <Pill variant="label" active>Active</Pill>
-        <Pill variant="label" interactive>
+        <span className="pill glass px-3">Label</span>
+        <button type="button" className="pill glass cursor-pointer px-3">
           <Icon name="calendar" />
           <span>With icon</span>
           <Icon name="chevron-down" />
-        </Pill>
-        <Pill variant="icon">
+        </button>
+        <button type="button" className="pill glass aspect-square cursor-pointer p-0">
           <Icon name="user" />
-        </Pill>
-        <Pill variant="tight">
+        </button>
+        <span className="pill glass px-2">
           <Logo className="h-5 w-auto" />
-        </Pill>
+        </span>
+        <span className="pill px-3 ring-1 ring-border">Flat (no glass)</span>
       </Section>
 
       <Section title="Pill bar">
         <div className="w-full max-w-md">
           <PillBar
-            className="glass h-10 min-w-0 rounded-full px-1.5"
+            surface="glass"
+            className="min-w-0"
             items={Array.from({ length: 4 }, (_, i) => ({
               key: String(i),
               element: <span className="relative z-10">Item {i + 1}</span>,

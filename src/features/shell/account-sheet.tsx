@@ -5,7 +5,6 @@ import { AdaptiveSurface } from "@/components/adaptive-surface"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Avatar, AvatarFallback } from "@/ui/avatar"
 import { Icon } from "@/ui/icon"
-import { Pill } from "@/ui/pill"
 import { cn } from "@/lib/utils"
 import { getInitials } from "@/lib/text"
 import { getColor } from "@/lib/colors"
@@ -18,7 +17,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/ui/dropdown-menu"
-import { pillVariants } from "@/ui/pill"
 import { YearPill } from "@/features/shell/year-pill"
 import { useSyncStatus, syncIcon } from "@/features/shell/sync-status"
 
@@ -57,7 +55,7 @@ function HouseholdPicker({ onNavigate }: { readonly onNavigate: () => void }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn(pillVariants({ variant: "label", interactive: true }), "min-w-0 flex-1 justify-start")}
+          className={cn("pill cursor-pointer px-3", "min-w-0 flex-1 justify-start")}
         >
           <Icon name="home" className="size-4 shrink-0 text-muted-foreground" />
           <span className="truncate">{current?.name ?? "Household"}</span>
@@ -118,11 +116,13 @@ export function AccountSheet({ className, bare = false }: AccountSheetProps) {
       <Icon name="user" className="size-4" />
     </button>
   ) : (
-    <Pill asChild variant="icon" interactive className={className}>
-      <button type="button" aria-label="Account menu">
-        <Icon name="user" className="size-4 text-muted-foreground" />
-      </button>
-    </Pill>
+    <button
+      type="button"
+      aria-label="Account menu"
+      className={cn("pill glass aspect-square cursor-pointer p-0", className)}
+    >
+      <Icon name="user" className="size-4 text-muted-foreground" />
+    </button>
   )
 
   return (

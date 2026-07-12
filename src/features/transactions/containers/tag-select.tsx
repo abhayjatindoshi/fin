@@ -3,7 +3,6 @@ import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { tagIconName } from "@/catalog/icon-resolve"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import type { TagView } from "@/views/tag-view"
@@ -36,7 +35,7 @@ export function TagSelect({ state, className }: FilterControlProps) {
     >
       <Button
         variant="ghost"
-        className={cn(pillVariants({ variant: "label", interactive: true }), "w-full justify-start font-light", className)}
+        className={cn("pill px-3", "w-full justify-start font-light", className)}
       >
         <Icon
           name={selected ? tagIconName(selected) : "hash"}

@@ -35,7 +35,7 @@ function SubNavBar({ subNav }: { readonly subNav: SubNav }) {
   }))
 
   return (
-    <PillBar items={items} className="glass h-10 w-fit max-w-full rounded-full px-1.5" />
+    <PillBar items={items} surface="glass" className="w-fit max-w-full" />
   )
 }
 

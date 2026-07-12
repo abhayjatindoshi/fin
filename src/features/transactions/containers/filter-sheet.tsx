@@ -16,9 +16,6 @@ export type FilterSheetProps = {
   readonly ref?: Ref<HTMLDivElement>
 }
 
-/** Strips the pill's glass fill/border/blur so controls blend into the glass sheet. */
-const FLAT_PILL = "border-transparent bg-transparent backdrop-blur-none"
-
 /**
  * Mobile filtering — a collapsible search pill and a filter pill (with an
  * active-count badge) that opens a bottom sheet of stacked controls. Live
@@ -40,7 +37,7 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
             variant="ghost"
             size="icon"
             aria-label="Filters"
-            className="glass relative size-10 shrink-0 rounded-full border border-border"
+            className="pill glass relative aspect-square shrink-0 border border-border"
           >
             <Icon name="sliders-horizontal" />
             {activeCount > 0 && (
@@ -53,16 +50,16 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
         content={
           <div className="flex flex-col gap-2.5 px-4 pb-4">
             <Field label="Sort">
-              <SortControl state={state} className={FLAT_PILL} />
+              <SortControl state={state} />
             </Field>
             <Field label="Accounts">
-              <AccountFilter state={state} className={FLAT_PILL} />
+              <AccountFilter state={state} />
             </Field>
             <Field label="Status">
-              <TagToggle state={state} className={FLAT_PILL} />
+              <TagToggle state={state} />
             </Field>
             <Field label="Tag">
-              <TagSelect state={state} className={FLAT_PILL} />
+              <TagSelect state={state} />
             </Field>
             <Field label="Amount">
               <AmountRange state={state} />

@@ -10,7 +10,6 @@ import {
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 
 const MONTH_SHORT = [
   "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -102,7 +101,7 @@ export function YearPill({ className }: YearPillProps) {
         <button
           type="button"
           aria-label="Select year"
-          className={cn(pillVariants({ variant: "label", interactive: true }), "font-medium", className)}
+          className={cn("pill glass cursor-pointer px-3 font-medium", className)}
         >
           <Icon name="calendar" className="size-4 text-muted-foreground" />
           <span className="flex items-center gap-1">{formatYearTrigger(year, firstMonth)}</span>

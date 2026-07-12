@@ -1,7 +1,6 @@
 import { Icon } from "@/ui/icon"
 import { Input } from "@/ui/input"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import type { FilterControlProps } from "@/views/filter-control-props"
 
 export type SearchBarProps = FilterControlProps & {
@@ -18,7 +17,7 @@ export function SearchBar({ state, className, autoFocus }: SearchBarProps) {
   const onChange = (next: string) => { patch({ search: next }) }
 
   return (
-    <div className={cn(pillVariants({ variant: "input" }), "relative min-w-0 flex-1 px-0", className)}>
+    <div className={cn("pill glass", "relative min-w-0 flex-1 px-0", className)}>
       <Icon
         name="search"
         className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"

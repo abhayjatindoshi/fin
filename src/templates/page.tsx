@@ -15,12 +15,16 @@ export type PageProps = {
   readonly children: ReactNode
   /** Max width of the centred content column. Default `md`. */
   readonly width?: PageWidth
-  /** Override both gutter axes for this page (e.g. `--spacing(2)`). */
+  /** Override every gutter side for this page (e.g. `--spacing(2)`). */
   readonly gutter?: string
-  /** Override the horizontal gutter only. */
-  readonly gutterX?: string
-  /** Override the vertical gutter only. */
-  readonly gutterY?: string
+  /** Override the top gutter only. */
+  readonly gutterTop?: string
+  /** Override the right gutter only. */
+  readonly gutterRight?: string
+  /** Override the bottom gutter only. */
+  readonly gutterBottom?: string
+  /** Override the left gutter only. */
+  readonly gutterLeft?: string
   readonly className?: string
 }
 
@@ -30,16 +34,30 @@ export type PageProps = {
  * need to reach the edge use `<Bleed>`. Pages that want total control (e.g.
  * virtualized lists) can skip `<Page>` and render straight into the shell.
  *
- * The `gutter*` props set the effective `--gutter-x` / `--gutter-y` inline, so
- * both the padding here and any `<Bleed>` inside track the override.
+ * The `gutter*` props set the effective `--gutter-top` / `-right` / `-bottom` /
+ * `-left` inline, so both the padding here and any `<Bleed>` inside track the
+ * override.
  */
-export function Page({ children, width = "md", gutter, gutterX, gutterY, className }: PageProps) {
-  const gx = gutterX ?? gutter
-  const gy = gutterY ?? gutter
+export function Page({
+  children,
+  width = "md",
+  gutter,
+  gutterTop,
+  gutterRight,
+  gutterBottom,
+  gutterLeft,
+  className,
+}: PageProps) {
+  const top = gutterTop ?? gutter
+  const right = gutterRight ?? gutter
+  const bottom = gutterBottom ?? gutter
+  const left = gutterLeft ?? gutter
   const style = {
     "--page-w": WIDTHS[width],
-    ...(gx ? { "--gutter-x": gx } : {}),
-    ...(gy ? { "--gutter-y": gy } : {}),
+    ...(top ? { "--gutter-top": top } : {}),
+    ...(right ? { "--gutter-right": right } : {}),
+    ...(bottom ? { "--gutter-bottom": bottom } : {}),
+    ...(left ? { "--gutter-left": left } : {}),
   } as CSSProperties
 
   return (
@@ -51,17 +69,24 @@ export function Page({ children, width = "md", gutter, gutterX, gutterY, classNa
 
 export type BleedProps = {
   readonly children: ReactNode
-  /** Which axis to break out of the gutter on. Default `both`. */
-  readonly axis?: "x" | "y" | "both"
+  /** Which side to break out of the gutter on. Default `all`. */
+  readonly side?: "top" | "right" | "bottom" | "left" | "all"
   readonly className?: string
 }
 
+const BLEED_CLASS = {
+  top: "bleed-top",
+  right: "bleed-right",
+  bottom: "bleed-bottom",
+  left: "bleed-left",
+  all: "bleed",
+} as const
+
 /**
  * Breaks a child out of its enclosing page/surface gutter to reach the box
- * edge. Reads the effective `--gutter-x` / `--gutter-y` the box set, so the
- * same `<Bleed>` works inside a page and inside a surface.
+ * edge. Reads the effective `--gutter-top` / `-right` / `-bottom` / `-left` the
+ * box set, so the same `<Bleed>` works inside a page and inside a surface.
  */
-export function Bleed({ children, axis = "both", className }: BleedProps) {
-  const cls = axis === "x" ? "bleed-x" : axis === "y" ? "bleed-y" : "bleed"
-  return <div className={cn(cls, className)}>{children}</div>
+export function Bleed({ children, side = "all", className }: BleedProps) {
+  return <div className={cn(BLEED_CLASS[side], className)}>{children}</div>
 }

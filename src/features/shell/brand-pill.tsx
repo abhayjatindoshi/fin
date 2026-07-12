@@ -1,7 +1,6 @@
 import { Logo } from "@/components/logo"
 import { SyncStatus } from "@/features/shell/sync-status"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 
 type BrandPillProps = {
   readonly className?: string
@@ -9,7 +8,7 @@ type BrandPillProps = {
 
 export function BrandPill({ className }: BrandPillProps) {
   return (
-    <div className={cn(pillVariants({ variant: "tight" }), className)}>
+    <div className={cn("pill glass px-2", className)}>
       <Logo linked />
       <SyncStatus />
     </div>

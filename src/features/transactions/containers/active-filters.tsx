@@ -1,7 +1,6 @@
 import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import { getAccountDisplay } from "@/catalog/account-display"
 import { getCurrencyMeta } from "@/lib/format"
 import { useObservable } from "@/providers/use-observable"
@@ -44,7 +43,7 @@ function FilterChip({ label, onRemove }: { readonly label: string; readonly onRe
   return (
     <span
       className={cn(
-        pillVariants({ variant: "label" }),
+        "pill glass",
         "h-8 shrink-0 gap-1 border border-border py-0 pr-1 pl-2.5 text-xs font-light",
       )}
     >

@@ -140,17 +140,28 @@
        Defined on :root so body-portalled surfaces inherit it too. */
     --gutter: --spacing(4);
 
-    /* Role + axis tokens — default to the base; override any to give page vs
-       surface, or horizontal vs vertical, different sizes. */
-    --page-gutter-x: var(--gutter);
-    --page-gutter-y: var(--gutter);
-    --surface-gutter-x: var(--gutter);
-    --surface-gutter-y: var(--gutter);
+    /* Role + side tokens — default to the base; override any side to give page
+       vs surface, or any edge, a different size. */
+    --page-gutter-top: var(--gutter);
+    --page-gutter-right: var(--gutter);
+    --page-gutter-bottom: var(--gutter);
+    --page-gutter-left: var(--gutter);
+    --surface-gutter-top: var(--gutter);
+    --surface-gutter-right: var(--gutter);
+    --surface-gutter-bottom: var(--gutter);
+    --surface-gutter-left: var(--gutter);
 }
 
 @media (width >= 768px) {
     :root {
         --gutter: --spacing(6);
+
+        /* Desktop widens the page's left/right gutters. */
+        --page-gutter-right: --spacing(24); /* 96px */
+        --page-gutter-left: --spacing(24); /* 96px */
+
+        /* Desktop drops the page's top padding. */
+        --page-gutter-top: 0;
     }
 }
 
@@ -252,35 +263,54 @@
 
 /* ─── Page / surface gutter boxes ────────────────────── */
 
-/* Each box adopts its role tokens into the effective --gutter-x / --gutter-y
-   that both padding and the bleed utilities read. A page/surface can override
-   --gutter-x / --gutter-y inline (via the gutter / gutterX / gutterY props). */
+/* Each box adopts its role tokens into the effective --gutter-top / -right /
+   -bottom / -left that both padding and the bleed utilities read. A page/surface
+   can override any side inline (via the gutter / gutterTop / gutterRight /
+   gutterBottom / gutterLeft props). */
 @utility page-box {
-    --gutter-x: var(--page-gutter-x);
-    --gutter-y: var(--page-gutter-y);
-    padding-inline: var(--gutter-x);
-    padding-block: var(--gutter-y);
+    --gutter-top: var(--page-gutter-top);
+    --gutter-right: var(--page-gutter-right);
+    --gutter-bottom: var(--page-gutter-bottom);
+    --gutter-left: var(--page-gutter-left);
+    padding-top: var(--gutter-top);
+    padding-right: var(--gutter-right);
+    padding-bottom: var(--gutter-bottom);
+    padding-left: var(--gutter-left);
 }
 
 @utility surface-box {
-    --gutter-x: var(--surface-gutter-x);
-    --gutter-y: var(--surface-gutter-y);
-    padding-inline: var(--gutter-x);
-    padding-block: var(--gutter-y);
+    --gutter-top: var(--surface-gutter-top);
+    --gutter-right: var(--surface-gutter-right);
+    --gutter-bottom: var(--surface-gutter-bottom);
+    --gutter-left: var(--surface-gutter-left);
+    padding-top: var(--gutter-top);
+    padding-right: var(--gutter-right);
+    padding-bottom: var(--gutter-bottom);
+    padding-left: var(--gutter-left);
 }
 
-/* Break a child out of the enclosing box's gutter on an axis (or both). */
+/* Break a child out of the enclosing box's gutter on a side (or all sides). */
 @utility bleed {
-    margin-inline: calc(-1 * var(--gutter-x, var(--gutter)));
-    margin-block: calc(-1 * var(--gutter-y, var(--gutter)));
+    margin-top: calc(-1 * var(--gutter-top, var(--gutter)));
+    margin-right: calc(-1 * var(--gutter-right, var(--gutter)));
+    margin-bottom: calc(-1 * var(--gutter-bottom, var(--gutter)));
+    margin-left: calc(-1 * var(--gutter-left, var(--gutter)));
 }
 
-@utility bleed-x {
-    margin-inline: calc(-1 * var(--gutter-x, var(--gutter)));
+@utility bleed-top {
+    margin-top: calc(-1 * var(--gutter-top, var(--gutter)));
 }
 
-@utility bleed-y {
-    margin-block: calc(-1 * var(--gutter-y, var(--gutter)));
+@utility bleed-right {
+    margin-right: calc(-1 * var(--gutter-right, var(--gutter)));
+}
+
+@utility bleed-bottom {
+    margin-bottom: calc(-1 * var(--gutter-bottom, var(--gutter)));
+}
+
+@utility bleed-left {
+    margin-left: calc(-1 * var(--gutter-left, var(--gutter)));
 }
 
 /* ─── Glass surface ──────────────────────────────────── */
@@ -305,6 +335,20 @@
             background-color: var(--glass-bg);
             --tw-backdrop-blur: initial;
         }
+    }
+}
+
+/* ─── Pill ───────────────────────────────────────────── */
+
+/* Shape + size only — no surface. Every chrome pill (nav, year, filters,
+   profile, brand…) uses this for a uniform height and full-round shape;
+   `glass` is added separately when the pill floats on its own. Height is
+   responsive: taller on mobile, tighter on desktop. Icon pills add
+   `aspect-square p-0`; padding/width/state come from utilities at the call
+   site (which always win over this component layer). */
+@layer components {
+    .pill {
+        @apply inline-flex h-12 items-center justify-center gap-2 rounded-full text-sm whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 md:h-10 [&_svg]:shrink-0;
     }
 }
 

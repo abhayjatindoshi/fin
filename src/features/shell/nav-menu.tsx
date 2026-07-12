@@ -55,7 +55,7 @@ export function NavMenu({ variant }: NavMenuProps) {
   })
 
   if (!icons) {
-    return <PillBar items={navItems} className="glass h-10 rounded-full px-1.5" />
+    return <PillBar items={navItems} surface="glass" />
   }
 
   const items = [
@@ -64,5 +64,5 @@ export function NavMenu({ variant }: NavMenuProps) {
     { key: "account", active: false, element: <AccountSheet bare /> },
   ]
 
-  return <PillBar items={items} className="glass h-10 rounded-full px-1.5" />
+  return <PillBar items={items} surface="glass" />
 }

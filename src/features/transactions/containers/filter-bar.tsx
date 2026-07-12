@@ -3,7 +3,6 @@ import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import { SortControl } from "../components/sort-control"
 import { AccountFilter } from "./account-filter"
 import { TagToggle } from "../components/tag-toggle"
@@ -24,10 +23,10 @@ export function FilterBar({ state }: FilterBarProps) {
   const { clearAll, dirty } = state
   return (
     <div className="flex w-full items-center gap-2">
-      <SortControl state={state} className="w-auto border border-border" />
-      <AccountFilter state={state} className="w-auto border border-border" />
-      <TagToggle state={state} className="w-auto border border-border" />
-      <TagSelect state={state} className="w-auto border border-border" />
+      <SortControl state={state} className="glass w-auto border border-border" />
+      <AccountFilter state={state} className="glass w-auto border border-border" />
+      <TagToggle state={state} className="glass w-auto border border-border" />
+      <TagSelect state={state} className="glass w-auto border border-border" />
       <AmountPill state={state} />
       {dirty && (
         <Button variant="ghost" size="sm" className="shrink-0" onClick={clearAll}>
@@ -48,7 +47,7 @@ function AmountPill({ state }: { readonly state: UseTransactionsFilter }) {
         <Button
           variant="ghost"
           className={cn(
-            pillVariants({ variant: "label", interactive: true }),
+            "pill glass px-3",
             "w-auto border border-border font-light",
             active && "font-normal text-foreground",
           )}

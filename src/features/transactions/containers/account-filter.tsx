@@ -9,7 +9,6 @@ import {
 } from "@/ui/dropdown-menu"
 import { getAccountDisplay } from "@/catalog/account-display"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import type { FilterControlProps } from "../types"
@@ -37,7 +36,7 @@ export function AccountFilter({ state, className }: FilterControlProps) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={cn(pillVariants({ variant: "label", interactive: true }), "w-full justify-start font-light", className)}
+          className={cn("pill px-3", "w-full justify-start font-light", className)}
         >
           <Icon name={onlyAccount ? getAccountDisplay(onlyAccount).icon : "landmark"} />
           <span className="truncate">{label}</span>
