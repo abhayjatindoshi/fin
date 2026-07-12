@@ -46,6 +46,14 @@ export default defineConfig([
             group: ['lucide-react', 'lucide-react/*'],
             message: 'Use <Icon name="..."/> from @/ui/icon and add the icon to icons.config.ts. Direct lucide imports are only allowed in src/ui/* (shadcn primitives) and src/lib/icons/* (registry).',
           },
+          {
+            // Overlay primitives must be opened through <AdaptiveSurface> so the
+            // breakpoint choice, a11y (title/description) and gutter/close are
+            // centralised. Popover and dropdown-menu are anchored menus, not
+            // overlays — they stay unrestricted.
+            group: ['@/ui/sheet', '@/ui/dialog', '@/ui/drawer'],
+            message: 'Do not use <Sheet>/<Dialog>/<Drawer> directly. Open overlays via <AdaptiveSurface> (src/components/adaptive-surface): content in <SurfaceBody>, close via <SurfaceClose>. Direct imports are allowed only in the adaptive-surface adapters.',
+          },
         ],
       }],
       // Direct fyredb/repo access is restricted to the service layer. The
@@ -62,19 +70,22 @@ export default defineConfig([
     // shadcn primitives + the icon registry/loader/generated bundles ship
     // their own lucide imports — that's the canonical pattern there. The
     // toaster (`providers/sonner.tsx`) is a shadcn primitive that lives with
-    // the theme context, so it keeps the same lucide-authoring exemption.
+    // the theme context, so it keeps the same lucide-authoring exemption. The
+    // adaptive-surface adapters are the one place allowed to import the
+    // restricted overlay primitives (@/ui/sheet|dialog|drawer).
     files: [
       'src/ui/**/*.{ts,tsx}',
       'src/lib/icons/**/*.{ts,tsx}',
       'src/assets/icons/**/*.{ts,tsx}',
       'src/providers/sonner.tsx',
+      'src/components/adaptive-surface/**/*.{ts,tsx}',
     ],
     rules: {
       'no-restricted-imports': 'off',
     },
   },
   {
-    files: ['src/ui/**/*.{ts,tsx}', 'src/providers/**/*.{ts,tsx}'],
+    files: ['src/ui/**/*.{ts,tsx}', 'src/providers/**/*.{ts,tsx}', 'src/components/adaptive-surface/**/*.{ts,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

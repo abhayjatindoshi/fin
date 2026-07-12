@@ -1,8 +1,11 @@
+import { useCallback } from "react"
 import { useApp } from "@/providers/app-provider"
 import { DialogSurface } from "./dialog-surface"
 import { SheetSurface } from "./sheet-surface"
 import { PopoverSurface } from "./popover-surface"
 import { DrawerSurface } from "./drawer-surface"
+import { InlineSurface } from "./inline-surface"
+import { SurfaceProvider } from "./surface-context"
 import type { AdaptiveSurfaceProps, SurfaceCommonProps, SurfaceSpec } from "./types"
 
 /**
@@ -46,7 +49,9 @@ export function AdaptiveSurface({
     children: content,
   }
 
-  return renderSurface(spec, common)
+  const close = useCallback(() => { onOpenChange(false) }, [onOpenChange])
+
+  return <SurfaceProvider close={close}>{renderSurface(spec, common)}</SurfaceProvider>
 }
 
 function renderSurface(spec: SurfaceSpec, common: SurfaceCommonProps) {
@@ -57,6 +62,8 @@ function renderSurface(spec: SurfaceSpec, common: SurfaceCommonProps) {
       return <SheetSurface {...common} contentProps={spec.props} />
     case "popover":
       return <PopoverSurface {...common} contentProps={spec.props} />
+    case "inline":
+      return <InlineSurface {...common} contentProps={spec.props} />
     case "drawer":
       return (
         <DrawerSurface
