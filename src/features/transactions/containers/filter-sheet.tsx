@@ -26,7 +26,7 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div ref={ref} className="flex min-w-0 flex-1 flex-row items-center gap-4">
+    <div ref={ref} className="flex min-w-0 flex-1 flex-row items-center gap-(--pill-gap)">
       <SearchBar state={state} />
       <AdaptiveSurface
         open={open}

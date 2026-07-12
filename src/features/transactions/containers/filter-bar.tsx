@@ -22,7 +22,7 @@ export type FilterBarProps = {
 export function FilterBar({ state }: FilterBarProps) {
   const { clearAll, dirty } = state
   return (
-    <div className="flex w-full items-center gap-4">
+    <div className="flex w-full items-center gap-(--pill-gap)">
       <SortControl state={state} className="glass w-auto border border-border" />
       <AccountFilter state={state} className="glass w-auto border border-border" />
       <TagToggle state={state} className="glass w-auto border border-border" />

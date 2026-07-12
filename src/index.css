@@ -150,6 +150,11 @@
     --surface-gutter-right: var(--gutter);
     --surface-gutter-bottom: var(--gutter);
     --surface-gutter-left: var(--gutter);
+
+    /* Gap between adjacent chrome pills and pill rows in the shell. Keep the
+       numeric value in sync with PILL_GAP in app-shell-provider.tsx (the chrome
+       offset math). */
+    --pill-gap: --spacing(2);
 }
 
 @media (width >= 768px) {

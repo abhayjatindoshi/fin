@@ -51,19 +51,20 @@ function useShell(): ShellContextValue {
 
 // ─── Offset computation (provider's job) ──────────────────
 
-// One spacing unit drives every gap, inset, and the content clearance, so the
-// chrome padding always matches the visual rhythm between the floating pills.
-// Keep in sync with the shell template's `gap-4` / `top-4` / `bottom-4` and the
-// `.pill` heights (`h-12` mobile → `md:h-10` desktop).
-const SPACE = 16 // unified spacing: pill gaps, row gaps, edge insets, clearance
+// The chrome offsets are derived from two spacing values plus the pill height,
+// so the content padding always tracks the visual chrome. `PILL_GAP` mirrors
+// `--pill-gap` in index.css (the gap between stacked pill rows); `SPACE` is the
+// edge inset / content clearance (`top-4` / `bottom-4`).
+const SPACE = 16 // edge insets + chrome→content clearance
+const PILL_GAP = 8 // gap between stacked pill rows — mirror of --pill-gap (index.css)
 const PILL_DESKTOP = 40 // .pill height on desktop (h-10)
 const PILL_MOBILE = 48 // .pill height on mobile (h-12)
 
 // A stacked chrome line = one pill-height row plus the gap above it.
-const DESKTOP_LINE = PILL_DESKTOP + SPACE // extra desktop line (sub-nav / secondary)
+const DESKTOP_LINE = PILL_GAP + PILL_DESKTOP // extra desktop line (sub-nav / secondary)
 // Base = top inset + the line-1 bar + the clearance before content.
 const DESKTOP_BASE = SPACE + PILL_DESKTOP + SPACE
-const MOBILE_ROW = PILL_MOBILE + SPACE // each mobile top row (primary / secondary / sub-nav)
+const MOBILE_ROW = PILL_GAP + PILL_MOBILE // each mobile top row (primary / secondary / sub-nav)
 const MOBILE_BOTTOM = SPACE + PILL_MOBILE + SPACE // bottom nav + margin + clearance
 
 function computeOffsets(
