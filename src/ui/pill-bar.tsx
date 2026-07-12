@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const itemClassName = cn(
   "relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-sm transition-colors",
   "after:pointer-events-none after:absolute after:-top-4 after:h-16",
-  "after:w-[calc(100%+--spacing(3)+13px)] after:-left-[calc(var(--spacing)*1.5+6px)]",
+  "after:w-[calc(100%+(--spacing(3))+13px)] after:-left-[calc(var(--spacing)*1.5+6px)]",
   "after:bg-[radial-gradient(ellipse_at_top,var(--accent),transparent_50%)]",
   "after:opacity-0 after:transition-opacity after:duration-500",
   "first:after:rounded-l-3xl last:after:rounded-r-3xl",

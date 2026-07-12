@@ -129,7 +129,7 @@ function ClubRow({ club }: { club: BriefingClub }) {
 function CalmMonth({ appreciations }: { appreciations: readonly BriefingAppreciation[] }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 rounded-xl bg-emerald-500/10 px-4 py-4">
+      <div className="flex items-center gap-3 rounded-xl bg-emerald-500/10 p-4 ">
         <Icon name="circle-check" className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
         <p className="text-sm">
           Nothing unusual this month. Your spending looked like you.
@@ -186,7 +186,7 @@ function ProgressRow({ row }: { row: BriefingProgress }) {
           <Money amount={row.budget} className="text-muted-foreground" />
         </div>
       </div>
-      <Progress value={pct} className={cn(warn && "[&>[data-slot=progress-indicator]]:bg-amber-500")} />
+      <Progress value={pct} className={cn(warn && "*:data-[slot=progress-indicator]:bg-amber-500")} />
     </div>
   )
 }

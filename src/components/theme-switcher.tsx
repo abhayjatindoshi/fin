@@ -16,13 +16,13 @@ export function ThemeSwitcher() {
       size="sm"
     >
       <ToggleGroupItem value="light" aria-label="Light theme">
-        <Icon name="sun" className="h-4 w-4" />
+        <Icon name="sun" className="size-4 " />
       </ToggleGroupItem>
       <ToggleGroupItem value="dark" aria-label="Dark theme">
-        <Icon name="moon" className="h-4 w-4" />
+        <Icon name="moon" className="size-4 " />
       </ToggleGroupItem>
       <ToggleGroupItem value="system" aria-label="System theme">
-        <Icon name="monitor" className="h-4 w-4" />
+        <Icon name="monitor" className="size-4 " />
       </ToggleGroupItem>
     </ToggleGroup>
   )

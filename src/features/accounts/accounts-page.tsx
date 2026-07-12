@@ -141,7 +141,7 @@ function AccountCard({ account }: { account: AccountView }) {
           <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
             {model.label}
           </div>
-          <div className="text-lg font-semibold leading-tight">
+          <div className="text-lg/tight font-semibold ">
             {model.amount !== undefined ? (
               <Money amount={model.amount} currency={account.currency} />
             ) : (

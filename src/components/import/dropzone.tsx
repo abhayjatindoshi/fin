@@ -79,7 +79,7 @@ export function Dropzone() {
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="flex h-full w-full flex-col items-center justify-end px-8 py-5 backdrop-blur-sm">
+      <div className="flex size-full  flex-col items-center justify-end px-8 py-5 backdrop-blur-sm">
         <Button variant="outline" size="icon" className="absolute right-4 top-4" onClick={reset}>
           <Icon name="x" />
         </Button>

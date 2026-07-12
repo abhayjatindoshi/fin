@@ -34,7 +34,7 @@ function Action({ icon, label, onClick, spin = false }: ActionProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 rounded-lg px-2 py-2 text-xs transition-colors hover:bg-muted"
+      className="flex flex-col items-center gap-1.5 rounded-lg p-2  text-xs transition-colors hover:bg-muted"
     >
       <span className="flex size-10 items-center justify-center rounded-full bg-muted text-foreground">
         <Icon name={icon} className={cn("size-4", spin && "animate-spin")} />

@@ -87,7 +87,7 @@ export function SyncDialog({ connection, trigger }: SyncDialogProps) {
                 <label
                   key={bank.bankId}
                   data-checked={checked}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-2 py-2 hover:bg-muted data-[checked=true]:border-border data-[checked=true]:bg-muted/60"
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent p-2  hover:bg-muted data-[checked=true]:border-border data-[checked=true]:bg-muted/60"
                 >
                   <Checkbox
                     checked={checked}

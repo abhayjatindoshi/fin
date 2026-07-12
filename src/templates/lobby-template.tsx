@@ -23,7 +23,7 @@ export function LobbyTemplate({ children }: { readonly children: ReactNode }) {
               onClick={() => void signOut()}
               aria-label="Logout"
             >
-              <Icon name="log-out" className="h-4 w-4" />
+              <Icon name="log-out" className="size-4 " />
             </Button>
           </>
         )}

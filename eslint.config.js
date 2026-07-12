@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import boundaries from 'eslint-plugin-boundaries'
+import betterTailwindcss from 'eslint-plugin-better-tailwindcss'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
@@ -59,6 +60,31 @@ export default defineConfig([
     },
   },
   {
+    // Tailwind class correctness — mirrors the diagnostics surfaced by the
+    // Tailwind CSS IntelliSense extension (unknown / conflicting / restricted
+    // classes) so they show up in `npm run lint` and CI. Only the correctness
+    // rules are enabled; the plugin's stylistic set (line-wrapping, class
+    // ordering) is intentionally left off to avoid drowning real issues in
+    // formatting churn. `entryPoint` points at the CSS-first v4 config so
+    // custom `@theme` tokens and utilities are recognised.
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: { 'better-tailwindcss': betterTailwindcss },
+    rules: {
+      ...betterTailwindcss.configs.correctness.rules,
+      // Canonical-class suggestions (e.g. `w-4 h-4` → `size-4`) live in the
+      // plugin's *stylistic* category, so they aren't part of the correctness
+      // set above. Enable this one explicitly — it's autofixable and flags
+      // genuine simplifications rather than pure formatting churn.
+      'better-tailwindcss/enforce-canonical-classes': 'error',
+    },
+    settings: {
+      'better-tailwindcss': {
+        entryPoint: 'src/index.css',
+        detectComponentClasses: true,
+      },
+    },
+  },
+  {
     // shadcn primitives + the icon registry/loader/generated bundles ship
     // their own lucide imports — that's the canonical pattern there. The
     // toaster (`providers/sonner.tsx`) is a shadcn primitive that lives with
@@ -71,6 +97,15 @@ export default defineConfig([
     ],
     rules: {
       'no-restricted-imports': 'off',
+    },
+  },
+  {
+    // The Sonner toaster is a shadcn primitive that pairs a plain `toaster`
+    // marker class with `group-[.toaster]:*` variants — `toaster` is not a
+    // Tailwind utility, so exempt it from the unknown-class check.
+    files: ['src/providers/sonner.tsx'],
+    rules: {
+      'better-tailwindcss/no-unknown-classes': 'off',
     },
   },
   {

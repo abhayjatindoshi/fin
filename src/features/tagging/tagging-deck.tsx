@@ -183,7 +183,7 @@ export function TaggingDeck() {
       </div>
 
       {/* The card stack. Fixed-height positioning context; cards are absolute. */}
-      <div className="relative min-h-[30rem]">
+      <div className="relative min-h-120">
         <AnimatePresence initial={false}>
           {stackIds
             .map((id, depth) => {
