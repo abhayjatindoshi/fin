@@ -52,7 +52,9 @@ describe("AccountsService", () => {
 
     const tags = svc.accountTags$.value
     expect(tags).toHaveLength(1)
-    expect(tags[0].name).toContain("****7890")
+    // Personal name wins for the tag label (the default name already carries
+    // the masked number, so no separate suffix is appended).
+    expect(tags[0].name).toBe("Test Bank")
     expect(tags[0].parent).toBe("system-tag-selftransfer")
   })
 

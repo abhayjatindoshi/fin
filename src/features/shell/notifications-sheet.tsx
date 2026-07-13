@@ -2,7 +2,6 @@ import { useState } from "react"
 import { AdaptiveSurface } from "@/components/adaptive-surface"
 import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
-import { Pill } from "@/ui/pill"
 import { cn } from "@/lib/utils"
 import { useServices } from "@/providers/services-provider"
 import { useObservable } from "@/providers/use-observable"
@@ -44,12 +43,14 @@ export function NotificationsSheet({ className, bare = false }: NotificationsShe
       {badge}
     </button>
   ) : (
-    <Pill asChild variant="icon" interactive className={className}>
-      <button type="button" aria-label="Notifications">
-        <Icon name="bell" className="size-4 text-muted-foreground" />
-        {badge}
-      </button>
-    </Pill>
+    <button
+      type="button"
+      aria-label="Notifications"
+      className={cn("pill glass aspect-square cursor-pointer p-0", className)}
+    >
+      <Icon name="bell" className="size-4 text-muted-foreground" />
+      {badge}
+    </button>
   )
 
   return (

@@ -35,7 +35,7 @@ function SubNavBar({ subNav }: { readonly subNav: SubNav }) {
   }))
 
   return (
-    <PillBar items={items} className="glass h-10 w-fit max-w-full rounded-full px-1.5" />
+    <PillBar items={items} surface="glass" className="w-fit max-w-full" />
   )
 }
 
@@ -94,11 +94,11 @@ export function AppShellTemplate() {
   if (isMobile) {
     return (
       <div className="w-full">
-        <div className="absolute inset-x-0 top-4 z-20 flex flex-col gap-2 px-2">
+        <div className="absolute inset-x-0 top-4 z-20 flex flex-col gap-(--pill-gap) px-4">
           {subNav && <MobileSubNav subNav={subNav} />}
           <div
             ref={setPrimary}
-            className={cn("flex min-w-0 items-center gap-2", !filled.primary && "hidden")}
+            className={cn("flex min-w-0 items-center gap-(--pill-gap)", !filled.primary && "hidden")}
           />
           <div
             ref={setSecondary}
@@ -110,7 +110,7 @@ export function AppShellTemplate() {
           <Outlet />
         </div>
 
-        <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-2">
+        <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center px-4">
           <NavMenu variant="icons" />
         </div>
 
@@ -122,13 +122,13 @@ export function AppShellTemplate() {
 
   return (
     <div className="w-full">
-      <div className="absolute inset-x-0 top-4 z-20 mx-20 flex flex-col gap-2">
-        <div className="flex items-center gap-2">
+      <div className="absolute inset-x-0 top-4 z-20 mx-20 flex flex-col gap-(--pill-gap)">
+        <div className="flex items-center gap-(--pill-gap)">
           <BrandPill />
           <NavMenu variant="labels" />
           <div
             ref={setPrimary}
-            className="flex min-w-0 flex-1 items-center gap-2"
+            className="flex min-w-0 flex-1 items-center gap-(--pill-gap)"
           />
           <YearPill />
           <NotificationsSheet />

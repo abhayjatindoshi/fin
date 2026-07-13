@@ -6,8 +6,9 @@ import type { AccountStatement, AccountKind } from "@/entities"
  * render, the credit-card extras, and the synthetic credit-limit meta row — in
  * one testable place, so the card stays a thin renderer over this shape.
  *
- * `balance` is stored signed (assets positive, liabilities negative); the UI
- * shows the magnitude with a kind label, so every amount here is non-negative.
+ * `balance` is stored signed (assets positive, liabilities negative). The UI
+ * renders it with that sign, so a credit card's outstanding balance shows as a
+ * negative amount; the minimum due stays a magnitude.
  */
 
 /** Credit cards are the only liability kind surfaced today; everything else is an asset. */
@@ -34,7 +35,7 @@ export type AccountCardModel = {
   readonly isCreditCard: boolean
   /** True once a snapshot exists; false drives the "—/No statement yet" fallback. */
   readonly hasStatement: boolean
-  /** Magnitude of the closing balance/due, or undefined when there is no snapshot. */
+  /** Signed closing balance (negative for a credit card's due), or undefined when there is no snapshot. */
   readonly amount?: number
   readonly asOf?: number
   /** Magnitude of the minimum due (credit-card only). */
@@ -60,7 +61,7 @@ export function buildAccountCardModel(
     label: balanceLabel(kind),
     isCreditCard: creditCard,
     hasStatement: statement !== undefined,
-    amount: statement ? Math.abs(statement.balance) : undefined,
+    amount: statement ? statement.balance : undefined,
     asOf: statement?.asOf,
     minimumDue:
       creditCard && statement?.minimumDue !== undefined ? Math.abs(statement.minimumDue) : undefined,

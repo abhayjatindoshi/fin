@@ -23,6 +23,10 @@ import type { AccountKind } from "@/entities/account"
 /** Display details for a single offering (product) within a bank. */
 export type OfferingDisplay = {
   readonly label: string
+  /** Short colloquial name used to seed a new account's default name, e.g.
+   *  "HDFC" (savings) or "HDFC CC" (credit card). Suffixed with the masked
+   *  account number at creation — "HDFC ****1234". */
+  readonly slang: string
   /** Optional icon-key override; falls back to the bank icon, then kind icon. */
   readonly icon?: IconKey
 }
@@ -42,8 +46,8 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
     icon: "bank-hdfc",
     color: "#004c8f",
     offerings: {
-      savings: { label: "Savings Account" },
-      "credit-card": { label: "Credit Card" },
+      savings: { label: "Savings Account", slang: "HDFC" },
+      "credit-card": { label: "Credit Card", slang: "HDFC CC" },
     },
   },
   federal: {
@@ -51,7 +55,7 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
     icon: "bank-federal",
     color: "#004cbe",
     offerings: {
-      "credit-card": { label: "Credit Card" },
+      "credit-card": { label: "Credit Card", slang: "Federal CC" },
     },
   },
   jupiter: {
@@ -59,7 +63,7 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
     icon: "bank-jupiter",
     color: "#fc644f",
     offerings: {
-      "upi-account": { label: "UPI Account" },
+      "upi-account": { label: "UPI Account", slang: "Jupiter" },
     },
   },
   paytm: {
@@ -67,8 +71,8 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
     icon: "bank-paytm",
     color: "#233266",
     offerings: {
-      savings: { label: "Savings Account" },
-      wallet: { label: "Wallet" },
+      savings: { label: "Savings Account", slang: "Paytm" },
+      wallet: { label: "Wallet", slang: "Paytm Wallet" },
     },
   },
   sbi: {
@@ -76,8 +80,16 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
     icon: "bank-sbi",
     color: "#00b5ef",
     offerings: {
-      savings: { label: "Savings Account" },
-      loan: { label: "Loan Account" },
+      savings: { label: "Savings Account", slang: "SBI" },
+      loan: { label: "Loan Account", slang: "SBI Loan" },
+    },
+  },
+  bob: {
+    label: "Bank of Baroda",
+    icon: "bank-bob",
+    color: "#f26522",
+    offerings: {
+      savings: { label: "Savings Account", slang: "BoB" },
     },
   },
 }
@@ -119,4 +131,9 @@ export function getOfferingDisplay(
   const bank = getBankDisplay(bankId)
   if (!bank || !Object.hasOwn(bank.offerings, offeringId)) return undefined
   return bank.offerings[offeringId]
+}
+
+/** The offering's short slang (e.g. "HDFC CC"), or `undefined` if unknown. */
+export function getOfferingSlang(bankId: string, offeringId: string): string | undefined {
+  return getOfferingDisplay(bankId, offeringId)?.slang
 }

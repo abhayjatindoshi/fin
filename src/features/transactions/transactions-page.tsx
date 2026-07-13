@@ -17,7 +17,7 @@ import { AccountCell } from "@/features/transactions/containers/account-cell"
 import { FilterSheet } from "./containers/filter-sheet"
 import { FilterBar } from "./containers/filter-bar"
 import { ActiveFilters } from "./containers/active-filters"
-import { PrimarySlot, SecondarySlot, useChromeOffsets } from "@/features/shell/app-shell-provider"
+import { PrimarySlot, SecondarySlot } from "@/features/shell/app-shell-provider"
 import { Page } from "@/templates/page"
 
 function EmptyState() {
@@ -52,10 +52,11 @@ export function TransactionsPage() {
   const { filtered, clearAll } = filterState
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Month headers pin just below the floating chrome. Track the shell's real
-  // offset (via useChromeOffsets) so they stay correct when the filter bar
-  // adds a line — instead of a hard-coded number that ignores it.
-  const { top: stickyTop } = useChromeOffsets()
+  // Month headers pin just below the floating chrome. Read the offsets straight
+  // from the cascading CSS vars: `--chrome-top` (shell clearance, grows with the
+  // filter bar) plus `--gutter-top` (the page gutter the list sits inside), so
+  // the pin matches where the rows rest and the header doesn't jump on scroll.
+  const stickyTop = "calc(var(--chrome-top) + var(--gutter-top, 0px))"
 
   // Warm the bank-icons pack so account marks render in a single chunk
   // instead of each `<AccountIcon>` triggering its own dynamic import.
@@ -88,7 +89,7 @@ export function TransactionsPage() {
   }
 
   return (
-    <Page width="full" className="flex flex-col">
+    <Page className="flex flex-col">
       {isMobile ? (
         <>
           <PrimarySlot>
@@ -107,17 +108,17 @@ export function TransactionsPage() {
       )}
 
       <div className="flex flex-row gap-4">
-        <div className="min-w-0 flex-1 pb-4">
+        <div className="min-w-0 flex-1">
           {filtered.length === 0 ? (
             <NoResults onClear={clearAll} />
           ) : (
             <TransactionVirtualizer
               transactions={filtered}
-              rowHeight={isMobile ? 120 : 54}
-              headerHeight={isMobile ? 44 : 50}
+              rowHeight={isMobile ? 110 : 54}
+              headerHeight={isMobile ? 44 : 46}
               stickyTop={stickyTop}
               scrollElementRef={scrollElementRef}
-              renderHeader={(args) => <MonthHeader {...args} isMobile={isMobile} />}
+              renderHeader={(args) => <MonthHeader {...args} />}
               renderRow={(args) =>
                 isMobile ? (
                   <TransactionCardRow

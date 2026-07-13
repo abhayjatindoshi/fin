@@ -16,9 +16,6 @@ export type FilterSheetProps = {
   readonly ref?: Ref<HTMLDivElement>
 }
 
-/** Strips the pill's glass fill/border/blur so controls blend into the glass sheet. */
-const FLAT_PILL = "border-transparent bg-transparent backdrop-blur-none"
-
 /**
  * Mobile filtering — a collapsible search pill and a filter pill (with an
  * active-count badge) that opens a bottom sheet of stacked controls. Live
@@ -29,18 +26,17 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div ref={ref} className="flex min-w-0 flex-1 flex-row items-center gap-1.5">
+    <div ref={ref} className="flex min-w-0 flex-1 flex-row items-center gap-(--pill-gap)">
       <SearchBar state={state} />
       <AdaptiveSurface
         open={open}
         onOpenChange={setOpen}
         title="Filters"
         trigger={
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             aria-label="Filters"
-            className="glass relative size-10 shrink-0 rounded-full border border-border"
+            className="pill glass relative aspect-square shrink-0 cursor-pointer border border-border hover:bg-muted hover:text-foreground aria-expanded:bg-muted"
           >
             <Icon name="sliders-horizontal" />
             {activeCount > 0 && (
@@ -48,21 +44,21 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
                 {activeCount}
               </span>
             )}
-          </Button>
+          </button>
         }
         content={
           <div className="flex flex-col gap-2.5 px-4 pb-4">
             <Field label="Sort">
-              <SortControl state={state} className={FLAT_PILL} />
+              <SortControl state={state} />
             </Field>
             <Field label="Accounts">
-              <AccountFilter state={state} className={FLAT_PILL} />
+              <AccountFilter state={state} />
             </Field>
             <Field label="Status">
-              <TagToggle state={state} className={FLAT_PILL} />
+              <TagToggle state={state} />
             </Field>
             <Field label="Tag">
-              <TagSelect state={state} className={FLAT_PILL} />
+              <TagSelect state={state} />
             </Field>
             <Field label="Amount">
               <AmountRange state={state} />

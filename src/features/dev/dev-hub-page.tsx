@@ -48,5 +48,5 @@ export function DevHubPage() {
   }
 
   const element = available.find((s) => s.key === activeKey)?.element
-  return element ? <Page width="lg">{element}</Page> : null
+  return element ? <Page>{element}</Page> : null
 }

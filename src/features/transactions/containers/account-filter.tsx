@@ -1,4 +1,3 @@
-import { Button } from "@/ui/button"
 import { Icon } from "@/ui/icon"
 import {
   DropdownMenu,
@@ -9,7 +8,6 @@ import {
 } from "@/ui/dropdown-menu"
 import { getAccountDisplay } from "@/catalog/account-display"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
 import type { FilterControlProps } from "../types"
@@ -35,14 +33,18 @@ export function AccountFilter({ state, className }: FilterControlProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn(pillVariants({ variant: "label", interactive: true }), "w-full justify-start font-light", className)}
+        <button
+          type="button"
+          className={cn(
+            "pill cursor-pointer px-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+            "w-full justify-start font-light",
+            className,
+          )}
         >
           <Icon name={onlyAccount ? getAccountDisplay(onlyAccount).icon : "landmark"} />
           <span className="truncate">{label}</span>
           <Icon name="chevron-down" className="text-muted-foreground" />
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-80 w-72 overflow-auto">
         <DropdownMenuItem onClick={() => { patch({ accountIds: [] }) }}>

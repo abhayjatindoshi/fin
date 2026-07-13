@@ -51,8 +51,8 @@ describe("account-card-model", () => {
     expect(model.label).toBe("Due")
     expect(model.isCreditCard).toBe(true)
     expect(model.hasStatement).toBe(true)
-    // Stored negative; the UI shows the positive owed amount (magnitude).
-    expect(model.amount).toBe(1_234_56)
+    // Stored negative; the UI now shows the signed amount (credit-card due renders negative).
+    expect(model.amount).toBe(-1_234_56)
     expect(model.asOf).toBe(CREDIT_STATEMENT.asOf)
     expect(model.minimumDue).toBe(200_00)
     expect(model.dueDate).toBe(CREDIT_STATEMENT.dueDate)

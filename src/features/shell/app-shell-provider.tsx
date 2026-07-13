@@ -51,11 +51,21 @@ function useShell(): ShellContextValue {
 
 // ─── Offset computation (provider's job) ──────────────────
 
-const DESKTOP_BASE = 72 // line-1 bar + top margin
-const LINE = 48 // each extra desktop line (sub-nav / secondary)
-const MOBILE_ROW = 48 // each mobile top row (primary / secondary)
-const MOBILE_TOP_BASE = 16
-const MOBILE_BOTTOM = 72 // bottom nav + margin
+// The chrome offsets are derived from two spacing values plus the pill height,
+// so the content padding always tracks the visual chrome. `PILL_GAP` mirrors
+// `--pill-gap` in index.css (the gap between stacked pill rows); `SPACE` is the
+// edge inset / content clearance (`top-4` / `bottom-4`).
+const SPACE = 12 // edge insets + chrome→content clearance
+const PILL_GAP = 8 // gap between stacked pill rows — mirror of --pill-gap (index.css)
+const PILL_DESKTOP = 40 // .pill height on desktop (h-10)
+const PILL_MOBILE = 48 // .pill height on mobile (h-12)
+
+// A stacked chrome line = one pill-height row plus the gap above it.
+const DESKTOP_LINE = PILL_GAP + PILL_DESKTOP // extra desktop line (sub-nav / secondary)
+// Base = top inset + the line-1 bar + the clearance before content.
+const DESKTOP_BASE = SPACE + PILL_DESKTOP + SPACE
+const MOBILE_ROW = PILL_GAP + PILL_MOBILE // each mobile top row (primary / secondary / sub-nav)
+const MOBILE_BOTTOM = SPACE + PILL_MOBILE + SPACE // bottom nav + margin + clearance
 
 function computeOffsets(
   isMobile: boolean,
@@ -65,10 +75,10 @@ function computeOffsets(
   if (isMobile) {
     const rows =
       (filled.primary ? 1 : 0) + (filled.secondary ? 1 : 0) + (hasSubNav ? 1 : 0)
-    return { top: MOBILE_TOP_BASE + rows * MOBILE_ROW, bottom: MOBILE_BOTTOM }
+    return { top: SPACE + rows * MOBILE_ROW, bottom: MOBILE_BOTTOM }
   }
-  const top = DESKTOP_BASE + (hasSubNav ? LINE : 0) + (filled.secondary ? LINE : 0)
-  return { top, bottom: 16 }
+  const top = DESKTOP_BASE + (hasSubNav ? DESKTOP_LINE : 0) + (filled.secondary ? DESKTOP_LINE : 0)
+  return { top, bottom: SPACE }
 }
 
 // ─── Provider ─────────────────────────────────────────────

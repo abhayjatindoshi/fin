@@ -43,7 +43,7 @@ export function HomePage() {
   }
 
   return (
-    <Page width="md" className="flex flex-col gap-6">
+    <Page className="mx-auto w-full max-w-2xl flex flex-col gap-6">
       <Header briefing={briefing} />
       <AttentionSection briefing={briefing} />
       {briefing.progress.length > 0 && <ProgressSection rows={briefing.progress} />}

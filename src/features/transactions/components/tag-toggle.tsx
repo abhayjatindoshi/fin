@@ -1,6 +1,5 @@
 import { Button } from "@/ui/button"
 import { cn } from "@/lib/utils"
-import { pillVariants } from "@/ui/pill"
 import type { FilterControlProps } from "../types"
 
 /** Tagged / Untagged toggle. Clicking the active option clears it. Picking a
@@ -14,7 +13,7 @@ export function TagToggle({ state, className }: FilterControlProps) {
   return (
     <div
       role="group"
-      className={cn(pillVariants({ variant: "group" }), "w-full overflow-hidden *:flex-1", className)}
+      className={cn("pill gap-0 p-0.5", "w-full overflow-hidden *:flex-1", className)}
     >
       <Button
         className={cn("h-full rounded-full", value !== "tagged" && "font-light")}

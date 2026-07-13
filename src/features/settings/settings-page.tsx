@@ -42,5 +42,5 @@ export function SettingsPage() {
   }
 
   const element = SECTIONS.find((s) => s.key === activeKey)?.element
-  return element ? <Page width="lg">{element}</Page> : null
+  return element ? <Page>{element}</Page> : null
 }

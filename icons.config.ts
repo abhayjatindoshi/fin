@@ -226,6 +226,7 @@ export const manifest: Manifest = {
     // `tag-icons`, but `bank-paytm` is the bank's account-list mark).
     'bank-icons': {
       icons: [
+        { key: 'bank-bob', kind: 'svg', path: 'banks/bob.svg' },
         { key: 'bank-federal', kind: 'svg', path: 'banks/federal.svg' },
         { key: 'bank-hdfc', kind: 'svg', path: 'banks/hdfc.svg' },
         { key: 'bank-jupiter', kind: 'svg', path: 'banks/jupiter.svg' },
@@ -242,6 +243,8 @@ export const manifest: Manifest = {
         { key: 'arrow-right', kind: 'lucide', name: 'ArrowRightIcon' },
         { key: 'arrow-down-wide-narrow', kind: 'lucide', name: 'ArrowDownWideNarrowIcon' },
         { key: 'arrow-up-narrow-wide', kind: 'lucide', name: 'ArrowUpNarrowWideIcon' },
+        { key: 'archive', kind: 'lucide', name: 'ArchiveIcon' },
+        { key: 'archive-restore', kind: 'lucide', name: 'ArchiveRestoreIcon' },
         { key: 'bolt', kind: 'lucide', name: 'BoltIcon' },
         { key: 'calendar', kind: 'lucide', name: 'CalendarIcon' },
         { key: 'check', kind: 'lucide', name: 'CheckIcon' },
@@ -255,11 +258,14 @@ export const manifest: Manifest = {
         { key: 'circle-x', kind: 'lucide', name: 'CircleXIcon' },
         { key: 'clock', kind: 'lucide', name: 'ClockIcon' },
         { key: 'cloud-check', kind: 'lucide', name: 'CloudCheckIcon' },
+        { key: 'copy', kind: 'lucide', name: 'CopyIcon' },
         { key: 'database', kind: 'lucide', name: 'DatabaseIcon' },
         { key: 'download', kind: 'lucide', name: 'DownloadIcon' },
         { key: 'bell', kind: 'lucide', name: 'BellIcon' },
         { key: 'ellipsis-vertical', kind: 'lucide', name: 'EllipsisVerticalIcon' },
         { key: 'external-link', kind: 'lucide', name: 'ExternalLinkIcon' },
+        { key: 'eye', kind: 'lucide', name: 'EyeIcon' },
+        { key: 'eye-off', kind: 'lucide', name: 'EyeOffIcon' },
         { key: 'file-text', kind: 'lucide', name: 'FileTextIcon' },
         { key: 'hash', kind: 'lucide', name: 'HashIcon' },
         { key: 'home', kind: 'lucide', name: 'HouseIcon' },
