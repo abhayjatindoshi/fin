@@ -56,7 +56,7 @@ export function AccountsPage() {
         <>
           <button
             type="button"
-            onClick={() => setShowArchived((v) => !v)}
+            onClick={() => { setShowArchived((v) => !v) }}
             aria-expanded={showArchived}
             className="mt-2 inline-flex items-center gap-1.5 self-center rounded-full border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
@@ -154,7 +154,7 @@ function AccountCard({ account }: { account: AccountView }) {
       <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5">
         <button
           type="button"
-          onClick={() => setEditing(true)}
+          onClick={() => { setEditing(true) }}
           aria-label="Rename account"
           className="rounded-full bg-black/25 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/45"
         >
@@ -168,15 +168,15 @@ function AccountCard({ account }: { account: AccountView }) {
             <Icon name="ellipsis-vertical" className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditing(true)}>
+            <DropdownMenuItem onSelect={() => { setEditing(true) }}>
               <Icon name="pencil-line" /> Rename
             </DropdownMenuItem>
             {account.archived ? (
-              <DropdownMenuItem onSelect={() => accounts.restore(account.id)}>
+              <DropdownMenuItem onSelect={() => { accounts.restore(account.id) }}>
                 <Icon name="archive-restore" /> Restore
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem onSelect={() => accounts.archive(account.id)}>
+              <DropdownMenuItem onSelect={() => { accounts.archive(account.id) }}>
                 <Icon name="archive" /> Archive
               </DropdownMenuItem>
             )}
@@ -221,7 +221,7 @@ function AccountCard({ account }: { account: AccountView }) {
                 if (name) accounts.update(account.id, { name })
                 setEditing(false)
               }}
-              onCancel={() => setEditing(false)}
+              onCancel={() => { setEditing(false) }}
             />
           ) : (
             <>
@@ -307,12 +307,12 @@ function RenameField({
     <input
       autoFocus
       value={value}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e) => { setValue(e.target.value) }}
       onKeyDown={(e) => {
         if (e.key === "Enter") onSave(value.trim())
         if (e.key === "Escape") onCancel()
       }}
-      onBlur={() => onSave(value.trim())}
+      onBlur={() => { onSave(value.trim()) }}
       aria-label="Account name"
       className="w-full rounded border bg-background px-1.5 py-0.5 text-sm"
     />
@@ -333,7 +333,7 @@ function AccountNumber({ value }: { value: string }) {
       {!alreadyMasked && (
         <button
           type="button"
-          onClick={() => setRevealed((v) => !v)}
+          onClick={() => { setRevealed((v) => !v) }}
           aria-label={revealed ? "Hide account number" : "Show account number"}
           aria-pressed={revealed}
           className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -359,7 +359,7 @@ function CopyButton({ value, label, className }: { value: string; label?: string
       onClick={() => {
         void navigator.clipboard.writeText(value)
         setCopied(true)
-        window.setTimeout(() => setCopied(false), 1500)
+        window.setTimeout(() => { setCopied(false) }, 1500)
       }}
       aria-label={copied ? "Copied" : `Copy ${label ?? "value"}`}
       className={cn(
