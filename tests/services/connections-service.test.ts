@@ -50,13 +50,11 @@ function setting(connectionId: string): EmailImportSetting {
 describe("ConnectionsService", () => {
   let fyredb: FyreDb
   let svc: ConnectionsService
-  const realFetch = globalThis.fetch
 
   afterEach(async () => {
     svc.dispose()
     await fyredb.dispose().catch(() => {})
     sessionStorage.clear()
-    globalThis.fetch = realFetch
     googleLogin.mockClear()
     microsoftLogin.mockClear()
   })
@@ -128,24 +126,20 @@ describe("ConnectionsService", () => {
     expect(googleLogin).not.toHaveBeenCalled()
   })
 
-  /** Stub `fetch` to return a userinfo payload, and seed one-shot creds. */
-  function seedCreds(provider: string, info: Record<string, string>): void {
-    const fetchMock = vi.fn(() =>
-      Promise.resolve(new Response(JSON.stringify(info), { status: 200 })),
-    )
-    globalThis.fetch = fetchMock
+  /** Seed one-shot feature creds carrying the server-resolved profile. */
+  function seedCreds(provider: string, profile?: Record<string, string>): void {
     sessionStorage.setItem(
       FEATURE_CREDS_KEY,
-      JSON.stringify({ provider, feature: "email", accessToken: "at", refreshToken: "rt" }),
+      JSON.stringify({ provider, feature: "email", accessToken: "at", refreshToken: "rt", profile }),
     )
   }
 
-  it("materialises a saved Connection from google feature creds on construction", async () => {
+  it("materialises a saved Connection from the feature creds profile on construction", async () => {
     fyredb = await createTestFyreDb()
-    seedCreds("google", { sub: "g-1", email: "g@example.com", name: "G User", picture: "p.png" })
+    seedCreds("google", { provider: "google", userId: "g-1", email: "g@example.com", name: "G User", picture: "p.png" })
 
     svc = new ConnectionsService(fyredb)
-    // The userinfo fetch + save is async; wait for the materialised row to surface.
+    // The projection to connections$ settles on a later tick; poll for the row.
     await vi.waitFor(() => {
       expect(svc.connections$.value).toHaveLength(1)
     })
@@ -153,53 +147,15 @@ describe("ConnectionsService", () => {
     const rows = fyredb.repo(connectionEntity).query()
     expect(rows).toHaveLength(1)
     expect(rows[0].email).toBe("g@example.com")
+    expect(rows[0].name).toBe("G User")
+    expect(rows[0].picture).toBe("p.png")
     expect(rows[0].refreshToken).toBe("rt")
     expect(sessionStorage.getItem(FEATURE_CREDS_KEY)).toBeNull() // consumed
   })
 
-  it("materialises a microsoft Connection from the graph userinfo shape", async () => {
+  it("carries every profile field from the creds onto the saved row", async () => {
     fyredb = await createTestFyreDb()
-    seedCreds("microsoft", { id: "m-1", userPrincipalName: "m@example.com", displayName: "M User" })
-
-    svc = new ConnectionsService(fyredb)
-    // The userinfo fetch + save is async; wait for the materialised row to surface.
-    await vi.waitFor(() => {
-      expect(svc.connections$.value).toHaveLength(1)
-    })
-
-    const rows = fyredb.repo(connectionEntity).query()
-    expect(rows).toHaveLength(1)
-    expect(rows[0].email).toBe("m@example.com")
-    expect(rows[0].name).toBe("M User")
-  })
-
-  it("falls back to `mail` for the email when userinfo omits `email`", async () => {
-    fyredb = await createTestFyreDb()
-    seedCreds("microsoft", { id: "m-3", mail: "viamail@example.com", displayName: "Mail User" })
-
-    svc = new ConnectionsService(fyredb)
-    await vi.waitFor(() => {
-      expect(svc.connections$.value).toHaveLength(1)
-    })
-
-    expect(fyredb.repo(connectionEntity).query()[0].email).toBe("viamail@example.com")
-  })
-
-  it("stores an empty email when userinfo carries an identity but no address", async () => {
-    fyredb = await createTestFyreDb()
-    seedCreds("google", { sub: "g-9", name: "No Email User" })
-
-    svc = new ConnectionsService(fyredb)
-    await vi.waitFor(() => {
-      expect(svc.connections$.value).toHaveLength(1)
-    })
-
-    expect(fyredb.repo(connectionEntity).query()[0].email).toBe("")
-  })
-
-  it("stores empty name and picture when userinfo omits them", async () => {
-    fyredb = await createTestFyreDb()
-    seedCreds("google", { sub: "g-min", email: "min@example.com" })
+    seedCreds("microsoft", { provider: "microsoft", userId: "m-1", email: "m@example.com", name: "M User", picture: "" })
 
     svc = new ConnectionsService(fyredb)
     await vi.waitFor(() => {
@@ -207,8 +163,10 @@ describe("ConnectionsService", () => {
     })
 
     const row = fyredb.repo(connectionEntity).query()[0]
-    expect(row.name).toBe("")
-    expect(row.picture).toBe("")
+    expect(row.provider).toBe("microsoft")
+    expect(row.userId).toBe("m-1")
+    expect(row.email).toBe("m@example.com")
+    expect(row.name).toBe("M User")
   })
 
   it("disconnect removes the auth account even when no import setting exists", async () => {
@@ -228,13 +186,24 @@ describe("ConnectionsService", () => {
     expect(fyredb.repo(connectionEntity).query()).toHaveLength(0)
   })
 
-  it("does not save when userinfo lacks an identity (no userId)", async () => {
+  it("does not save when the creds carry no profile", async () => {
     fyredb = await createTestFyreDb()
-    seedCreds("google", { email: "no-id@example.com" }) // no sub/id
+    seedCreds("google") // no profile folded in by the server
 
     svc = new ConnectionsService(fyredb)
 
-    // Userinfo carries no identity → nothing is ever saved.
+    // No profile → nothing is saved, but the creds are still consumed.
+    expect(fyredb.repo(connectionEntity).query()).toHaveLength(0)
+    expect(sessionStorage.getItem(FEATURE_CREDS_KEY)).toBeNull()
+  })
+
+  it("does not save when the profile lacks an identity (no userId)", async () => {
+    fyredb = await createTestFyreDb()
+    seedCreds("google", { provider: "google", userId: "", email: "no-id@example.com", name: "", picture: "" })
+
+    svc = new ConnectionsService(fyredb)
+
+    // Profile carries no stable id → nothing is saved.
     expect(fyredb.repo(connectionEntity).query()).toHaveLength(0)
   })
 
@@ -247,36 +216,5 @@ describe("ConnectionsService", () => {
     // Invalid JSON is consumed and rejected synchronously, before any save.
     expect(fyredb.repo(connectionEntity).query()).toHaveLength(0)
     expect(sessionStorage.getItem(FEATURE_CREDS_KEY)).toBeNull() // still consumed
-  })
-
-  it("does not save when the userinfo request fails", async () => {
-    fyredb = await createTestFyreDb()
-    const fetchMock = vi.fn(() => Promise.resolve(new Response("nope", { status: 401 })))
-    globalThis.fetch = fetchMock
-    sessionStorage.setItem(
-      FEATURE_CREDS_KEY,
-      JSON.stringify({ provider: "google", feature: "email", accessToken: "at", refreshToken: "rt" }),
-    )
-
-    svc = new ConnectionsService(fyredb)
-
-    // The userinfo request fails → no identity, so nothing is saved.
-    expect(fyredb.repo(connectionEntity).query()).toHaveLength(0)
-  })
-
-  it("swallows a thrown userinfo request and saves nothing", async () => {
-    fyredb = await createTestFyreDb()
-    const fetchMock = vi.fn(() => Promise.reject(new Error("network down")))
-    globalThis.fetch = fetchMock
-    sessionStorage.setItem(
-      FEATURE_CREDS_KEY,
-      JSON.stringify({ provider: "google", feature: "email", accessToken: "at", refreshToken: "rt" }),
-    )
-
-    svc = new ConnectionsService(fyredb)
-
-    // The fetch rejection is caught (best-effort) → no identity, nothing saved.
-    await vi.waitFor(() => { expect(fetchMock).toHaveBeenCalled() })
-    expect(fyredb.repo(connectionEntity).query()).toHaveLength(0)
   })
 })
