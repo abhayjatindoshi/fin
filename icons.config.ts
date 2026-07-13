@@ -226,6 +226,7 @@ export const manifest: Manifest = {
     // `tag-icons`, but `bank-paytm` is the bank's account-list mark).
     'bank-icons': {
       icons: [
+        { key: 'bank-bob', kind: 'svg', path: 'banks/bob.svg' },
         { key: 'bank-federal', kind: 'svg', path: 'banks/federal.svg' },
         { key: 'bank-hdfc', kind: 'svg', path: 'banks/hdfc.svg' },
         { key: 'bank-jupiter', kind: 'svg', path: 'banks/jupiter.svg' },

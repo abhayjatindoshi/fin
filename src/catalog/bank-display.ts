@@ -84,6 +84,14 @@ export const BANK_DISPLAY: Readonly<Record<string, BankDisplay>> = {
       loan: { label: "Loan Account", slang: "SBI Loan" },
     },
   },
+  bob: {
+    label: "Bank of Baroda",
+    icon: "bank-bob",
+    color: "#f26522",
+    offerings: {
+      savings: { label: "Savings Account", slang: "BoB" },
+    },
+  },
 }
 
 /** Display details for an account kind — the structural fallback tier. */
