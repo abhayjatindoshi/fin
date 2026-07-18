@@ -56,9 +56,12 @@ export function getAccountDisplay(account: AccountDisplayInput): AccountDisplay 
   const usesDefaultName = defaultName !== undefined && account.name === defaultName
 
   const product = offering?.label ?? KIND_DISPLAY[account.kind].label
+  // When the name is the auto default, show the bank brand instead; the `??`
+  // fallback covers a name-less bank, though the default-name path always has one.
+  const defaultLabel = bank?.label ?? account.name
   return {
     icon: accountIconName(account),
-    label: usesDefaultName ? (bank?.label ?? account.name) : account.name,
+    label: usesDefaultName ? defaultLabel : account.name,
     // The default-name title already carries the brand, so its sublabel is just
     // the product. A custom-name title doesn't, so prefix the brand back in.
     sublabel: usesDefaultName || !bank ? product : `${bank.label} · ${product}`,

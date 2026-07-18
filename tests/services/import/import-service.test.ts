@@ -43,6 +43,7 @@ import type {
 } from "@/services/import/email-import-context"
 import type { HashedTransaction } from "@/services/import/import-utils"
 import { CancelledError, EmailPasswordError } from "@/services/import/import-utils"
+import { BANK_DISPLAY } from "@/catalog/bank-display"
 import { firstValueFrom } from "rxjs"
 
 // ── Fixtures ────────────────────────────────────────────
@@ -189,6 +190,66 @@ describe("ImportService", () => {
     expect(logRow?.touchedAccountIds).toEqual([account.id])
     expect(logRow?.counts).toEqual({ parsed: 2, new: 2, duplicate: 0 })
     expect(logRow?.completedAt).toBeTypeOf("number")
+  })
+
+  it("names a new account by offering slang when the statement carries no account number", async () => {
+    await setup()
+    runFileImportMock.mockResolvedValue(
+      fileResult({
+        importData: {
+          bankId: "hdfc",
+          offeringId: "savings",
+          kind: "bank",
+          account: { currency: "INR" }, // no accountNumber → no masked suffix
+          transactions: [],
+        },
+      }),
+    )
+
+    const logId = svc.startFileImport(fakeFile())
+    await waitForStatus(logId, "completed")
+
+    expect(fyredb.repo(accountEntity).query()[0].name).toBe(BANK_DISPLAY.hdfc.offerings.savings.slang)
+  })
+
+  it("names a new account by the masked number alone when the bank is unknown", async () => {
+    await setup()
+    runFileImportMock.mockResolvedValue(
+      fileResult({
+        importData: {
+          bankId: "", // no slang and no bankId → masked number is the only anchor
+          offeringId: "",
+          kind: "bank",
+          account: { currency: "INR", accountNumber: ["XXXXXX1234"] },
+          transactions: [],
+        },
+      }),
+    )
+
+    const logId = svc.startFileImport(fakeFile())
+    await waitForStatus(logId, "completed")
+
+    expect(fyredb.repo(accountEntity).query()[0].name).toBe("****1234")
+  })
+
+  it("falls back to the bankId for the name when nothing at all is known", async () => {
+    await setup()
+    runFileImportMock.mockResolvedValue(
+      fileResult({
+        importData: {
+          bankId: "", // buildDefaultName yields "" → createAccount falls back to bankId
+          offeringId: "",
+          kind: "bank",
+          account: { currency: "INR" },
+          transactions: [],
+        },
+      }),
+    )
+
+    const logId = svc.startFileImport(fakeFile())
+    await waitForStatus(logId, "completed")
+
+    expect(fyredb.repo(accountEntity).query()[0].name).toBe("")
   })
 
   it("file import (existing account): reuses the account and merges new metadata", async () => {
