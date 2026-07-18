@@ -71,6 +71,7 @@ function toAccountView(row: StoredAccount): AccountView {
     currency: row.currency,
     maskedNumber: maskAccountNumber(row),
     bankId: row.bankId,
+    offeringId: row.offeringId,
     statement: row.statement,
     archived: row.archived ?? false,
   }
@@ -92,15 +93,12 @@ function toAccountDetails(row: StoredAccount): AccountRow {
 }
 
 function toAccountTagData(row: StoredAccount): AccountTagData {
-  const masked = maskAccountNumber(row)
-  // Only invoked for rows passing `hasFullDetails`, so `masked` is always
-  // defined here; the bare-name fallback is unreachable.
-  /* v8 ignore next */
-  const name = masked ? `${row.name} ${masked}` : row.name
+  // Personal name always wins for the self-transfer tag (it already carries
+  // the masked number by default, so no separate suffix is appended).
   return {
     id: `account-${row.id}`,
     accountId: row.id,
-    name,
+    name: row.name,
     icon: row.icon,
     kind: row.kind,
     bankId: row.bankId,

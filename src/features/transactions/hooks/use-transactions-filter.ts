@@ -37,6 +37,7 @@ export function countActiveFilters(filter: TransactionFilter): number {
   let n = 0
   if (filter.accountIds.length > 0) n++
   if (filter.tag !== null) n++
+  if (filter.tagId !== undefined) n++
   if (filter.amountMin !== undefined || filter.amountMax !== undefined) n++
   return n
 }
@@ -47,6 +48,23 @@ function isDirty(filter: TransactionFilter): boolean {
     filter.search.trim() !== "" ||
     countActiveFilters(filter) > 0
   )
+}
+
+/** Resolve a selected tag to the set of tag ids that should match: itself plus
+ *  all descendants. Returns `null` when no tag is selected (no filter). */
+function expandTag(
+  tagId: string | undefined,
+  childrenByParent: ReadonlyMap<string, readonly string[]>,
+): Set<string> | null {
+  if (tagId === undefined) return null
+  const set = new Set<string>()
+  const visit = (id: string) => {
+    if (set.has(id)) return
+    set.add(id)
+    for (const child of childrenByParent.get(id) ?? []) visit(child)
+  }
+  visit(tagId)
+  return set
 }
 
 export type UseTransactionsFilter = FilterState & {
@@ -62,9 +80,10 @@ export function useTransactionsFilter(
   transactions: readonly TransactionRow[],
 ): UseTransactionsFilter {
   const { tenantId } = useParams()
-  const { accounts: accountsService, settings: settingsService } = useServices()
+  const { accounts: accountsService, settings: settingsService, tags: tagsService } = useServices()
   const accounts = useObservable(accountsService.accounts$)
   const settings = useObservable(settingsService.settings$)
+  const tags = useObservable(tagsService.displayTags$)
   const [filter, setFilter] = useState<TransactionFilter>(() => loadFilter(tenantId))
 
   // Persist on change. Writing to storage is a side-effect (not state), so an
@@ -97,10 +116,30 @@ export function useTransactionsFilter(
     return map
   }, [accounts])
 
+  // tagId → name (for search matching) and parent → child ids (for expanding a
+  // selected parent tag to also match its descendants).
+  const { tagNameById, childrenByParent } = useMemo(() => {
+    const names = new Map<string, string>()
+    const children = new Map<string, string[]>()
+    for (const t of tags) {
+      names.set(t.id, t.name)
+      if (t.parent) {
+        const bucket = children.get(t.parent) ?? []
+        bucket.push(t.id)
+        children.set(t.parent, bucket)
+      }
+    }
+    return { tagNameById: names, childrenByParent: children }
+  }, [tags])
+
   const filtered = useMemo(() => {
     const q = filter.search.trim().toLowerCase()
     const numeric = q !== "" && /^[\d.]+$/.test(q)
-    const { accountIds, tag, amountMin, amountMax } = filter
+    const { accountIds, tag, tagId, amountMin, amountMax } = filter
+
+    // Expand a selected tag to itself + all descendants (one level in practice,
+    // but resolved recursively so deeper trees still work). `null` = no filter.
+    const tagMatch = expandTag(tagId, childrenByParent)
 
     const majorAbs = (tx: TransactionRow): number => {
       const currency = currencyByAccount.get(tx.accountId) ?? settings.currency
@@ -111,13 +150,15 @@ export function useTransactionsFilter(
       if (accountIds.length > 0 && !accountIds.includes(tx.accountId)) return false
       if (tag === "tagged" && !tx.tagId) return false
       if (tag === "untagged" && tx.tagId) return false
+      if (tagMatch && (tx.tagId === undefined || !tagMatch.has(tx.tagId))) return false
       if (amountMin !== undefined || amountMax !== undefined) {
         const major = majorAbs(tx)
         if (amountMin !== undefined && major < amountMin) return false
         if (amountMax !== undefined && major > amountMax) return false
       }
       if (q !== "") {
-        const text = `${tx.title ?? ""} ${tx.narration}`.toLowerCase()
+        const tagName = tx.tagId ? tagNameById.get(tx.tagId) ?? "" : ""
+        const text = `${tx.title ?? ""} ${tx.narration} ${tagName}`.toLowerCase()
         const amountMatch = numeric && majorAbs(tx).toString() === q
         if (!text.includes(q) && !amountMatch) return false
       }
@@ -129,7 +170,7 @@ export function useTransactionsFilter(
         ? b.transactionAt - a.transactionAt
         : a.transactionAt - b.transactionAt,
     )
-  }, [transactions, filter, currencyByAccount, settings.currency])
+  }, [transactions, filter, currencyByAccount, settings.currency, tagNameById, childrenByParent])
 
   return {
     filter,

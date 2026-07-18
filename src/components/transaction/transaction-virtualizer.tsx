@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef, type CSSProperties, type ReactNode, type 
 import type { TransactionRow } from "@/entities/transaction"
 
 type ListItem =
-  | { readonly kind: "header"; readonly monthStart: number; readonly count: number }
+  | { readonly kind: "header"; readonly dayStart: number; readonly count: number }
   | { readonly kind: "row"; readonly tx: TransactionRow }
 
 export type RenderRowArgs = {
@@ -13,7 +13,7 @@ export type RenderRowArgs = {
 }
 
 export type RenderHeaderArgs = {
-  readonly monthStart: number
+  readonly dayStart: number
   readonly count: number
   readonly active: boolean
 }
@@ -22,9 +22,11 @@ export type TransactionVirtualizerProps = {
   readonly transactions: readonly TransactionRow[]
   readonly rowHeight: number
   readonly headerHeight: number
-  /** Offset (px) at which the active month header pins, so it stops below any
-   *  sticky chrome above the list (the filter bar) instead of the viewport top. */
-  readonly stickyTop?: number
+  /** Where the active month header pins, so it stops below the floating chrome
+   *  instead of the viewport top. A CSS length or number (px); pass a
+   *  `calc(var(--chrome-top) + var(--gutter-top))` so it tracks the chrome +
+   *  any page gutter the list sits inside. */
+  readonly stickyTop?: number | string
   /** The scroll container the list virtualizes against — injected by the caller
    *  so this view stays free of app context. */
   readonly scrollElementRef: RefObject<HTMLDivElement | null>
@@ -32,16 +34,16 @@ export type TransactionVirtualizerProps = {
   readonly renderHeader: (args: RenderHeaderArgs) => ReactNode
 }
 
-/** UTC month-start (ms) for a transaction epoch — aligns with monthly partitions. */
-function monthStartOf(epochMs: number): number {
+/** UTC day-start (ms) for a transaction epoch — aligns with the day grouping. */
+function dayStartOf(epochMs: number): number {
   const d = new Date(epochMs)
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
 }
 
 /**
  * Flatten date-sorted transactions into a header-interleaved list. Assumes
- * rows are contiguous by month (true for a single-field date sort), so each
- * month yields one header followed by its rows.
+ * rows are contiguous by day (true for a single-field date sort), so each
+ * day yields one header followed by its rows.
  */
 function buildItems(transactions: readonly TransactionRow[]): {
   items: ListItem[]
@@ -51,18 +53,18 @@ function buildItems(transactions: readonly TransactionRow[]): {
   const stickyIndices: number[] = []
   let i = 0
   while (i < transactions.length) {
-    const monthStart = monthStartOf(transactions[i].transactionAt)
+    const dayStart = dayStartOf(transactions[i].transactionAt)
     let j = i
-    while (j < transactions.length && monthStartOf(transactions[j].transactionAt) === monthStart) j++
+    while (j < transactions.length && dayStartOf(transactions[j].transactionAt) === dayStart) j++
     stickyIndices.push(items.length)
-    items.push({ kind: "header", monthStart, count: j - i })
+    items.push({ kind: "header", dayStart, count: j - i })
     for (let k = i; k < j; k++) items.push({ kind: "row", tx: transactions[k] })
     i = j
   }
   return { items, stickyIndices }
 }
 
-function itemStyle(item: VirtualItem, header: boolean, active: boolean, stickyTop: number): CSSProperties {
+function itemStyle(item: VirtualItem, header: boolean, active: boolean, stickyTop: number | string): CSSProperties {
   const style: CSSProperties = { top: 0, left: 0, width: "100%", height: `${item.size}px` }
   if (header) style.zIndex = 9
   if (active) {
@@ -125,7 +127,7 @@ export function TransactionVirtualizer({
         return (
           <div key={vItem.key} data-index={vItem.index} style={itemStyle(vItem, item.kind === "header", active, stickyTop)}>
             {item.kind === "header"
-              ? renderHeader({ monthStart: item.monthStart, count: item.count, active })
+              ? renderHeader({ dayStart: item.dayStart, count: item.count, active })
               : renderRow({ tx: item.tx, first: isFirstRow(vItem.index), last: isLastRow(vItem.index) })}
           </div>
         )

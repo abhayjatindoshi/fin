@@ -10,6 +10,7 @@
     --font-sans: 'Montserrat Variable', sans-serif;
 
     --animate-fade-out: fade-out 500ms ease-out;
+    --animate-marquee: marquee var(--marquee-duration, 40s) linear infinite;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -131,12 +132,70 @@
     --glass-border: oklch(from var(--foreground) l c h / 0.12);
 }
 
+/* ─── Layout gutter tokens ───────────────────────────── */
+
+:root {
+    /* Base gutter — the single spacing size shared by pages and surfaces.
+       Responsive: flips at the same 768px cutoff as MOBILE_BREAKPOINT
+       (app-provider.tsx) so it tracks the JS `isMobile` used elsewhere.
+       Defined on :root so body-portalled surfaces inherit it too. */
+    --gutter: --spacing(4);
+
+    /* Role + side tokens — default to the base; override any side to give page
+       vs surface, or any edge, a different size. */
+    --page-gutter-top: var(--gutter);
+    --page-gutter-right: var(--gutter);
+    --page-gutter-bottom: var(--gutter);
+    --page-gutter-left: var(--gutter);
+    --surface-gutter-top: var(--gutter);
+    --surface-gutter-right: var(--gutter);
+    --surface-gutter-bottom: var(--gutter);
+    --surface-gutter-left: var(--gutter);
+
+    /* Gap between adjacent chrome pills and pill rows in the shell. Keep the
+       numeric value in sync with PILL_GAP in app-shell-provider.tsx (the chrome
+       offset math). */
+    --pill-gap: --spacing(2);
+}
+
+@media (width >= 768px) {
+    :root {
+        --gutter: --spacing(6);
+
+        /* Desktop widens the page's left/right gutters. */
+        --page-gutter-right: --spacing(30); /* 120px */
+        --page-gutter-left: --spacing(30); /* 120px */
+
+        /* Keep a length unit (not a bare 0) so the token composes inside
+           calc() — e.g. the sticky month-header pin does
+           `calc(var(--chrome-top) + var(--gutter-top))`, and `<length> + 0`
+           (unitless) is invalid CSS, which would drop the pin to `top: auto`. */
+        --page-gutter-top: 0px;
+    }
+}
+
+@media (width < 768px) {
+    :root {
+        --page-gutter-top: --spacing(1);
+    }
+}
+
 @keyframes fade-out {
     from {
         opacity: 1;
     }
     to {
         opacity: 0;
+    }
+}
+
+/* Seamless horizontal scroll for a track that renders its content twice. */
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
     }
 }
 
@@ -227,6 +286,58 @@
     }
 }
 
+/* ─── Page / surface gutter boxes ────────────────────── */
+
+/* Each box adopts its role tokens into the effective --gutter-top / -right /
+   -bottom / -left that both padding and the bleed utilities read. A page/surface
+   can override any side inline (via the gutter / gutterTop / gutterRight /
+   gutterBottom / gutterLeft props). */
+@utility page-box {
+    --gutter-top: var(--page-gutter-top);
+    --gutter-right: var(--page-gutter-right);
+    --gutter-bottom: var(--page-gutter-bottom);
+    --gutter-left: var(--page-gutter-left);
+    padding-top: var(--gutter-top);
+    padding-right: var(--gutter-right);
+    padding-bottom: var(--gutter-bottom);
+    padding-left: var(--gutter-left);
+}
+
+@utility surface-box {
+    --gutter-top: var(--surface-gutter-top);
+    --gutter-right: var(--surface-gutter-right);
+    --gutter-bottom: var(--surface-gutter-bottom);
+    --gutter-left: var(--surface-gutter-left);
+    padding-top: var(--gutter-top);
+    padding-right: var(--gutter-right);
+    padding-bottom: var(--gutter-bottom);
+    padding-left: var(--gutter-left);
+}
+
+/* Break a child out of the enclosing box's gutter on a side (or all sides). */
+@utility bleed {
+    margin-top: calc(-1 * var(--gutter-top, var(--gutter)));
+    margin-right: calc(-1 * var(--gutter-right, var(--gutter)));
+    margin-bottom: calc(-1 * var(--gutter-bottom, var(--gutter)));
+    margin-left: calc(-1 * var(--gutter-left, var(--gutter)));
+}
+
+@utility bleed-top {
+    margin-top: calc(-1 * var(--gutter-top, var(--gutter)));
+}
+
+@utility bleed-right {
+    margin-right: calc(-1 * var(--gutter-right, var(--gutter)));
+}
+
+@utility bleed-bottom {
+    margin-bottom: calc(-1 * var(--gutter-bottom, var(--gutter)));
+}
+
+@utility bleed-left {
+    margin-left: calc(-1 * var(--gutter-left, var(--gutter)));
+}
+
 /* ─── Glass surface ──────────────────────────────────── */
 
 @layer components {
@@ -249,6 +360,20 @@
             background-color: var(--glass-bg);
             --tw-backdrop-blur: initial;
         }
+    }
+}
+
+/* ─── Pill ───────────────────────────────────────────── */
+
+/* Shape + size only — no surface. Every chrome pill (nav, year, filters,
+   profile, brand…) uses this for a uniform height and full-round shape;
+   `glass` is added separately when the pill floats on its own. Height is
+   responsive: taller on mobile, tighter on desktop. Icon pills add
+   `aspect-square p-0`; padding/width/state come from utilities at the call
+   site (which always win over this component layer). */
+@layer components {
+    .pill {
+        @apply inline-flex h-12 items-center justify-center gap-2 rounded-full text-sm whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 md:h-10 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4;
     }
 }
 

@@ -5,6 +5,7 @@ import { Icon } from "@/ui/icon"
 import { SortControl } from "../components/sort-control"
 import { AccountFilter } from "./account-filter"
 import { TagToggle } from "../components/tag-toggle"
+import { TagSelect } from "./tag-select"
 import { AmountRange } from "./amount-range"
 import { SearchBar } from "@/components/search-bar"
 import type { UseTransactionsFilter } from "../hooks/use-transactions-filter"
@@ -25,18 +26,17 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div ref={ref} className="sticky top-0 z-20 flex flex-row items-center gap-1.5 px-4 pb-3 pt-2">
-      <SearchBar state={state} variant="sheet" />
+    <div ref={ref} className="flex min-w-0 flex-1 flex-row items-center gap-(--pill-gap)">
+      <SearchBar state={state} />
       <AdaptiveSurface
         open={open}
         onOpenChange={setOpen}
         title="Filters"
         trigger={
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             aria-label="Filters"
-            className="glass relative size-9 shrink-0 rounded-full border border-border"
+            className="pill glass relative aspect-square shrink-0 cursor-pointer border border-border hover:bg-muted hover:text-foreground aria-expanded:bg-muted"
           >
             <Icon name="sliders-horizontal" />
             {activeCount > 0 && (
@@ -44,21 +44,24 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
                 {activeCount}
               </span>
             )}
-          </Button>
+          </button>
         }
         content={
-          <div className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-2.5 px-4 pb-4">
             <Field label="Sort">
-              <SortControl state={state} variant="sheet" />
+              <SortControl state={state} />
             </Field>
             <Field label="Accounts">
-              <AccountFilter state={state} variant="sheet" />
+              <AccountFilter state={state} />
+            </Field>
+            <Field label="Status">
+              <TagToggle state={state} />
             </Field>
             <Field label="Tag">
-              <TagToggle state={state} variant="sheet" />
+              <TagSelect state={state} />
             </Field>
             <Field label="Amount">
-              <AmountRange state={state} variant="sheet" />
+              <AmountRange state={state} />
             </Field>
 
             <div className="mt-2 flex items-center justify-between border-t pt-3">
@@ -71,8 +74,8 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
             </div>
           </div>
         }
-        desktop={{ type: "sheet", props: { side: "bottom" } }}
-        mobile={{ type: "sheet", props: { side: "bottom" } }}
+        desktop={{ type: "popover", props: { surface: "glass" } }}
+        mobile={{ type: "sheet", props: { side: "bottom", surface: "glass", className: "gap-2" } }}
       />
     </div>
   )
@@ -80,9 +83,9 @@ export function FilterSheet({ state, resultCount, ref }: FilterSheetProps) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {children}
+    <div className="flex items-center gap-3">
+      <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   )
 }

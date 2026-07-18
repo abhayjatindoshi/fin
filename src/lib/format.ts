@@ -52,6 +52,16 @@ export function minorToMajor(minor: number, currency: string): number {
 }
 
 /**
+ * Converts a major-unit amount (as a user types it) to integer minor units for
+ * storage, rounding to the currency's precision. Example:
+ * `majorToMinor(1234.5, 'INR')` → `123450`. Non-finite input yields `0`.
+ */
+export function majorToMinor(major: number, currency: string): number {
+  if (!Number.isFinite(major)) return 0
+  return Math.round(major * 10 ** getCurrencyDigits(currency))
+}
+
+/**
  * Formats a minor-unit `amount` as a complete currency string using
  * `Intl.NumberFormat`.
  * Example: `formatMoney(-123450, { locale: 'en-IN', currency: 'INR' })` → `"-₹1,234.50"`.

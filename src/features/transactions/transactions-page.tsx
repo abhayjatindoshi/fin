@@ -8,14 +8,16 @@ import { log } from "@/lib/log"
 import { useTransactionsQuery } from "./hooks/use-transactions-query"
 import { useTransactionsFilter } from "./hooks/use-transactions-filter"
 import { TransactionVirtualizer } from "@/components/transaction/transaction-virtualizer"
-import { MonthHeader } from "@/components/transaction/month-header"
-import { TransactionTableRow } from "@/components/transaction/table-row"
-import { TransactionCardRow } from "@/components/transaction/card-row"
+import { DayHeader } from "@/components/transaction/day-header"
+import { TransactionRow } from "@/components/transaction/transaction-row"
 import { TransactionDetail } from "@/features/transactions/containers/transaction-detail"
 import { TagPickerCell } from "@/features/transactions/containers/tag-picker-cell"
 import { AccountCell } from "@/features/transactions/containers/account-cell"
-import { FilterBar } from "./containers/filter-bar"
 import { FilterSheet } from "./containers/filter-sheet"
+import { FilterBar } from "./containers/filter-bar"
+import { ActiveFilters } from "./containers/active-filters"
+import { PrimarySlot, SecondarySlot } from "@/features/shell/app-shell-provider"
+import { Page } from "@/templates/page"
 
 function EmptyState() {
   return (
@@ -49,20 +51,11 @@ export function TransactionsPage() {
   const { filtered, clearAll } = filterState
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Measure the sticky filter chrome so the month headers can pin directly
-  // below it instead of sliding to the top of the scroll viewport. Desktop
-  // chrome pins at 72px (≈10px below the navbar); mobile at `top-0`.
-  const [filterEl, setFilterEl] = useState<HTMLDivElement | null>(null)
-  const [filterHeight, setFilterHeight] = useState(0)
-  useEffect(() => {
-    if (!filterEl) return
-    const measure = () => { setFilterHeight(filterEl.offsetHeight) }
-    const ro = new ResizeObserver(measure)
-    ro.observe(filterEl)
-    measure()
-    return () => { ro.disconnect() }
-  }, [filterEl])
-  const stickyTop = (isMobile ? 0 : 72) + filterHeight
+  // Month headers pin just below the floating chrome. Read the offsets straight
+  // from the cascading CSS vars: `--chrome-top` (shell clearance, grows with the
+  // filter bar) plus `--gutter-top` (the page gutter the list sits inside), so
+  // the pin matches where the rows rest and the header doesn't jump on scroll.
+  const stickyTop = "calc(var(--chrome-top) + var(--gutter-top, 0px))"
 
   // Warm the bank-icons pack so account marks render in a single chunk
   // instead of each `<AccountIcon>` triggering its own dynamic import.
@@ -95,51 +88,49 @@ export function TransactionsPage() {
   }
 
   return (
-    <div className="flex flex-col">
+    <Page className="flex flex-col">
       {isMobile ? (
-        <FilterSheet ref={setFilterEl} state={filterState} resultCount={filtered.length} />
+        <>
+          <PrimarySlot>
+            <FilterSheet state={filterState} resultCount={filtered.length} />
+          </PrimarySlot>
+          {filterState.activeCount > 0 && (
+            <SecondarySlot>
+              <ActiveFilters state={filterState} />
+            </SecondarySlot>
+          )}
+        </>
       ) : (
-        <FilterBar ref={setFilterEl} state={filterState} />
+        <SecondarySlot>
+          <FilterBar state={filterState} />
+        </SecondarySlot>
       )}
 
       <div className="flex flex-row gap-4">
-        <div className="min-w-0 flex-1 pb-4">
+        <div className="min-w-0 flex-1">
           {filtered.length === 0 ? (
             <NoResults onClear={clearAll} />
           ) : (
             <TransactionVirtualizer
               transactions={filtered}
-              rowHeight={isMobile ? 120 : 54}
-              headerHeight={isMobile ? 44 : 50}
+              rowHeight={48}
+              headerHeight={44}
               stickyTop={stickyTop}
               scrollElementRef={scrollElementRef}
-              renderHeader={(args) => <MonthHeader {...args} isMobile={isMobile} />}
-              renderRow={(args) =>
-                isMobile ? (
-                  <TransactionCardRow
-                    amount={args.tx.amount}
-                    date={args.tx.transactionAt}
-                    title={args.tx.title}
-                    narration={args.tx.narration}
-                    tagCell={<TagPickerCell tx={args.tx} />}
-                    accountCell={<AccountCell accountId={args.tx.accountId} />}
-                    onClick={() => { setSelectedId(args.tx.id) }}
-                  />
-                ) : (
-                  <TransactionTableRow
-                    amount={args.tx.amount}
-                    date={args.tx.transactionAt}
-                    title={args.tx.title}
-                    narration={args.tx.narration}
-                    tagCell={<TagPickerCell tx={args.tx} />}
-                    accountCell={<AccountCell accountId={args.tx.accountId} />}
-                    first={args.first}
-                    last={args.last}
-                    selected={args.tx.id === selectedId}
-                    onClick={() => { setSelectedId(args.tx.id) }}
-                  />
-                )
-              }
+              renderHeader={(args) => <DayHeader {...args} />}
+              renderRow={(args) => (
+                <TransactionRow
+                  amount={args.tx.amount}
+                  title={args.tx.title}
+                  narration={args.tx.narration}
+                  tagCell={<TagPickerCell tx={args.tx} />}
+                  accountCell={<AccountCell accountId={args.tx.accountId} />}
+                  first={args.first}
+                  last={args.last}
+                  selected={args.tx.id === selectedId}
+                  onClick={() => { setSelectedId(args.tx.id) }}
+                />
+              )}
             />
           )}
         </div>
@@ -147,6 +138,6 @@ export function TransactionsPage() {
           <TransactionDetail tx={selectedTx} onClose={() => { setSelectedId(null) }} />
         )}
       </div>
-    </div>
+    </Page>
   )
 }

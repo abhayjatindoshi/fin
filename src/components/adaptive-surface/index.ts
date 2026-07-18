@@ -1,2 +1,6 @@
 export { AdaptiveSurface } from "./adaptive-surface"
+export { SurfaceBody } from "./surface-body"
+export { SurfaceClose, useSurface } from "./surface-context"
+export type { SurfaceBodyProps } from "./surface-body"
+export type { SurfaceCloseProps } from "./surface-context"
 export type { AdaptiveSurfaceProps, SurfaceSpec } from "./types"

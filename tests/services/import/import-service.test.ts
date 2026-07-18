@@ -43,6 +43,7 @@ import type {
 } from "@/services/import/email-import-context"
 import type { HashedTransaction } from "@/services/import/import-utils"
 import { CancelledError, EmailPasswordError } from "@/services/import/import-utils"
+import { BANK_DISPLAY } from "@/catalog/bank-display"
 import { firstValueFrom } from "rxjs"
 
 // ── Fixtures ────────────────────────────────────────────
@@ -191,6 +192,66 @@ describe("ImportService", () => {
     expect(logRow?.completedAt).toBeTypeOf("number")
   })
 
+  it("names a new account by offering slang when the statement carries no account number", async () => {
+    await setup()
+    runFileImportMock.mockResolvedValue(
+      fileResult({
+        importData: {
+          bankId: "hdfc",
+          offeringId: "savings",
+          kind: "bank",
+          account: { currency: "INR" }, // no accountNumber → no masked suffix
+          transactions: [],
+        },
+      }),
+    )
+
+    const logId = svc.startFileImport(fakeFile())
+    await waitForStatus(logId, "completed")
+
+    expect(fyredb.repo(accountEntity).query()[0].name).toBe(BANK_DISPLAY.hdfc.offerings.savings.slang)
+  })
+
+  it("names a new account by the masked number alone when the bank is unknown", async () => {
+    await setup()
+    runFileImportMock.mockResolvedValue(
+      fileResult({
+        importData: {
+          bankId: "", // no slang and no bankId → masked number is the only anchor
+          offeringId: "",
+          kind: "bank",
+          account: { currency: "INR", accountNumber: ["XXXXXX1234"] },
+          transactions: [],
+        },
+      }),
+    )
+
+    const logId = svc.startFileImport(fakeFile())
+    await waitForStatus(logId, "completed")
+
+    expect(fyredb.repo(accountEntity).query()[0].name).toBe("****1234")
+  })
+
+  it("falls back to the bankId for the name when nothing at all is known", async () => {
+    await setup()
+    runFileImportMock.mockResolvedValue(
+      fileResult({
+        importData: {
+          bankId: "", // buildDefaultName yields "" → createAccount falls back to bankId
+          offeringId: "",
+          kind: "bank",
+          account: { currency: "INR" },
+          transactions: [],
+        },
+      }),
+    )
+
+    const logId = svc.startFileImport(fakeFile())
+    await waitForStatus(logId, "completed")
+
+    expect(fyredb.repo(accountEntity).query()[0].name).toBe("")
+  })
+
   it("file import (existing account): reuses the account and merges new metadata", async () => {
     await setup()
     const accountId = fyredb.repo(accountEntity).save({
@@ -323,6 +384,60 @@ describe("ImportService", () => {
     const logRow = fyredb.repo(importLogEntity).get(logId)
     expect(logRow?.touchedAccountIds).toEqual([accounts[0].id])
     expect(logRow?.emailRun?.scanned).toBe(1)
+  })
+
+  it("startEmailSync: forwards the bankIds allow-list to the email runner", async () => {
+    await setup()
+    const accountId = seedConnection()
+    runEmailImportMock.mockReturnValue(new Promise<EmailRunSummary>(() => {})) // never settles
+
+    svc.startEmailSync(accountId, { bankIds: ["sbi"] })
+
+    await vi.waitFor(() => { expect(runEmailImportMock).toHaveBeenCalledTimes(1) })
+    // options is the 7th positional arg (index 6).
+    expect(runEmailImportMock.mock.calls[0][6]).toEqual({ bankIds: ["sbi"] })
+  })
+
+  it("startEmailSync: reset wipes the sweep checkpoint before running", async () => {
+    await setup()
+    const accountId = seedConnection()
+    // Seed a completed run's high-water mark + an in-flight cursor.
+    fyredb.repo(emailImportSettingEntity).save({
+      connectionId: accountId,
+      paused: false,
+      importState: {
+        endPoint: { date: STMT_OLD, emailId: "old" },
+        currentPoint: { date: STMT_NEW, emailId: "cur" },
+        lastImportAt: STMT_NEW,
+      },
+    })
+    runEmailImportMock.mockReturnValue(new Promise<EmailRunSummary>(() => {})) // never settles
+
+    svc.startEmailSync(accountId, { reset: true })
+
+    const setting = fyredb
+      .repo(emailImportSettingEntity)
+      .query({ where: { connectionId: accountId } })[0]
+    expect(setting.importState).toEqual({})
+    expect(setting.lastErrorLogId).toBeUndefined()
+  })
+
+  it("startEmailSync: without reset, preserves the existing checkpoint", async () => {
+    await setup()
+    const accountId = seedConnection()
+    const importState = {
+      endPoint: { date: STMT_OLD, emailId: "old" },
+      lastImportAt: STMT_OLD,
+    }
+    fyredb.repo(emailImportSettingEntity).save({ connectionId: accountId, paused: false, importState })
+    runEmailImportMock.mockReturnValue(new Promise<EmailRunSummary>(() => {})) // never settles
+
+    svc.startEmailSync(accountId)
+
+    const setting = fyredb
+      .repo(emailImportSettingEntity)
+      .query({ where: { connectionId: accountId } })[0]
+    expect(setting.importState).toEqual(importState)
   })
 
   // ── Init sweep ────────────────────────────────────────

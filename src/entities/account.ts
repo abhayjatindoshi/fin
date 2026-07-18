@@ -40,7 +40,8 @@ export type AccountStatement = {
  *
  * Storage is intentionally minimal:
  * - `kind` drives behaviour
- * - `name` is the user-facing label
+ * - `name` is the user-facing label — defaulted on import to the offering slang
+ *   + masked account number (e.g. "HDFC ****1234"); the user can edit it.
  * - `bankId` is the parser registry id (set only when a parser owns this account)
  * - `offeringId` is the parser offering id within the bank (e.g. "savings",
  *   "credit-card") — set alongside `bankId`; drives the offering display label

@@ -3,7 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { Icon } from "@/ui/icon"
 import { Input } from "@/ui/input"
 import { Button } from "@/ui/button"
-import { SheetClose } from "@/ui/sheet"
+import { SurfaceClose } from "@/components/adaptive-surface"
 import type { TagView } from "@/views/tag-view"
 import { TagItem } from "./tag-item"
 import type { TagWithChildren } from "./types"
@@ -20,8 +20,7 @@ export type TagListProps = {
 
 /**
  * Virtualised list with a sticky search input at the top. The close button is
- * shown only inside a sheet, where the dialog primitive doesn't auto-render
- * one.
+ * shown only inside a sheet, where the surface doesn't auto-render one.
  */
 export function TagList({
   rows,
@@ -53,11 +52,11 @@ export function TagList({
           placeholder="Search tags…"
         />
         {showCloseButton && (
-          <SheetClose asChild>
+          <SurfaceClose asChild>
             <Button variant="ghost" size="icon-sm" aria-label="Close">
               <Icon name="x" />
             </Button>
-          </SheetClose>
+          </SurfaceClose>
         )}
       </div>
       <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>

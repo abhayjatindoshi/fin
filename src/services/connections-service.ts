@@ -11,6 +11,7 @@
 
 import { BehaviorSubject, Subscription } from "rxjs"
 import type { BaseEntity, FyreDb, RepositoryType as Repository } from "@fyre-db/core"
+import type { FeatureCreds } from "@fyre-db/plugins"
 import { connectionEntity } from "@/entities"
 import type { Connection } from "@/entities"
 import { emailImportSettingEntity } from "@/entities/email-import-setting"
@@ -25,14 +26,6 @@ export type { ConnectionView } from "@/views/connection-view"
 
 type ConnectionRow = Connection & BaseEntity
 type SettingRow = EmailImportSetting & BaseEntity
-
-/** One-shot OAuth creds left in sessionStorage by the auth callback. */
-type FeatureCreds = {
-  readonly provider: string
-  readonly feature: string
-  readonly accessToken: string
-  readonly refreshToken: string
-}
 
 function toConnectionView(account: ConnectionRow, setting: SettingRow | undefined): ConnectionView {
   return {
@@ -74,7 +67,7 @@ export class ConnectionsService implements Disposable {
     // Materialise any one-shot OAuth feature creds left in sessionStorage by the
     // auth callback into a Connection row (was EntityProvider's responsibility
     // via the now-removed useConsumeFeatureCreds hook).
-    void this.consumeFeatureCreds()
+    this.consumeFeatureCreds()
   }
 
   // ── Exposes ──────────────────────────────────────────────
@@ -112,11 +105,11 @@ export class ConnectionsService implements Disposable {
 
   /**
    * One-shot: materialise OAuth feature creds left in sessionStorage by the auth
-   * callback into a `Connection` row, fetching the provider's userinfo to fill
-   * identity fields. Best-effort — failures are swallowed. Runs once on
-   * construction (per tenant), replacing the old `useConsumeFeatureCreds` hook.
+   * callback into a `Connection` row. The framework resolves the account's
+   * normalized profile server-side and folds it into the callback creds, so no
+   * userinfo fetch happens here. Runs once on construction (per tenant).
    */
-  private async consumeFeatureCreds(): Promise<void> {
+  private consumeFeatureCreds(): void {
     const raw = sessionStorage.getItem(FEATURE_CREDS_KEY)
     if (raw === null) return
     sessionStorage.removeItem(FEATURE_CREDS_KEY)
@@ -128,40 +121,16 @@ export class ConnectionsService implements Disposable {
       return
     }
 
-    let userId = ""
-    let email = ""
-    let name = ""
-    let picture = ""
-    try {
-      const userinfoUrl = creds.provider === MICROSOFT_AUTH_NAME
-        ? "https://graph.microsoft.com/v1.0/me"
-        : "https://www.googleapis.com/oauth2/v3/userinfo"
-      const res = await fetch(userinfoUrl, {
-        headers: { Authorization: `Bearer ${creds.accessToken}` },
-      })
-      if (res.ok) {
-        const info = (await res.json()) as {
-          sub?: string; id?: string
-          email?: string; mail?: string; userPrincipalName?: string
-          name?: string; displayName?: string; picture?: string
-        }
-        userId = info.sub ?? info.id ?? ""
-        email = info.email ?? info.mail ?? info.userPrincipalName ?? ""
-        name = info.name ?? info.displayName ?? ""
-        picture = info.picture ?? ""
-      }
-    } catch {
-      // best-effort
-    }
-    if (!userId) return
-    log.home("saving connection for %s (%s)", email, creds.provider)
+    const profile = creds.profile
+    if (!profile || !profile.userId) return
+    log.home("saving connection for %s (%s)", profile.email, creds.provider)
     this.connectionRepo.save({
       provider: creds.provider,
       feature: creds.feature,
-      userId,
-      email,
-      name,
-      picture,
+      userId: profile.userId,
+      email: profile.email,
+      name: profile.name,
+      picture: profile.picture,
       refreshToken: creds.refreshToken,
     })
   }

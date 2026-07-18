@@ -3,8 +3,10 @@ import { useEffect, useRef } from "react"
 import { useStatus, useTenant, useFyreDbApp } from "@fyre-db/plugins-ui"
 import { FullPageSpinner } from "@/components/full-page-spinner"
 import { UnlockDialog } from "@/features/auth/unlock-dialog"
-import { DefaultTemplate } from "@/templates/default-template"
+import { AppShellProvider } from "@/features/shell/app-shell-provider"
 import { HomePage } from "@/features/home/home-page"
+import { AccountsPage } from "@/features/accounts/accounts-page"
+import { TaggingPage } from "@/features/tagging/tagging-page"
 import { TenantsPage } from "@/features/tenants/tenants-page"
 import { LoginPage } from "@/features/auth/login-page"
 import { AuthCallbackPage } from "@/features/auth/auth-callback-page"
@@ -60,14 +62,6 @@ function TenantGuardRoute() {
   return <FullPageSpinner message="Opening household…" />
 }
 
-function DefaultLayoutRoute() {
-  return (
-    <DefaultTemplate>
-      <Outlet />
-    </DefaultTemplate>
-  )
-}
-
 /**
  * Public marketing root. Signed-in visitors are bounced into the app
  * (`/tenants`) — including after a login redirect, which lands on `/` — so the
@@ -100,8 +94,10 @@ export function AppRouter() {
         <Route element={<AuthGuardRoute />}>
           <Route path="/tenants" element={<TenantsPage />} />
           <Route path="/t/:tenantId" element={<TenantGuardRoute />}>
-            <Route element={<DefaultLayoutRoute />}>
+            <Route element={<AppShellProvider />}>
               <Route index element={<HomePage />} />
+              <Route path="accounts" element={<AccountsPage />} />
+              <Route path="tag" element={<TaggingPage />} />
               <Route path="transactions" element={<TransactionsPage />} />
               <Route path="settings/*" element={<SettingsPage />} />
               <Route path="dev/*" element={<DevHubPage />} />

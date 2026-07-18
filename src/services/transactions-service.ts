@@ -30,6 +30,7 @@ import type {
   ImportSourceDescriptor,
 } from "@/entities/import-source"
 import { TaggingEngine } from "@/services/tagging/engine"
+import { TAGGING } from "@/services/tagging/constants"
 import { buildSignature, extractUpiId, keyOf } from "@/services/tagging/extract"
 import type {
   TaggingData,
@@ -175,6 +176,32 @@ export class TransactionsService implements TaggingData, Disposable {
     )
     this.applyOutcome(outcome)
     return {}
+  }
+
+  /**
+   * Preview the untagged look-alikes a `tag(txId, tagId)` WOULD surface — the
+   * exact `SimilarFact` the mutation returns — WITHOUT tagging anything. Lets a
+   * confirmation UI (the tagging cards) pre-fill an "apply to all N similar"
+   * count that is guaranteed to match what `tagMany` then applies.
+   *
+   * Mirrors `applyHumanTag`'s gate precisely (D8): siblings are surfaced only
+   * when a rule would FORM — either an existing rule already covers the key, or
+   * the key recurs (≥ `RECURRENCE_MIN` rows share it, incl. `tx`). A lone key
+   * yields no rule and therefore no bulk offer, so this returns `undefined` too.
+   * Loaded partitions only, like the engine (best-effort live).
+   */
+  previewSimilar(txId: string, tagId: string): SimilarFact | undefined {
+    const tx = this.txRepo.get(txId)
+    if (!tx || tx.tagId !== undefined) return undefined
+    const key = keyOf(extractUpiId(tx.narration), buildSignature(tx.narration))
+    const ruleWouldForm =
+      this.ruleByKey(key) !== undefined ||
+      this.transactionsByKey(key).length >= TAGGING.RECURRENCE_MIN
+    if (!ruleWouldForm) return undefined
+    const transactionIds = this.engine
+      .findSimilarUntagged(key)
+      .filter((id) => id !== txId)
+    return transactionIds.length > 0 ? { tagId, transactionIds } : undefined
   }
 
   /**

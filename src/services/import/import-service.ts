@@ -35,6 +35,7 @@ import type { PromptAnswer } from "./import-context"
 import { runFileImport, type FileImportResult } from "./file-import-context"
 import { runEmailImport, type EmailResult, type EmailRunProgress } from "./email-import-context"
 import { CancelledError, EmailPasswordError, findMatchingAccounts, mergeMetadata } from "./import-utils"
+import { getOfferingSlang } from "@/catalog/bank-display"
 import { log } from "@/lib/log"
 
 // ── Active context entry ────────────────────────────────
@@ -42,6 +43,14 @@ import { log } from "@/lib/log"
 type ActiveImport = {
   readonly logId: string
   readonly ctx: ImportContext
+}
+
+/** Options for an email sync trigger. */
+export type EmailSyncOptions = {
+  /** Restrict parsing to this subset of bank ids. Empty/omitted = all banks. */
+  readonly bankIds?: readonly string[]
+  /** Wipe the sweep checkpoint first so the run re-imports from scratch. */
+  readonly reset?: boolean
 }
 
 // ── Service ─────────────────────────────────────────────
@@ -128,8 +137,12 @@ export class ImportService implements Disposable {
    * while a run is already live (`in_progress` or parked on `needs_input`)
    * returns the existing log id instead of spawning a parallel run. Two runs
    * would race on the single shared `EmailImportSetting.importState` cursor and
-   * corrupt the high-water mark. */
-  startEmailSync(accountId: string): string {
+   * corrupt the high-water mark.
+   *
+   * `options.bankIds` restricts parsing to a subset of adapters (empty/omitted
+   * = all banks). `options.reset` wipes the sweep checkpoint first, so the run
+   * re-imports the mailbox from the newest email all the way back. */
+  startEmailSync(accountId: string, options?: EmailSyncOptions): string {
     const account = this.fyredb.repo(connectionEntity).get(accountId)
     if (account === undefined) {
       log.import('email sync: unknown account=%s', accountId)
@@ -139,6 +152,10 @@ export class ImportService implements Disposable {
     if (existing) {
       log.import('email sync already active: account=%s logId=%s', account.email, existing)
       return existing
+    }
+
+    if (options?.reset) {
+      this.resetEmailSyncState(account)
     }
 
     const source: ImportLogEmailSource = {
@@ -152,10 +169,19 @@ export class ImportService implements Disposable {
     const logId = this.createLog("manual", source)
     const ctx = new ImportContext()
     this.active.set(logId, { logId, ctx })
-    log.import('email sync started: %s logId=%s', account.email, logId)
+    log.import('email sync started: %s logId=%s reset=%s banks=%s',
+      account.email, logId, options?.reset ?? false, options?.bankIds?.join(",") ?? "all")
 
-    void this.executeEmailImport(logId, ctx, account)
+    void this.executeEmailImport(logId, ctx, account, { bankIds: options?.bankIds })
     return logId
+  }
+
+  /** Wipe the sweep checkpoint for an account so the next run backfills from
+   *  scratch. Clears the high-water mark, in-flight cursor, and last error. */
+  private resetEmailSyncState(account: Connection & BaseEntity): void {
+    const current = this.getOrCreateEmailSetting(account)
+    this.settingsRepo.save({ ...current, importState: {}, lastErrorLogId: undefined })
+    log.import('email sync state reset: %s', account.email)
   }
 
   /** The live (`in_progress` / `needs_input`) email-sweep log id for an
@@ -335,6 +361,7 @@ export class ImportService implements Disposable {
     logId: string,
     ctx: ImportContext,
     account: Connection & BaseEntity,
+    options?: { readonly bankIds?: readonly string[] },
   ): Promise<void> {
     try {
       const passwords = [...this.getUserSettings().filePasswords]
@@ -416,6 +443,7 @@ export class ImportService implements Disposable {
           const summary = await runEmailImport(
             ctx, account, this.getOrCreateEmailSetting(account).importState,
             passwords, this.txRepo, { commitEmail, saveState, reportProgress },
+            { bankIds: options?.bankIds },
           )
           ctx.status = "completed"
           log.import('email sync completed: logId=%s emails=%d imported=%d', logId, summary.scanned, summary.imported)
@@ -605,7 +633,12 @@ export class ImportService implements Disposable {
     )
     return this.accountRepo.save({
       kind: result.importData.kind,
-      name: result.importData.bankId,
+      name:
+        buildDefaultName(
+          result.importData.account,
+          result.importData.bankId,
+          result.importData.offeringId,
+        ) || result.importData.bankId,
       currency: result.importData.account.currency,
       ...(statement && { statement }),
       bankId: result.importData.bankId,
@@ -614,15 +647,12 @@ export class ImportService implements Disposable {
     })
   }
 
-  private createAccountFromEmail(
-    emailResult: EmailResult,
-    account: Connection & BaseEntity,
-  ): string {
+  private createAccountFromEmail(emailResult: EmailResult, account: Connection & BaseEntity): string {
     const [bankId, offeringId] = emailResult.adapterId.split("/")
     const statement = toAccountStatement(emailResult.statement, emailResult.transactions)
     return this.accountRepo.save({
       kind: emailResult.kind,
-      name: bankId || account.email,
+      name: buildDefaultName(emailResult.accountDetails, bankId, offeringId) || account.email,
       currency: emailResult.accountDetails.currency,
       ...(statement && { statement }),
       bankId,
@@ -639,10 +669,7 @@ export class ImportService implements Disposable {
    * second email reuse the account the first one just created instead of
    * spawning a duplicate.
    */
-  private resolveOrCreateEmailAccount(
-    emailResult: EmailResult,
-    account: Connection & BaseEntity,
-  ): string {
+  private resolveOrCreateEmailAccount(emailResult: EmailResult, account: Connection & BaseEntity): string {
     const [bankId] = emailResult.adapterId.split("/")
     const matches = findMatchingAccounts(this.accountRepo.query(), bankId, emailResult.kind, emailResult.accountDetails)
     if (matches.length > 0) {
@@ -752,6 +779,25 @@ function toAccountStatement(
     ...(summary.minimumDue !== undefined && { minimumDue: summary.minimumDue }),
     ...(summary.dueDate !== undefined && { dueDate: summary.dueDate }),
   }
+}
+
+/**
+ * Seed a new account's name from the offering slang + masked account number,
+ * e.g. "HDFC ****1234". Falls back to just the slang (or `bankId`), then to the
+ * masked number alone. Returns "" when nothing is known — the caller supplies a
+ * final fallback (bank id for files, mailbox email for email imports).
+ */
+function buildDefaultName(
+  account: import("@pai-app/adapters").AccountDetails,
+  bankId: string,
+  offeringId: string,
+): string {
+  const slang = getOfferingSlang(bankId, offeringId) ?? bankId
+  const first = account.accountNumber?.[0]
+  const last4 = first ? first.replace(/\D/g, "").slice(-4) : ""
+  if (slang && last4) return `${slang} ****${last4}`
+  if (slang) return slang
+  return last4 ? `****${last4}` : ""
 }
 
 function buildMetadata(

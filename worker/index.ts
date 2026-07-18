@@ -3,8 +3,10 @@ import {
   BffServerAdapter,
   GOOGLE_OAUTH_ENDPOINTS,
   GOOGLE_DRIVE_SCOPES,
+  GOOGLE_USERINFO_MAPPER,
   MICROSOFT_OAUTH_ENDPOINTS,
   ONEDRIVE_SCOPES,
+  MICROSOFT_USERINFO_MAPPER,
 } from "@fyre-db/plugins"
 import { GOOGLE_AUTH_NAME, MICROSOFT_AUTH_NAME, AUTH_BASE_PREFIX, AUTH_CALLBACK_PATH, REFRESH_COOKIE, CSRF_COOKIE, GOOGLE_EMAIL_SCOPES, MICROSOFT_EMAIL_SCOPES } from "../shared/providers"
 import debug from "debug"
@@ -26,6 +28,7 @@ function getAuthService(env: Env, origin: string): ServerAuthService {
           clientSecret: env.GOOGLE_CLIENT_SECRET,
           callbackUrl,
           endpoints: GOOGLE_OAUTH_ENDPOINTS,
+          userInfoMapper: GOOGLE_USERINFO_MAPPER,
           scopes: {
             login: [...GOOGLE_DRIVE_SCOPES],
             email: [...GOOGLE_EMAIL_SCOPES],
@@ -37,6 +40,7 @@ function getAuthService(env: Env, origin: string): ServerAuthService {
           clientSecret: env.MICROSOFT_CLIENT_SECRET,
           callbackUrl,
           endpoints: MICROSOFT_OAUTH_ENDPOINTS,
+          userInfoMapper: MICROSOFT_USERINFO_MAPPER,
           scopes: {
             login: [...ONEDRIVE_SCOPES],
             email: [...MICROSOFT_EMAIL_SCOPES],
