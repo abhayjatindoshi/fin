@@ -155,38 +155,47 @@ export default defineConfig([
       // The dependency DAG — default deny, allow only downward edges plus each
       // layer's own peers (intra-layer composition: a navbar uses sibling
       // pills, an adaptive surface composes its variant surfaces, etc.).
-      'boundaries/element-types': ['error', {
+      //
+      // `checkAllOrigins` widens the rule to external/core modules so the
+      // fyre-db DATA-package restriction (last policy) is enforced here rather
+      // than the deprecated `boundaries/external` rule. Policies are processed
+      // in order and the last match wins, so the external baseline is allowed
+      // first and then narrowed for the listed importer layers.
+      'boundaries/dependencies': ['error', {
         default: 'disallow',
+        checkAllOrigins: true,
         rules: [
+          // Baseline: every element may import any external/core package. The
+          // fyre-db DATA-package restriction (last policy) overrides this for
+          // the listed importer layers.
+          { from: { type: '*' }, allow: [{ to: { origin: 'external' } }, { to: { origin: 'core' } }] },
+
           // `app` (main + router) composes the route table from feature route
           // elements and shared chrome, so it may also reach feature/components.
-          { from: 'app',        allow: ['app', 'pages', 'templates', 'feature', 'providers', 'components', 'ui', 'lib'] },
-          { from: 'pages',      allow: ['pages', 'feature', 'templates', 'providers', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] },
-          { from: 'templates',  allow: ['templates', 'feature', 'providers', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] },
-          { from: 'feature',    allow: ['feature', 'providers', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] },
-          { from: 'providers',  allow: ['providers', 'services', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] },
-          { from: 'services',   allow: ['services', 'views', 'entities', 'catalog', 'lib'] },
-          { from: 'components', allow: ['components', 'ui', 'views', 'entities', 'catalog', 'lib'] },
-          { from: 'ui',         allow: ['ui', 'lib'] },
-          { from: 'views',     allow: ['views', 'entities', 'lib'] },
-          { from: 'entities',  allow: ['entities', 'lib'] },
-          { from: 'catalog',   allow: ['catalog', 'views', 'entities', 'lib'] },
-          { from: 'lib',       allow: ['lib'] },
-        ],
-      }],
-      // fyre-db DATA packages (@fyre-db/core, @fyre-db/plugins) are restricted
-      // to the service layer for DATA ACCESS. Exception: `entities/` may import
-      // the @fyre-db/core DEFINITION api (`defineEntity`, `partitioned`) because
-      // each entity co-locates its declarative schema with its type — that's
-      // schema definition, not data access, which stays services-only. The
-      // React-integration package (@fyre-db/plugins-ui — providers, hooks,
-      // guards, login buttons) is allowed everywhere it's needed, so it is
-      // deliberately NOT in `disallow`.
-      'boundaries/external': ['error', {
-        default: 'allow',
-        rules: [
-          { from: ['ui', 'components', 'lib', 'views', 'catalog', 'feature', 'pages', 'templates', 'app'],
-            disallow: ['@fyre-db/core', '@fyre-db/core/*', '@fyre-db/plugins', '@fyre-db/plugins/*'],
+          { from: { type: 'app' },        allow: [{ to: { type: ['app', 'pages', 'templates', 'feature', 'providers', 'components', 'ui', 'lib'] } }] },
+          { from: { type: 'pages' },      allow: [{ to: { type: ['pages', 'feature', 'templates', 'providers', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] } }] },
+          { from: { type: 'templates' },  allow: [{ to: { type: ['templates', 'feature', 'providers', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] } }] },
+          { from: { type: 'feature' },    allow: [{ to: { type: ['feature', 'providers', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] } }] },
+          { from: { type: 'providers' },  allow: [{ to: { type: ['providers', 'services', 'components', 'ui', 'views', 'entities', 'catalog', 'lib'] } }] },
+          { from: { type: 'services' },   allow: [{ to: { type: ['services', 'views', 'entities', 'catalog', 'lib'] } }] },
+          { from: { type: 'components' }, allow: [{ to: { type: ['components', 'ui', 'views', 'entities', 'catalog', 'lib'] } }] },
+          { from: { type: 'ui' },         allow: [{ to: { type: ['ui', 'lib'] } }] },
+          { from: { type: 'views' },      allow: [{ to: { type: ['views', 'entities', 'lib'] } }] },
+          { from: { type: 'entities' },   allow: [{ to: { type: ['entities', 'lib'] } }] },
+          { from: { type: 'catalog' },    allow: [{ to: { type: ['catalog', 'views', 'entities', 'lib'] } }] },
+          { from: { type: 'lib' },        allow: [{ to: { type: ['lib'] } }] },
+
+          // fyre-db DATA packages (@fyre-db/core, @fyre-db/plugins) are
+          // restricted to the service layer for DATA ACCESS. Exception:
+          // `entities/` may import the @fyre-db/core DEFINITION api
+          // (`defineEntity`, `partitioned`) because each entity co-locates its
+          // declarative schema with its type — that's schema definition, not
+          // data access, which stays services-only. The React-integration
+          // package (@fyre-db/plugins-ui — providers, hooks, guards, login
+          // buttons) is allowed everywhere it's needed, so it is deliberately
+          // NOT in `disallow`.
+          { from: { type: ['ui', 'components', 'lib', 'views', 'catalog', 'feature', 'pages', 'templates', 'app'] },
+            disallow: [{ dependency: { source: ['@fyre-db/core', '@fyre-db/core/*', '@fyre-db/plugins', '@fyre-db/plugins/*'] } }],
             message: 'fyre-db core/plugins access is restricted to src/services/**. Use a domain service via useServices().' },
         ],
       }],
@@ -196,7 +205,7 @@ export default defineConfig([
     // Providers construct the FyreDbApp and bridge observables — the only
     // non-service fyre-db touch-point.
     files: ['src/providers/services-provider.tsx', 'src/providers/app-provider.tsx'],
-    rules: { 'boundaries/external': 'off' },
+    rules: { 'boundaries/dependencies': 'off' },
   },
   {
     // Sanctioned app-wide domain widget. `<Money>` reads the active user's
@@ -209,7 +218,7 @@ export default defineConfig([
     files: [
       'src/components/money.tsx',
     ],
-    rules: { 'boundaries/element-types': 'off' },
+    rules: { 'boundaries/dependencies': 'off' },
   },
   {
     // Import-feature data surfaces. These render stored entity rows
@@ -224,8 +233,7 @@ export default defineConfig([
       'src/features/settings/sections/imports-section.tsx',
     ],
     rules: {
-      'boundaries/element-types': 'off',
-      'boundaries/external': 'off',
+      'boundaries/dependencies': 'off',
     },
   },
   {
@@ -234,8 +242,7 @@ export default defineConfig([
     // touch-point that needs `@fyre-db/core` types and the entity schema.
     files: ['src/features/dev/sections/data-section.tsx'],
     rules: {
-      'boundaries/external': 'off',
-      'boundaries/element-types': 'off',
+      'boundaries/dependencies': 'off',
     },
   },
   {
@@ -252,7 +259,7 @@ export default defineConfig([
       'src/components/import/dropzone.tsx',
       'src/components/theme-switcher.tsx',
     ],
-    rules: { 'boundaries/element-types': 'off' },
+    rules: { 'boundaries/dependencies': 'off' },
   },
   {
     // Data-wired feature/dev surfaces that read service-owned display helpers
@@ -267,7 +274,7 @@ export default defineConfig([
       'src/features/shell/notifications-sheet.tsx',
       'src/features/transactions/notify-tag-similar.ts',
     ],
-    rules: { 'boundaries/element-types': 'off' },
+    rules: { 'boundaries/dependencies': 'off' },
   },
   {
     // The auth client (`clientAuth`) is constructed at the app wiring root
@@ -279,6 +286,6 @@ export default defineConfig([
       'src/services/connections-service.ts',
       'src/services/mail/mail-token.ts',
     ],
-    rules: { 'boundaries/element-types': 'off' },
+    rules: { 'boundaries/dependencies': 'off' },
   },
 ])
