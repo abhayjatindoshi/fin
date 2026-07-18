@@ -187,6 +187,18 @@ describe("TransactionsService", () => {
     expect(repo.get(`transaction.${JAN}.s2`)?.autoTagged).toBe(true)
   })
 
+  it("applyRulesToTransactions skips a row that no longer exists in the repo", async () => {
+    await setup()
+    establishUpiRule()
+
+    // A row present in the passed-in slice but absent from the repo (e.g. deleted
+    // mid-sweep) is skipped without throwing.
+    const ghost = { ...tx({ hash: "ghost" }), id: `transaction.${JAN}.ghost` }
+    const applied = svc.applyRulesToTransactions([ghost] as Parameters<typeof svc.applyRulesToTransactions>[0])
+
+    expect(applied).toBe(0)
+  })
+
   it("untags an auto-tagged row (corrects via the autoApplied histogram)", async () => {
     await setup()
     establishUpiRule()
