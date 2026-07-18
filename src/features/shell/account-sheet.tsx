@@ -55,7 +55,7 @@ function HouseholdPicker({ onNavigate }: { readonly onNavigate: () => void }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn("pill cursor-pointer px-3", "min-w-0 flex-1 justify-start")}
+          className={cn("pill glass cursor-pointer px-3", "min-w-0 flex-1 justify-start")}
         >
           <Icon name="home" className="size-4 shrink-0 text-muted-foreground" />
           <span className="truncate">{current?.name ?? "Household"}</span>

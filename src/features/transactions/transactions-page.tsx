@@ -8,9 +8,8 @@ import { log } from "@/lib/log"
 import { useTransactionsQuery } from "./hooks/use-transactions-query"
 import { useTransactionsFilter } from "./hooks/use-transactions-filter"
 import { TransactionVirtualizer } from "@/components/transaction/transaction-virtualizer"
-import { MonthHeader } from "@/components/transaction/month-header"
-import { TransactionTableRow } from "@/components/transaction/table-row"
-import { TransactionCardRow } from "@/components/transaction/card-row"
+import { DayHeader } from "@/components/transaction/day-header"
+import { TransactionRow } from "@/components/transaction/transaction-row"
 import { TransactionDetail } from "@/features/transactions/containers/transaction-detail"
 import { TagPickerCell } from "@/features/transactions/containers/tag-picker-cell"
 import { AccountCell } from "@/features/transactions/containers/account-cell"
@@ -114,37 +113,24 @@ export function TransactionsPage() {
           ) : (
             <TransactionVirtualizer
               transactions={filtered}
-              rowHeight={isMobile ? 110 : 54}
-              headerHeight={isMobile ? 44 : 46}
+              rowHeight={48}
+              headerHeight={44}
               stickyTop={stickyTop}
               scrollElementRef={scrollElementRef}
-              renderHeader={(args) => <MonthHeader {...args} />}
-              renderRow={(args) =>
-                isMobile ? (
-                  <TransactionCardRow
-                    amount={args.tx.amount}
-                    date={args.tx.transactionAt}
-                    title={args.tx.title}
-                    narration={args.tx.narration}
-                    tagCell={<TagPickerCell tx={args.tx} />}
-                    accountCell={<AccountCell accountId={args.tx.accountId} />}
-                    onClick={() => { setSelectedId(args.tx.id) }}
-                  />
-                ) : (
-                  <TransactionTableRow
-                    amount={args.tx.amount}
-                    date={args.tx.transactionAt}
-                    title={args.tx.title}
-                    narration={args.tx.narration}
-                    tagCell={<TagPickerCell tx={args.tx} />}
-                    accountCell={<AccountCell accountId={args.tx.accountId} />}
-                    first={args.first}
-                    last={args.last}
-                    selected={args.tx.id === selectedId}
-                    onClick={() => { setSelectedId(args.tx.id) }}
-                  />
-                )
-              }
+              renderHeader={(args) => <DayHeader {...args} />}
+              renderRow={(args) => (
+                <TransactionRow
+                  amount={args.tx.amount}
+                  title={args.tx.title}
+                  narration={args.tx.narration}
+                  tagCell={<TagPickerCell tx={args.tx} />}
+                  accountCell={<AccountCell accountId={args.tx.accountId} />}
+                  first={args.first}
+                  last={args.last}
+                  selected={args.tx.id === selectedId}
+                  onClick={() => { setSelectedId(args.tx.id) }}
+                />
+              )}
             />
           )}
         </div>
