@@ -1,6 +1,7 @@
 import { LandingHeader } from "./landing-header"
 import { LandingHero } from "./landing-hero"
 import { FeatureGrid } from "./feature-grid"
+import { SupportedBanks } from "./supported-banks"
 import { LandingCta } from "./landing-cta"
 import { LandingFooter } from "./landing-footer"
 
@@ -15,6 +16,7 @@ export function LandingPage() {
       <main>
         <LandingHero />
         <FeatureGrid />
+        <SupportedBanks />
         <LandingCta />
       </main>
       <LandingFooter />

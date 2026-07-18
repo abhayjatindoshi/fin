@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router"
-import { useAuthActions, useTenant } from "@fyre-db/plugins-ui"
+import { useAuthActions, useAuthState, useTenant } from "@fyre-db/plugins-ui"
 import { AdaptiveSurface } from "@/components/adaptive-surface"
 import { ThemeSwitcher } from "@/components/theme-switcher"
-import { Avatar, AvatarFallback } from "@/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar"
 import { Icon } from "@/ui/icon"
 import { cn } from "@/lib/utils"
 import { getInitials } from "@/lib/text"
@@ -55,7 +55,7 @@ function HouseholdPicker({ onNavigate }: { readonly onNavigate: () => void }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn("pill cursor-pointer px-3", "min-w-0 flex-1 justify-start")}
+          className={cn("pill glass cursor-pointer px-3", "min-w-0 flex-1 justify-start")}
         >
           <Icon name="home" className="size-4 shrink-0 text-muted-foreground" />
           <span className="truncate">{current?.name ?? "Household"}</span>
@@ -99,13 +99,15 @@ export function AccountSheet({ className, bare = false }: AccountSheetProps) {
   const navigate = useNavigate()
   const { tenantId } = useParams()
   const { signOut } = useAuthActions()
+  const { profile } = useAuthState()
   const { devMode } = useApp()
   const sync = useSyncStatus()
   const syncGlyph = syncIcon(sync)
 
-  // No user identity in the session yet — placeholders for now.
-  const userName = "Your Name"
-  const userEmail = "you@example.com"
+  // Identity resolved by the framework (server-side profile folded into the
+  // auth state); falls back to placeholders until a profile is available.
+  const userName = profile?.name ?? "You"
+  const userEmail = profile?.email ?? ""
   const color = getColor(userName)
 
   const go = (path: string) => { setOpen(false); void navigate(path) }
@@ -136,6 +138,7 @@ export function AccountSheet({ className, bare = false }: AccountSheetProps) {
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center gap-3">
             <Avatar size="lg">
+              {profile?.picture ? <AvatarImage src={profile.picture} alt={userName} /> : null}
               <AvatarFallback className={cn(color.bg, color.text, color.darkText)}>
                 {getInitials(userName)}
               </AvatarFallback>

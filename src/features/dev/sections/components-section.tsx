@@ -11,6 +11,15 @@ import { FullPageSpinner } from "@/components/full-page-spinner"
 import { Logo } from "@/components/logo"
 import { SyncStatus } from "@/features/shell/sync-status"
 import { TagPicker } from "@/features/transactions/containers/tag-picker"
+import { TagCell } from "@/components/transaction/tag-cell"
+import { AccountMarker } from "@/components/transaction/account-marker"
+import { ACCOUNT_MARKER_VARIANTS, type AccountMarkerVariant } from "@/components/transaction/account-marker-variants"
+import {
+  TransactionRowVariantA,
+  TransactionRowVariantB,
+  TransactionRowVariantC,
+} from "@/components/transaction/row-variants"
+import type { AccountView } from "@/views/account-view"
 import type { TagView } from "@/views/tag-view"
 import { useServices } from "@/providers/services-provider"
 
@@ -65,6 +74,14 @@ export function ComponentsSection() {
 
       <Section title="Tag picker">
         <TagPickerDemo />
+      </Section>
+
+      <Section title="Transaction row variants (date lives in the day header)">
+        <TransactionRowVariantsDemo />
+      </Section>
+
+      <Section title="Variant C — mobile vs desktop">
+        <VariantCResponsiveDemo />
       </Section>
 
       <Section title="Icon (lazy-loaded by name)">
@@ -222,6 +239,169 @@ function TagPickerDemo() {
       <Text variant="caption">
         {selected ? `Selected id: ${selected.id}` : "No tag selected"}
       </Text>
+    </div>
+  )
+}
+
+/**
+ * Compares the three candidate mobile-density row layouts side by side. The
+ * date column is intentionally absent — it moves into the day-group header in
+ * the unified layout. Sample tag/account cells are static stand-ins for the
+ * service-resolved cells the real page injects.
+ */
+function TransactionRowVariantsDemo() {
+  const [marker, setMarker] = useState<AccountMarkerVariant>("current")
+  const hdfcBank: AccountView = {
+    id: "acct-hdfc-savings",
+    name: "HDFC Savings",
+    kind: "bank",
+    currency: "INR",
+    maskedNumber: "****1234",
+    bankId: "hdfc",
+    offeringId: "savings",
+    archived: false,
+  }
+  const hdfcCard: AccountView = {
+    id: "acct-hdfc-cc",
+    name: "HDFC Credit Card",
+    kind: "credit-card",
+    currency: "INR",
+    maskedNumber: "****5678",
+    bankId: "hdfc",
+    offeringId: "credit-card",
+    archived: false,
+  }
+  const federalCard: AccountView = {
+    id: "acct-federal-cc",
+    name: "Federal Credit Card",
+    kind: "credit-card",
+    currency: "INR",
+    maskedNumber: "****9012",
+    bankId: "federal",
+    offeringId: "credit-card",
+    archived: false,
+  }
+  const groceriesTag: TagView = { id: "tag-groceries", name: "Groceries", icon: "shopping-cart" }
+  const salaryTag: TagView = { id: "tag-salary", name: "Salary", icon: "wallet" }
+
+  const samples = [
+    { amount: -125000, title: "Blinkit", narration: "UPI/BLINKIT/402938475", tag: groceriesTag, account: hdfcBank },
+    { amount: -45999, title: null, narration: "POS 5678 SWIGGY BANGALORE IN", tag: null, account: hdfcCard },
+    { amount: 5000000, title: "Monthly salary", narration: "NEFT CR ACME CORP SALARY", tag: salaryTag, account: federalCard },
+  ] as const
+
+  const renderTag = (tag: TagView | null) => <TagCell tag={tag} className="pointer-events-none rounded-full" />
+
+  const variants = [
+    { key: "A", label: "Variant A — icon-led single line", Row: TransactionRowVariantA },
+    { key: "B", label: "Variant B — two-tier compact", Row: TransactionRowVariantB },
+    { key: "C", label: "Variant C — amount-led single line", Row: TransactionRowVariantC },
+  ] as const
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex flex-row flex-wrap items-center gap-2">
+        <Text variant="caption">Account marker</Text>
+        {ACCOUNT_MARKER_VARIANTS.map((v) => (
+          <Button
+            key={v}
+            size="sm"
+            variant={v === marker ? "default" : "outline"}
+            onClick={() => { setMarker(v) }}
+          >
+            {v}
+          </Button>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {variants.map(({ key, label, Row }) => (
+          <div key={key} className="flex flex-col gap-2">
+            <Text variant="caption">{label}</Text>
+            <div className="text-[15px]">
+              {samples.map((s, i) => (
+                <Row
+                  key={i}
+                  amount={s.amount}
+                  title={s.title}
+                  narration={s.narration}
+                  tagCell={renderTag(s.tag)}
+                  accountCell={<AccountMarker account={s.account} variant={marker} />}
+                  first={i === 0}
+                  last={i === samples.length - 1}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Shows the chosen Variant C in two framings: a phone-width column (icon-only
+ * account marker, densest) and a full-width desktop column (icon + last-4).
+ * Both use the same row component — only the container width and the injected
+ * account marker differ, illustrating how the one row adapts across breakpoints.
+ */
+function VariantCResponsiveDemo() {
+  const hdfcBank: AccountView = {
+    id: "acct-hdfc-savings",
+    name: "HDFC Savings",
+    kind: "bank",
+    currency: "INR",
+    maskedNumber: "****1234",
+    bankId: "hdfc",
+    offeringId: "savings",
+    archived: false,
+  }
+  const federalCard: AccountView = {
+    id: "acct-federal-cc",
+    name: "Federal Credit Card",
+    kind: "credit-card",
+    currency: "INR",
+    maskedNumber: "****9012",
+    bankId: "federal",
+    offeringId: "credit-card",
+    archived: false,
+  }
+  const groceriesTag: TagView = { id: "tag-groceries", name: "Groceries", icon: "shopping-cart" }
+  const salaryTag: TagView = { id: "tag-salary", name: "Salary", icon: "wallet" }
+
+  const samples = [
+    { amount: -125000, title: "Blinkit", narration: "UPI/BLINKIT/402938475", tag: groceriesTag, account: hdfcBank },
+    { amount: -45999, title: null, narration: "POS 5678 SWIGGY BANGALORE IN", tag: null, account: hdfcBank },
+    { amount: 5000000, title: "Monthly salary", narration: "NEFT CR ACME CORP SALARY", tag: salaryTag, account: federalCard },
+  ] as const
+
+  const rows = (marker: AccountMarkerVariant, showNumber?: boolean) =>
+    samples.map((s, i) => (
+      <TransactionRowVariantC
+        key={i}
+        amount={s.amount}
+        title={s.title}
+        narration={s.narration}
+        tagCell={<TagCell tag={s.tag} className="pointer-events-none rounded-full" />}
+        accountCell={<AccountMarker account={s.account} variant={marker} showNumber={showNumber} />}
+        first={i === 0}
+        last={i === samples.length - 1}
+      />
+    ))
+
+  return (
+    <div className="flex w-full flex-col items-start gap-8 lg:flex-row">
+      <div className="flex flex-col gap-2">
+        <Text variant="caption">Mobile — 390px, layered icon</Text>
+        <div className="w-97.5 max-w-full rounded-2xl border bg-background p-2 text-[15px] shadow-sm">
+          {rows("layered")}
+        </div>
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <Text variant="caption">Desktop — full width, layered icon + last-4</Text>
+        <div className="rounded-xl border bg-background p-2 text-[15px]">
+          {rows("layered", true)}
+        </div>
+      </div>
     </div>
   )
 }
