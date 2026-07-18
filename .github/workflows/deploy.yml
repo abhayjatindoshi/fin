@@ -32,6 +32,12 @@ jobs:
 
       - run: npm install
 
+      # Track the latest published patch of the workspace-sibling packages
+      # (range ^0.1.0). They are released independently, so the committed
+      # lockfile pin can lag behind a fresh publish — this keeps the deploy on
+      # the newest published patch without a manual lockfile bump each time.
+      - run: npm update @fyre-db/core @fyre-db/plugins @fyre-db/plugins-ui @pai-app/adapters
+
       # Build first so the generated icons + SPA bundle exist before tests run
       # (gen:icons runs via the `prebuild` hook; `npm test` has no such hook, so
       # running it first would load a missing `src/lib/icons/generated`).

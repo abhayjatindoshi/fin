@@ -20,6 +20,12 @@ jobs:
 
       - run: npm install
 
+      # Track the latest published patch of the workspace-sibling packages
+      # (range ^0.1.0). They are released independently, so the committed
+      # lockfile pin can lag behind a fresh publish — this keeps CI on the newest
+      # published patch without a manual lockfile bump each time.
+      - run: npm update @fyre-db/core @fyre-db/plugins @fyre-db/plugins-ui @pai-app/adapters
+
       - run: npm run lint
 
       # Run unit tests (vitest) with v8 coverage. Fails CI on any test failure.
