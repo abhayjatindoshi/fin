@@ -1,7 +1,16 @@
 import { Icon } from "@/ui/icon"
 import { useObservable } from "@/providers/use-observable"
 import { useServices } from "@/providers/services-provider"
-import { formatMoney, formatNumber, getCurrencyDigits, minorToMajor } from "@/lib/format"
+import { useApp } from "@/providers/app-provider"
+import {
+  formatMoney,
+  formatNumber,
+  formatPrivacyMoney,
+  getCurrencyDigits,
+  minorToMajor,
+  privacyAmount,
+  PRIVACY_SYMBOL,
+} from "@/lib/format"
 import { Currency } from "@/components/currency"
 import { cn } from "@/lib/utils"
 
@@ -37,26 +46,33 @@ export function Money({
   className,
 }: MoneyProps) {
   const settings = useObservable(useServices().settings.settings$)
+  const { privacyMode } = useApp()
   const code = currency ?? settings.currency
   const loc = locale ?? settings.locale
 
   if (variant === "default") {
-    return <span className={className}>{formatMoney(amount, { locale: loc, currency: code })}</span>
+    const text = privacyMode
+      ? formatPrivacyMoney(amount, { locale: loc, currency: code })
+      : formatMoney(amount, { locale: loc, currency: code })
+    return <span className={className}>{text}</span>
   }
 
   // variant === "icon" — old-app split layout. Decimals are shown only when
   // present (whole amounts render without a trailing ".00").
   const digits = getCurrencyDigits(code)
-  const number = formatNumber(minorToMajor(Math.abs(amount), code), {
+  const displayAmount = privacyMode ? privacyAmount(amount, code) : Math.abs(amount)
+  const number = formatNumber(minorToMajor(displayAmount, code), {
     locale: loc,
-    minimumFractionDigits: 0,
+    minimumFractionDigits: privacyMode ? digits : 0,
     maximumFractionDigits: digits,
   })
 
   return (
     <span className={cn("inline-flex flex-row items-center", className)}>
       {sign && <Icon name={amount < 0 ? "minus" : "plus"} className="size-3 text-muted-foreground" aria-hidden />}
-      <Currency code={code} variant="icon" className="size-3" aria-hidden />
+      {privacyMode
+        ? <span className="px-0.5" aria-hidden>{PRIVACY_SYMBOL}</span>
+        : <Currency code={code} variant="icon" className="size-3" aria-hidden />}
       <span className="truncate">{number}</span>
     </span>
   )

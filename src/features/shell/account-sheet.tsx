@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router"
-import { useAuthActions, useTenant } from "@fyre-db/plugins-ui"
+import { useAuthActions, useAuthState, useTenant } from "@fyre-db/plugins-ui"
 import { AdaptiveSurface } from "@/components/adaptive-surface"
 import { ThemeSwitcher } from "@/components/theme-switcher"
-import { Avatar, AvatarFallback } from "@/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar"
 import { Icon } from "@/ui/icon"
 import { cn } from "@/lib/utils"
 import { getInitials } from "@/lib/text"
@@ -99,13 +99,13 @@ export function AccountSheet({ className, bare = false }: AccountSheetProps) {
   const navigate = useNavigate()
   const { tenantId } = useParams()
   const { signOut } = useAuthActions()
-  const { devMode } = useApp()
+  const { profile } = useAuthState()
+  const { devMode, privacyMode, setPrivacyMode } = useApp()
   const sync = useSyncStatus()
   const syncGlyph = syncIcon(sync)
 
-  // No user identity in the session yet — placeholders for now.
-  const userName = "Your Name"
-  const userEmail = "you@example.com"
+  const userName = profile?.name ?? "You"
+  const userEmail = profile?.email ?? ""
   const color = getColor(userName)
 
   const go = (path: string) => { setOpen(false); void navigate(path) }
@@ -136,13 +136,16 @@ export function AccountSheet({ className, bare = false }: AccountSheetProps) {
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center gap-3">
             <Avatar size="lg">
+              {profile?.picture ? <AvatarImage src={profile.picture} alt={userName} /> : null}
               <AvatarFallback className={cn(color.bg, color.text, color.darkText)}>
                 {getInitials(userName)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">{userName}</div>
-              <div className="truncate text-xs text-muted-foreground">{userEmail}</div>
+              {userEmail ? (
+                <div className="truncate text-xs text-muted-foreground">{userEmail}</div>
+              ) : null}
             </div>
             <button
               type="button"
@@ -161,6 +164,11 @@ export function AccountSheet({ className, bare = false }: AccountSheetProps) {
 
           <div className="flex justify-center gap-2">
             <Action icon={syncGlyph.name} spin={syncGlyph.spin} label="Sync" onClick={sync.saveChanges} />
+            <Action
+              icon={privacyMode ? "eye-off" : "eye"}
+              label={privacyMode ? "Show" : "Hide"}
+              onClick={() => { setPrivacyMode(!privacyMode) }}
+            />
             <Action icon="settings" label="Settings" onClick={() => { go(`/t/${tenantId}/settings`) }} />
             {devMode && (
               <Action icon="terminal" label="Dev" onClick={() => { go(`/t/${tenantId}/dev`) }} />

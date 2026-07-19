@@ -109,3 +109,71 @@ export function getCurrencyDigits(code: string): number {
     return 2
   }
 }
+
+/** Neutral, non-currency glyph shown in place of the currency symbol while privacy mode hides amounts. */
+export const PRIVACY_SYMBOL = "#"
+
+/** FNV-1a-style 32-bit hash used to deterministically scramble an amount. */
+function hashAmount(n: number): number {
+  let h = (2166136261 ^ (n | 0)) >>> 0
+  h = Math.imul(h, 16777619)
+  h ^= h >>> 15
+  h = Math.imul(h, 16777619)
+  h ^= h >>> 13
+  return h >>> 0
+}
+
+/**
+ * Deterministic obfuscated minor-unit amount for privacy mode. The masked
+ * integer width is derived from the amount's magnitude but deliberately jittered
+ * (±1 digit) so it does not exactly reveal the original digit count; the digits
+ * themselves are pseudo-random and unrecoverable. Stable per input (same amount
+ * → same mask) to avoid flicker across re-renders.
+ */
+export function privacyAmount(amount: number, currency: string): number {
+  const digits = getCurrencyDigits(currency)
+  const scale = 10 ** digits
+  const majorAbs = Math.floor(Math.abs(amount) / scale)
+  const baseDigits = Math.max(1, majorAbs.toString().length)
+  let h = hashAmount(Math.round(Math.abs(amount)))
+
+  // Jitter the integer width by -1/0/+1 so masked figures no longer map 1:1 to
+  // the real digit count. Keep at least one integer digit.
+  const jitter = (h % 3) - 1
+  const intDigits = Math.max(1, baseDigits + jitter)
+
+  let intPart = 0
+  for (let i = 0; i < intDigits; i++) {
+    h = hashAmount(h + i * 31 + 7)
+    let d = h % 10
+    if (i === 0 && intDigits > 1 && d === 0) d = 1 + (h % 9)
+    intPart = intPart * 10 + d
+  }
+
+  let frac = 0
+  for (let i = 0; i < digits; i++) {
+    h = hashAmount(h + i * 17 + 101)
+    frac = frac * 10 + (h % 10)
+  }
+
+  return intPart * scale + frac
+}
+
+/**
+ * Formats `amount` for privacy mode: a pseudo-random figure of a similar width,
+ * prefixed with {@link PRIVACY_SYMBOL} instead of the currency glyph. Negative
+ * amounts keep their leading sign so income/expense colouring stays consistent.
+ */
+export function formatPrivacyMoney(
+  amount: number,
+  opts: { readonly locale: string; readonly currency: string },
+): string {
+  const digits = getCurrencyDigits(opts.currency)
+  const fake = privacyAmount(amount, opts.currency)
+  const number = formatNumber(minorToMajor(fake, opts.currency), {
+    locale: opts.locale,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })
+  return `${amount < 0 ? "-" : ""}${PRIVACY_SYMBOL}${number}`
+}
