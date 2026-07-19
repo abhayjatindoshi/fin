@@ -3,11 +3,14 @@ import {
   CURRENCIES,
   formatMoney,
   formatNumber,
+  formatPrivacyMoney,
   getCurrencyDigits,
   getCurrencyMeta,
   isKnownCurrency,
   majorToMinor,
   minorToMajor,
+  privacyAmount,
+  PRIVACY_SYMBOL,
 } from "@/lib/format"
 
 describe("getCurrencyMeta / isKnownCurrency", () => {
@@ -103,5 +106,82 @@ describe("formatNumber", () => {
 
   it("formats without explicit fraction options", () => {
     expect(formatNumber(42, { locale: "en-US" })).toBe("42")
+  })
+})
+
+describe("privacyAmount", () => {
+  it("is deterministic for the same input", () => {
+    expect(privacyAmount(123456, "INR")).toBe(privacyAmount(123456, "INR"))
+    expect(privacyAmount(0, "USD")).toBe(privacyAmount(0, "USD"))
+  })
+
+  it("ignores the sign of the input (masks magnitude only)", () => {
+    expect(privacyAmount(-123456, "INR")).toBe(privacyAmount(123456, "INR"))
+  })
+
+  it("jitters the integer width by at most one digit", () => {
+    for (const major of [1, 12, 123, 1234, 12345, 123456]) {
+      const amount = major * 100 // INR minor units
+      const baseDigits = major.toString().length
+      const maskedMajor = Math.floor(privacyAmount(amount, "INR") / 100)
+      const maskedDigits = maskedMajor.toString().length
+      expect(Math.abs(maskedDigits - baseDigits)).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it("never produces a leading zero for multi-digit masked figures", () => {
+    // Sweeps a wide range so the leading-zero-avoidance branch is exercised.
+    for (let major = 10; major < 5000; major += 7) {
+      const maskedMajor = Math.floor(privacyAmount(major * 100, "INR") / 100)
+      if (maskedMajor >= 10) {
+        expect(maskedMajor.toString().startsWith("0")).toBe(false)
+      }
+    }
+  })
+
+  it("fills the currency's fraction digits", () => {
+    // Two-decimal currency: the masked value carries a fractional part space.
+    const inr = privacyAmount(100000, "INR")
+    expect(inr % 100).toBeGreaterThanOrEqual(0)
+    expect(inr % 100).toBeLessThan(100)
+  })
+
+  it("has no fraction component for a zero-decimal currency", () => {
+    const jpy = privacyAmount(12345, "JPY")
+    expect(Number.isInteger(jpy)).toBe(true)
+  })
+})
+
+describe("formatPrivacyMoney", () => {
+  it("prefixes the neutral privacy glyph instead of a currency symbol", () => {
+    const out = formatPrivacyMoney(123456, { locale: "en-IN", currency: "INR" })
+    expect(out).toContain(PRIVACY_SYMBOL)
+    expect(out).not.toContain("₹")
+  })
+
+  it("keeps a leading minus for negative amounts", () => {
+    const out = formatPrivacyMoney(-123456, { locale: "en-IN", currency: "INR" })
+    expect(out.startsWith("-")).toBe(true)
+    expect(out).toContain(PRIVACY_SYMBOL)
+  })
+
+  it("has no leading minus for positive amounts", () => {
+    const out = formatPrivacyMoney(123456, { locale: "en-IN", currency: "INR" })
+    expect(out.startsWith("-")).toBe(false)
+  })
+
+  it("shows the currency's fraction digits", () => {
+    const out = formatPrivacyMoney(123456, { locale: "en-IN", currency: "INR" })
+    expect(out).toMatch(/\.\d{2}$/)
+  })
+
+  it("omits fraction digits for a zero-decimal currency", () => {
+    const out = formatPrivacyMoney(12345, { locale: "ja-JP", currency: "JPY" })
+    expect(out).not.toContain(".")
+  })
+
+  it("is deterministic", () => {
+    const opts = { locale: "en-IN", currency: "INR" } as const
+    expect(formatPrivacyMoney(987654, opts)).toBe(formatPrivacyMoney(987654, opts))
   })
 })
