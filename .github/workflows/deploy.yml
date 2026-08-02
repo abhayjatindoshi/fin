@@ -12,6 +12,7 @@ name: Deploy
 #   - CLOUDFLARE_ACCOUNT_ID
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, v2]
 
